@@ -21,4 +21,29 @@ function generateRandomHSLColor() {
     return `hsl(${h}, ${s}%, ${l}%)`;
 }
 
-export { generateRandomColor, generateRandomRGBColor, generateRandomHSLColor };
+export { generateRandomColor, generateRandomRGBColor, generateRandomHSLColor };function generateRandomColor(format = 'hex') {
+    const randomValue = () => Math.floor(Math.random() * 256);
+    
+    if (format.toLowerCase() === 'rgb') {
+        return `rgb(${randomValue()}, ${randomValue()}, ${randomValue()})`;
+    }
+    
+    const componentToHex = (c) => {
+        const hex = c.toString(16);
+        return hex.length === 1 ? '0' + hex : hex;
+    };
+    
+    return '#' + componentToHex(randomValue()) + 
+                  componentToHex(randomValue()) + 
+                  componentToHex(randomValue());
+}
+
+function generateRandomPalette(count = 5, format = 'hex') {
+    const palette = [];
+    for (let i = 0; i < count; i++) {
+        palette.push(generateRandomColor(format));
+    }
+    return palette;
+}
+
+export { generateRandomColor, generateRandomPalette };
