@@ -1,87 +1,62 @@
-function fetchUserData(userId, timeout = 5000) {
-    return new Promise((resolve, reject) => {
-        const controller = new AbortController();
-        const signal = controller.signal;
-        const timeoutId = setTimeout(() => {
-            controller.abort();
-            reject(new Error('Request timed out'));
-        }, timeout);
-
-        fetch(`https://api.example.com/users/${userId}`, { signal })
-            .then(response => {
-                clearTimeout(timeoutId);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => resolve(data))
-            .catch(error => {
-                clearTimeout(timeoutId);
-                if (error.name === 'AbortError') {
-                    reject(new Error('Request was aborted due to timeout'));
-                } else {
-                    reject(error);
-                }
-            });
-    });
-}function fetchUserData(userId) {
-    const apiUrl = `https://jsonplaceholder.typicode.com/users/${userId}`;
+async function fetchUserData(userId, maxRetries = 3) {
+    const url = `https://api.example.com/users/${userId}`;
+    let lastError;
     
-    fetch(apiUrl)
-        .then(response => {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            const response = await fetch(url);
+            
             if (!response.ok) {
-                throw new Error('Network response was not ok');
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
-            return response.json();
-        })
-        .then(data => {
-            console.log('User Data:', data);
-            displayUserInfo(data);
-        })
-        .catch(error => {
-            console.error('Error fetching user data:', error);
-        });
-}
-
-function displayUserInfo(user) {
-    const userInfoDiv = document.getElementById('userInfo');
-    
-    if (userInfoDiv) {
-        userInfoDiv.innerHTML = `
-            <h2>${user.name}</h2>
-            <p><strong>Email:</strong> ${user.email}</p>
-            <p><strong>Phone:</strong> ${user.phone}</p>
-            <p><strong>Website:</strong> ${user.website}</p>
-            <p><strong>Company:</strong> ${user.company.name}</p>
-        `;
-    }
-}
-
-// Example usage
-fetchUserData(1);async function fetchUserData(url) {
-    try {
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            
+            const data = await response.json();
+            console.log(`Successfully fetched data for user ${userId}`);
+            return data;
+            
+        } catch (error) {
+            lastError = error;
+            console.warn(`Attempt ${attempt} failed: ${error.message}`);
+            
+            if (attempt < maxRetries) {
+                const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
+                console.log(`Retrying in ${delay}ms...`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
         }
-        const data = await response.json();
-        return processUserData(data);
+    }
+    
+    throw new Error(`Failed to fetch user data after ${maxRetries} attempts: ${lastError.message}`);
+}
+
+function validateUserId(userId) {
+    if (!userId || typeof userId !== 'string') {
+        throw new Error('Invalid user ID provided');
+    }
+    return userId.trim();
+}
+
+async function getUserProfile(userId) {
+    try {
+        const validatedId = validateUserId(userId);
+        const userData = await fetchUserData(validatedId);
+        
+        return {
+            success: true,
+            data: {
+                id: userData.id,
+                name: userData.name,
+                email: userData.email,
+                lastActive: new Date(userData.lastActive)
+            }
+        };
     } catch (error) {
-        console.error('Failed to fetch user data:', error);
-        return null;
+        console.error('Failed to get user profile:', error);
+        return {
+            success: false,
+            error: error.message
+        };
     }
 }
 
-function processUserData(users) {
-    if (!Array.isArray(users)) {
-        console.warn('Expected an array of users');
-        return [];
-    }
-    return users.map(user => ({
-        id: user.id,
-        fullName: `${user.firstName} ${user.lastName}`,
-        email: user.email,
-        isActive: user.status === 'active'
-    }));
-}
+export { fetchUserData, getUserProfile };
