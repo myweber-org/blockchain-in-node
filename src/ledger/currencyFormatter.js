@@ -18,4 +18,23 @@ function parseCurrency(formattedString, locale = 'en-US') {
     return parseFloat(normalized.replace(/[^\d.-]/g, ''));
 }
 
+export { formatCurrency, parseCurrency };function formatCurrency(amount, locale = 'en-US', currency = 'USD') {
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency: currency
+  }).format(amount);
+}
+
+function parseCurrency(formattedString, locale = 'en-US') {
+  const example = formatCurrency(0, locale);
+  const cleanPattern = example.replace(/0/g, '\\d').replace(/[^\d]/g, '[^\\d]*');
+  const regex = new RegExp(cleanPattern.replace(/\\d/g, '(\\d+)'));
+  const matches = formattedString.match(regex);
+  
+  if (matches) {
+    return parseFloat(matches[1]) / 100;
+  }
+  return null;
+}
+
 export { formatCurrency, parseCurrency };
