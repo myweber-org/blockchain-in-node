@@ -59,4 +59,29 @@ function displayUserInfo(user) {
 }
 
 // Example usage
-fetchUserData(1);
+fetchUserData(1);async function fetchUserData(url) {
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        return processUserData(data);
+    } catch (error) {
+        console.error('Failed to fetch user data:', error);
+        return null;
+    }
+}
+
+function processUserData(users) {
+    if (!Array.isArray(users)) {
+        console.warn('Expected an array of users');
+        return [];
+    }
+    return users.map(user => ({
+        id: user.id,
+        fullName: `${user.firstName} ${user.lastName}`,
+        email: user.email,
+        isActive: user.status === 'active'
+    }));
+}
