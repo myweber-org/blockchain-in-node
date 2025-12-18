@@ -178,4 +178,35 @@ function validateUserInput(username, email) {
     };
 }
 
-export { validateUserInput, validateUsername, validateEmail };
+export { validateUserInput, validateUsername, validateEmail };function validateUsername(username) {
+    const minLength = 3;
+    const maxLength = 20;
+    const regex = /^[a-zA-Z0-9_]+$/;
+    
+    if (typeof username !== 'string') return false;
+    if (username.length < minLength || username.length > maxLength) return false;
+    return regex.test(username);
+}
+
+function validatePassword(password) {
+    const minLength = 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumbers = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    
+    if (typeof password !== 'string') return false;
+    if (password.length < minLength) return false;
+    if (!hasUpperCase || !hasLowerCase || !hasNumbers || !hasSpecialChar) return false;
+    return true;
+}
+
+function validateUserInput(username, password) {
+    return {
+        usernameValid: validateUsername(username),
+        passwordValid: validatePassword(password),
+        allValid: validateUsername(username) && validatePassword(password)
+    };
+}
+
+export { validateUsername, validatePassword, validateUserInput };
