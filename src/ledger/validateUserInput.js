@@ -171,4 +171,47 @@ function validateUserInput(username, email) {
     };
 }
 
-export { validateUserInput, validateUsername, validateEmail };
+export { validateUserInput, validateUsername, validateEmail };function validateUserInput(input, type) {
+    if (typeof input !== 'string') {
+        return { isValid: false, error: 'Input must be a string' };
+    }
+
+    const trimmedInput = input.trim();
+
+    if (trimmedInput.length === 0) {
+        return { isValid: false, error: 'Input cannot be empty' };
+    }
+
+    switch (type) {
+        case 'email':
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return {
+                isValid: emailRegex.test(trimmedInput),
+                error: emailRegex.test(trimmedInput) ? null : 'Invalid email format'
+            };
+        case 'username':
+            const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+            return {
+                isValid: usernameRegex.test(trimmedInput),
+                error: usernameRegex.test(trimmedInput) ? null : 'Username must be 3-20 alphanumeric characters or underscores'
+            };
+        case 'password':
+            const hasMinLength = trimmedInput.length >= 8;
+            const hasUpperCase = /[A-Z]/.test(trimmedInput);
+            const hasLowerCase = /[a-z]/.test(trimmedInput);
+            const hasNumber = /\d/.test(trimmedInput);
+            const isValid = hasMinLength && hasUpperCase && hasLowerCase && hasNumber;
+            
+            if (!isValid) {
+                const errors = [];
+                if (!hasMinLength) errors.push('at least 8 characters');
+                if (!hasUpperCase) errors.push('one uppercase letter');
+                if (!hasLowerCase) errors.push('one lowercase letter');
+                if (!hasNumber) errors.push('one number');
+                return { isValid: false, error: `Password must contain ${errors.join(', ')}` };
+            }
+            return { isValid: true, error: null };
+        default:
+            return { isValid: true, error: null };
+    }
+}
