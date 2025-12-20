@@ -157,4 +157,29 @@ async function getUserProfile(userId) {
     }
 }
 
-export { fetchUserData, getUserProfile };
+export { fetchUserData, getUserProfile };function fetchUserData(userId, maxRetries = 3) {
+    const baseUrl = 'https://api.example.com/users';
+    let retryCount = 0;
+
+    async function attemptFetch() {
+        try {
+            const response = await fetch(`${baseUrl}/${userId}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            if (retryCount < maxRetries) {
+                retryCount++;
+                console.warn(`Attempt ${retryCount} failed. Retrying...`);
+                return attemptFetch();
+            } else {
+                console.error('Max retries reached. Operation failed.');
+                throw error;
+            }
+        }
+    }
+
+    return attemptFetch();
+}
