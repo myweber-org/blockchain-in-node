@@ -98,4 +98,52 @@ module.exports = {
     celsiusToFahrenheit,
     fahrenheitToCelsius,
     convertTemperature
+};function celsiusToFahrenheit(celsius) {
+    return (celsius * 9/5) + 32;
+}
+
+function fahrenheitToCelsius(fahrenheit) {
+    return (fahrenheit - 32) * 5/9;
+}
+
+function convertTemperature(value, unit) {
+    if (unit.toLowerCase() === 'c') {
+        return celsiusToFahrenheit(value);
+    } else if (unit.toLowerCase() === 'f') {
+        return fahrenheitToCelsius(value);
+    } else {
+        throw new Error('Invalid unit. Use "C" for Celsius or "F" for Fahrenheit.');
+    }
+}
+
+function formatTemperature(value, originalUnit) {
+    const convertedUnit = originalUnit.toLowerCase() === 'c' ? 'F' : 'C';
+    return `${value.toFixed(2)}°${convertedUnit}`;
+}
+
+function validateTemperatureInput(value) {
+    if (typeof value !== 'number' || isNaN(value)) {
+        return false;
+    }
+    return true;
+}
+
+function temperatureConversionHandler(inputValue, inputUnit) {
+    if (!validateTemperatureInput(inputValue)) {
+        return 'Invalid temperature value';
+    }
+    
+    try {
+        const convertedValue = convertTemperature(inputValue, inputUnit);
+        return formatTemperature(convertedValue, inputUnit);
+    } catch (error) {
+        return error.message;
+    }
+}
+
+export {
+    celsiusToFahrenheit,
+    fahrenheitToCelsius,
+    convertTemperature,
+    temperatureConversionHandler
 };
