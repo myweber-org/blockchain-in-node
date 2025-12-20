@@ -1,26 +1,26 @@
 function validateUserProfile(profile) {
-    const nameRegex = /^[A-Za-z\s]{2,50}$/;
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const phoneRegex = /^\+?[\d\s\-\(\)]{10,15}$/;
+  const errors = {};
 
-    const errors = [];
+  if (!profile.username || profile.username.trim().length < 3) {
+    errors.username = 'Username must be at least 3 characters long';
+  }
 
-    if (!nameRegex.test(profile.name?.trim())) {
-        errors.push('Name must be 2-50 letters and spaces only');
-    }
+  if (!profile.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profile.email)) {
+    errors.email = 'Please enter a valid email address';
+  }
 
-    if (!emailRegex.test(profile.email?.trim())) {
-        errors.push('Invalid email format');
-    }
+  if (profile.age && (profile.age < 0 || profile.age > 120)) {
+    errors.age = 'Age must be between 0 and 120';
+  }
 
-    if (profile.phone && !phoneRegex.test(profile.phone.replace(/\s/g, ''))) {
-        errors.push('Phone must be 10-15 digits with optional country code');
-    }
+  if (profile.website && !/^https?:\/\/.+/.test(profile.website)) {
+    errors.website = 'Website must start with http:// or https://';
+  }
 
-    return {
-        isValid: errors.length === 0,
-        errors: errors
-    };
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors: errors
+  };
 }
 
-module.exports = { validateUserProfile };
+module.exports = validateUserProfile;
