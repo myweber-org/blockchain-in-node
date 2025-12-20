@@ -94,4 +94,53 @@ function validatePassword(password) {
     return true;
 }
 
-export { validateEmail, validatePhone, sanitizeInput, validatePassword };
+export { validateEmail, validatePhone, sanitizeInput, validatePassword };function sanitizeInput(input, type) {
+    if (typeof input !== 'string') {
+        return null;
+    }
+
+    const trimmed = input.trim();
+    
+    const validators = {
+        email: (str) => {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(str) ? str : null;
+        },
+        username: (str) => {
+            const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+            return usernameRegex.test(str) ? str : null;
+        },
+        password: (str) => {
+            return str.length >= 8 ? str : null;
+        },
+        text: (str) => {
+            return str.length > 0 ? str.replace(/[<>]/g, '') : null;
+        }
+    };
+
+    const validator = validators[type] || validators.text;
+    return validator(trimmed);
+}
+
+function validateFormData(formData) {
+    const errors = {};
+    const sanitizedData = {};
+
+    for (const [field, value] of Object.entries(formData)) {
+        const sanitized = sanitizeInput(value, field);
+        
+        if (sanitized === null) {
+            errors[field] = `Invalid ${field} format`;
+        } else {
+            sanitizedData[field] = sanitized;
+        }
+    }
+
+    return {
+        isValid: Object.keys(errors).length === 0,
+        errors,
+        data: sanitizedData
+    };
+}
+
+export { sanitizeInput, validateFormData };
