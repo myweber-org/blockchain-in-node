@@ -484,4 +484,27 @@ module.exports = { validateUserInput, validateUsername, validateEmail };function
         valid: true,
         message: "Input validation passed."
     };
+}function validateUserInput(username, password) {
+    const errors = [];
+
+    if (typeof username !== 'string' || username.trim().length === 0) {
+        errors.push('Username must be a non-empty string');
+    }
+
+    if (typeof password !== 'string' || password.length < 8) {
+        errors.push('Password must be a string with at least 8 characters');
+    }
+
+    if (username.includes(' ')) {
+        errors.push('Username cannot contain spaces');
+    }
+
+    if (!/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+        errors.push('Password must contain at least one uppercase letter and one number');
+    }
+
+    return {
+        isValid: errors.length === 0,
+        errors: errors
+    };
 }
