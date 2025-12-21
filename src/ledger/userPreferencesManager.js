@@ -53,4 +53,51 @@ const UserPreferencesManager = (function() {
 // UserPreferencesManager.set('theme', 'dark');
 // UserPreferencesManager.set('language', 'en');
 // console.log(UserPreferencesManager.get('theme')); // 'dark'
-// console.log(UserPreferencesManager.getAll()); // {theme: 'dark', language: 'en'}
+// console.log(UserPreferencesManager.getAll()); // {theme: 'dark', language: 'en'}class UserPreferencesManager {
+    constructor() {
+        this.preferences = this.loadPreferences();
+    }
+
+    loadPreferences() {
+        const stored = localStorage.getItem('userPreferences');
+        return stored ? JSON.parse(stored) : {
+            theme: 'light',
+            language: 'en',
+            notifications: true,
+            fontSize: 16
+        };
+    }
+
+    savePreferences() {
+        localStorage.setItem('userPreferences', JSON.stringify(this.preferences));
+    }
+
+    setPreference(key, value) {
+        if (this.preferences.hasOwnProperty(key)) {
+            this.preferences[key] = value;
+            this.savePreferences();
+            return true;
+        }
+        return false;
+    }
+
+    getPreference(key) {
+        return this.preferences[key];
+    }
+
+    getAllPreferences() {
+        return { ...this.preferences };
+    }
+
+    resetToDefaults() {
+        this.preferences = {
+            theme: 'light',
+            language: 'en',
+            notifications: true,
+            fontSize: 16
+        };
+        this.savePreferences();
+    }
+}
+
+const userPrefs = new UserPreferencesManager();
