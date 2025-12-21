@@ -181,4 +181,69 @@ module.exports = {
     convertCurrency,
     getAvailableCurrencies,
     updateExchangeRate
+};const exchangeRates = {
+    USD: 1.0,
+    EUR: 0.85,
+    GBP: 0.73,
+    JPY: 110.0,
+    CAD: 1.25,
+    AUD: 1.35,
+    CHF: 0.92,
+    CNY: 6.45
 };
+
+const rateCache = new Map();
+const CACHE_DURATION = 5 * 60 * 1000;
+
+async function fetchExchangeRate(base, target) {
+    const cacheKey = `${base}_${target}`;
+    const cached = rateCache.get(cacheKey);
+    
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+        return cached.rate;
+    }
+    
+    try {
+        const response = await fetch(`https://api.exchangerate-api.com/v4/latest/${base}`);
+        const data = await response.json();
+        const rate = data.rates[target];
+        
+        if (rate) {
+            rateCache.set(cacheKey, {
+                rate: rate,
+                timestamp: Date.now()
+            });
+            return rate;
+        }
+    } catch (error) {
+        console.warn('Failed to fetch exchange rate, using fallback:', error);
+    }
+    
+    const fallbackRate = exchangeRates[target] / exchangeRates[base];
+    return fallbackRate || 1;
+}
+
+function convertCurrency(amount, fromCurrency, toCurrency) {
+    if (!amount || isNaN(amount)) {
+        throw new Error('Invalid amount provided');
+    }
+    
+    if (fromCurrency === toCurrency) {
+        return amount;
+    }
+    
+    return fetchExchangeRate(fromCurrency, toCurrency)
+        .then(rate => {
+            const converted = amount * rate;
+            return Math.round(converted * 100) / 100;
+        });
+}
+
+function formatCurrency(amount, currencyCode) {
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: currencyCode
+    }).format(amount);
+}
+
+export { convertCurrency, formatCurrency };
