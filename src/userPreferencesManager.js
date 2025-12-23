@@ -170,4 +170,59 @@ if (typeof module !== 'undefined' && module.exports) {
         clear: clearAllPreferences,
         getAll: getAllPreferences
     };
-})();
+})();const UserPreferences = {
+  preferences: {},
+
+  init() {
+    const stored = localStorage.getItem('userPreferences');
+    if (stored) {
+      this.preferences = JSON.parse(stored);
+    } else {
+      this.preferences = {
+        theme: 'light',
+        language: 'en',
+        notifications: true,
+        fontSize: 16
+      };
+      this.save();
+    }
+  },
+
+  get(key) {
+    return this.preferences[key];
+  },
+
+  set(key, value) {
+    this.preferences[key] = value;
+    this.save();
+    this.dispatchChangeEvent(key, value);
+  },
+
+  save() {
+    localStorage.setItem('userPreferences', JSON.stringify(this.preferences));
+  },
+
+  reset() {
+    this.preferences = {
+      theme: 'light',
+      language: 'en',
+      notifications: true,
+      fontSize: 16
+    };
+    this.save();
+    this.dispatchChangeEvent('reset', this.preferences);
+  },
+
+  getAll() {
+    return { ...this.preferences };
+  },
+
+  dispatchChangeEvent(key, value) {
+    const event = new CustomEvent('preferencesChanged', {
+      detail: { key, value, all: this.getAll() }
+    });
+    window.dispatchEvent(event);
+  }
+};
+
+UserPreferences.init();
