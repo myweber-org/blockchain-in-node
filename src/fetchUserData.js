@@ -298,4 +298,34 @@ function displayErrorMessage(message) {
 document.addEventListener('DOMContentLoaded', function() {
   const userId = 1;
   fetchUserData(userId);
-});
+});function fetchUserData(userId) {
+  const cacheKey = `user_${userId}`;
+  const cachedData = localStorage.getItem(cacheKey);
+  
+  if (cachedData) {
+    const parsedData = JSON.parse(cachedData);
+    if (Date.now() - parsedData.timestamp < 300000) {
+      return Promise.resolve(parsedData.data);
+    }
+  }
+
+  return fetch(`https://api.example.com/users/${userId}`)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(userData => {
+      const cacheObject = {
+        data: userData,
+        timestamp: Date.now()
+      };
+      localStorage.setItem(cacheKey, JSON.stringify(cacheObject));
+      return userData;
+    })
+    .catch(error => {
+      console.error('Failed to fetch user data:', error);
+      throw error;
+    });
+}
