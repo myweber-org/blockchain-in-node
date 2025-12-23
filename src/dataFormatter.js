@@ -1,68 +1,4 @@
-function formatDateToISOWithOffset(date) {
-    const pad = (num) => num.toString().padStart(2, '0');
-    const year = date.getFullYear();
-    const month = pad(date.getMonth() + 1);
-    const day = pad(date.getDate());
-    const hours = pad(date.getHours());
-    const minutes = pad(date.getMinutes());
-    const seconds = pad(date.getSeconds());
-
-    const offset = -date.getTimezoneOffset();
-    const sign = offset >= 0 ? '+' : '-';
-    const offsetHours = pad(Math.floor(Math.abs(offset) / 60));
-    const offsetMinutes = pad(Math.abs(offset) % 60);
-
-    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}${sign}${offsetHours}:${offsetMinutes}`;
-}
-
-export { formatDateToISOWithOffset };function formatDateWithTimezone(date) {
-    if (!(date instanceof Date) || isNaN(date)) {
-        throw new TypeError('Invalid Date object provided');
-    }
-
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
-
-    const timezoneOffset = -date.getTimezoneOffset();
-    const offsetHours = Math.floor(Math.abs(timezoneOffset) / 60);
-    const offsetMinutes = Math.abs(timezoneOffset) % 60;
-    const offsetSign = timezoneOffset >= 0 ? '+' : '-';
-
-    const formattedOffset = `${offsetSign}${String(offsetHours).padStart(2, '0')}:${String(offsetMinutes).padStart(2, '0')}`;
-
-    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}${formattedOffset}`;
-}
-
-function isValidDateString(dateString) {
-    const date = new Date(dateString);
-    return !isNaN(date.getTime());
-}
-
-export { formatDateWithTimezone, isValidDateString };function formatDateToISOWithOffset(date) {
-    if (!(date instanceof Date)) {
-        throw new TypeError('Input must be a Date object');
-    }
-
-    const pad = (num) => num.toString().padStart(2, '0');
-
-    const year = date.getFullYear();
-    const month = pad(date.getMonth() + 1);
-    const day = pad(date.getDate());
-    const hours = pad(date.getHours());
-    const minutes = pad(date.getMinutes());
-    const seconds = pad(date.getSeconds());
-
-    const tzOffset = -date.getTimezoneOffset();
-    const sign = tzOffset >= 0 ? '+' : '-';
-    const offsetHours = pad(Math.floor(Math.abs(tzOffset) / 60));
-    const offsetMinutes = pad(Math.abs(tzOffset) % 60);
-
-    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}${sign}${offsetHours}:${offsetMinutes}`;
-}function formatDateWithTimezone(date) {
+function formatDateWithTimezone(date) {
     if (!(date instanceof Date)) {
         throw new TypeError('Input must be a Date object');
     }
@@ -75,22 +11,9 @@ export { formatDateWithTimezone, isValidDateString };function formatDateToISOWit
     const seconds = String(date.getSeconds()).padStart(2, '0');
 
     const timezoneOffset = -date.getTimezoneOffset();
-    const offsetHours = Math.floor(Math.abs(timezoneOffset) / 60);
-    const offsetMinutes = Math.abs(timezoneOffset) % 60;
+    const offsetHours = String(Math.floor(Math.abs(timezoneOffset) / 60)).padStart(2, '0');
+    const offsetMinutes = String(Math.abs(timezoneOffset) % 60).padStart(2, '0');
     const offsetSign = timezoneOffset >= 0 ? '+' : '-';
 
-    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}${offsetSign}${String(offsetHours).padStart(2, '0')}:${String(offsetMinutes).padStart(2, '0')}`;
-}
-
-export { formatDateWithTimezone };function formatRelativeTime(dateString) {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInSeconds = Math.floor((now - date) / 1000);
-    
-    if (diffInSeconds < 60) return 'just now';
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
-    
-    return date.toLocaleDateString();
+    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}${offsetSign}${offsetHours}:${offsetMinutes}`;
 }
