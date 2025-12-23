@@ -143,4 +143,52 @@ function validateFormData(formData) {
     };
 }
 
-export { sanitizeInput, validateFormData };
+export { sanitizeInput, validateFormData };function validateEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+function validatePhone(phone) {
+    const phoneRegex = /^\+?[\d\s\-\(\)]{10,}$/;
+    return phoneRegex.test(phone);
+}
+
+function sanitizeInput(input) {
+    return input
+        .replace(/[<>]/g, '')
+        .trim()
+        .substring(0, 255);
+}
+
+function validateFormData(data) {
+    const errors = [];
+    
+    if (!validateEmail(data.email)) {
+        errors.push('Invalid email format');
+    }
+    
+    if (!validatePhone(data.phone)) {
+        errors.push('Invalid phone number');
+    }
+    
+    if (data.name && data.name.length > 100) {
+        errors.push('Name exceeds maximum length');
+    }
+    
+    return {
+        isValid: errors.length === 0,
+        errors: errors,
+        sanitizedData: {
+            name: sanitizeInput(data.name || ''),
+            email: data.email.toLowerCase(),
+            phone: data.phone.replace(/\D/g, '')
+        }
+    };
+}
+
+module.exports = {
+    validateEmail,
+    validatePhone,
+    sanitizeInput,
+    validateFormData
+};
