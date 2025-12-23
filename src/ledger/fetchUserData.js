@@ -106,4 +106,20 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error fetching user data:', error);
             throw error;
         });
+}async function fetchUserData() {
+  const url = 'https://jsonplaceholder.typicode.com/users/1';
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    console.log('User Data:', data);
+    return data;
+  } catch (error) {
+    console.error('Failed to fetch user data:', error);
+    return null;
+  }
 }
+
+fetchUserData();
