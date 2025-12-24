@@ -35,4 +35,31 @@ function validateUserProfile(user) {
         isValid: errors.length === 0,
         errors: errors
     };
+}function validateUserProfile(profile) {
+    const errors = [];
+
+    if (!profile.username || profile.username.trim().length < 3) {
+        errors.push("Username must be at least 3 characters long");
+    }
+
+    if (!profile.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profile.email)) {
+        errors.push("Please provide a valid email address");
+    }
+
+    if (profile.age && (profile.age < 18 || profile.age > 120)) {
+        errors.push("Age must be between 18 and 120");
+    }
+
+    if (profile.preferences) {
+        if (!Array.isArray(profile.preferences)) {
+            errors.push("Preferences must be an array");
+        } else if (profile.preferences.length > 10) {
+            errors.push("Cannot have more than 10 preferences");
+        }
+    }
+
+    return {
+        isValid: errors.length === 0,
+        errors: errors
+    };
 }
