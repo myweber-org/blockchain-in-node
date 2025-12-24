@@ -107,4 +107,31 @@ fetchUserData(1);function fetchUserData(userId, maxRetries = 3) {
             console.error('Failed to fetch user data:', error);
             throw error;
         });
+}async function fetchUserData(apiUrl) {
+    try {
+        const response = await fetch(apiUrl);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        return processUserData(data);
+    } catch (error) {
+        console.error('Failed to fetch user data:', error);
+        return null;
+    }
+}
+
+function processUserData(users) {
+    if (!Array.isArray(users)) {
+        return [];
+    }
+    return users
+        .filter(user => user.age >= 18)
+        .map(user => ({
+            id: user.id,
+            name: user.name.toUpperCase(),
+            age: user.age,
+            isActive: user.status === 'active'
+        }))
+        .sort((a, b) => b.age - a.age);
 }
