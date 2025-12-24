@@ -600,4 +600,129 @@ userPreferencesManager.initialize();const userPreferencesManager = (() => {
     getAll: getAllPreferences,
     subscribe
   };
+})();const UserPreferencesManager = (() => {
+    const STORAGE_KEY = 'app_user_preferences';
+    
+    const defaultPreferences = {
+        theme: 'light',
+        fontSize: 16,
+        notifications: true,
+        language: 'en',
+        autoSave: true,
+        sidebarCollapsed: false
+    };
+
+    const validatePreference = (key, value) => {
+        const validators = {
+            theme: (val) => ['light', 'dark', 'auto'].includes(val),
+            fontSize: (val) => Number.isInteger(val) && val >= 12 && val <= 24,
+            notifications: (val) => typeof val === 'boolean',
+            language: (val) => ['en', 'es', 'fr', 'de'].includes(val),
+            autoSave: (val) => typeof val === 'boolean',
+            sidebarCollapsed: (val) => typeof val === 'boolean'
+        };
+        
+        return validators[key] ? validators[key](value) : false;
+    };
+
+    const loadPreferences = () => {
+        try {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (!stored) return { ...defaultPreferences };
+            
+            const parsed = JSON.parse(stored);
+            return { ...defaultPreferences, ...parsed };
+        } catch (error) {
+            console.error('Failed to load preferences:', error);
+            return { ...defaultPreferences };
+        }
+    };
+
+    const savePreferences = (preferences) => {
+        try {
+            const validPreferences = {};
+            
+            Object.keys(preferences).forEach(key => {
+                if (validatePreference(key, preferences[key])) {
+                    validPreferences[key] = preferences[key];
+                }
+            });
+            
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(validPreferences));
+            return true;
+        } catch (error) {
+            console.error('Failed to save preferences:', error);
+            return false;
+        }
+    };
+
+    const resetToDefaults = () => {
+        return savePreferences(defaultPreferences);
+    };
+
+    const getPreference = (key) => {
+        const preferences = loadPreferences();
+        return preferences[key] !== undefined ? preferences[key] : null;
+    };
+
+    const setPreference = (key, value) => {
+        if (!validatePreference(key, value)) {
+            console.warn(`Invalid preference value for ${key}:`, value);
+            return false;
+        }
+        
+        const currentPreferences = loadPreferences();
+        const updatedPreferences = { ...currentPreferences, [key]: value };
+        
+        return savePreferences(updatedPreferences);
+    };
+
+    const setMultiplePreferences = (updates) => {
+        const currentPreferences = loadPreferences();
+        const updatedPreferences = { ...currentPreferences };
+        let success = true;
+        
+        Object.entries(updates).forEach(([key, value]) => {
+            if (validatePreference(key, value)) {
+                updatedPreferences[key] = value;
+            } else {
+                console.warn(`Invalid preference value for ${key}:`, value);
+                success = false;
+            }
+        });
+        
+        return savePreferences(updatedPreferences) && success;
+    };
+
+    const getAllPreferences = () => {
+        return loadPreferences();
+    };
+
+    const subscribe = (callback) => {
+        const storageHandler = (event) => {
+            if (event.key === STORAGE_KEY) {
+                callback(getAllPreferences());
+            }
+        };
+        
+        window.addEventListener('storage', storageHandler);
+        
+        return () => {
+            window.removeEventListener('storage', storageHandler);
+        };
+    };
+
+    return {
+        get: getPreference,
+        set: setPreference,
+        setMultiple: setMultiplePreferences,
+        getAll: getAllPreferences,
+        reset: resetToDefaults,
+        subscribe,
+        validate: validatePreference
+    };
 })();
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = UserPreferencesManager;
+}
