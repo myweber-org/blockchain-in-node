@@ -476,4 +476,54 @@ if (typeof module !== 'undefined' && module.exports) {
   }
 };
 
-UserPreferences.init();
+UserPreferences.init();const userPreferencesManager = {
+    preferences: {},
+
+    initialize: function() {
+        const stored = localStorage.getItem('userPreferences');
+        if (stored) {
+            this.preferences = JSON.parse(stored);
+        } else {
+            this.preferences = {
+                theme: 'light',
+                language: 'en',
+                notifications: true,
+                fontSize: 16
+            };
+            this.save();
+        }
+    },
+
+    getPreference: function(key) {
+        return this.preferences[key];
+    },
+
+    setPreference: function(key, value) {
+        this.preferences[key] = value;
+        this.save();
+        this.dispatchChangeEvent(key, value);
+    },
+
+    save: function() {
+        localStorage.setItem('userPreferences', JSON.stringify(this.preferences));
+    },
+
+    reset: function() {
+        this.preferences = {
+            theme: 'light',
+            language: 'en',
+            notifications: true,
+            fontSize: 16
+        };
+        this.save();
+    },
+
+    dispatchChangeEvent: function(key, value) {
+        const event = new CustomEvent('preferenceChanged', {
+            detail: { key, value }
+        });
+        window.dispatchEvent(event);
+    }
+};
+
+userPreferencesManager.initialize();
