@@ -2,31 +2,23 @@ function calculateFibonacci(n) {
     if (n <= 0) return [];
     if (n === 1) return [0];
     
-    const sequence = [0, 1];
+    let sequence = [0, 1];
     for (let i = 2; i < n; i++) {
         sequence.push(sequence[i - 1] + sequence[i - 2]);
     }
     return sequence;
 }
 
-function isFibonacciNumber(num) {
-    if (num < 0) return false;
-    if (num === 0 || num === 1) return true;
+function displayFibonacci() {
+    const input = document.getElementById('fibInput');
+    const resultDiv = document.getElementById('fibResult');
     
-    let a = 0, b = 1;
-    while (b < num) {
-        const temp = b;
-        b = a + b;
-        a = temp;
+    const n = parseInt(input.value);
+    if (isNaN(n) || n < 1 || n > 50) {
+        resultDiv.textContent = 'Please enter a number between 1 and 50';
+        return;
     }
-    return b === num;
+    
+    const fibSequence = calculateFibonacci(n);
+    resultDiv.textContent = `Fibonacci sequence (${n} terms): ${fibSequence.join(', ')}`;
 }
-
-module.exports = { calculateFibonacci, isFibonacciNumber };function fibonacci(n, memo = {}) {
-    if (n in memo) return memo[n];
-    if (n <= 2) return 1;
-    memo[n] = fibonacci(n - 1, memo) + fibonacci(n - 2, memo);
-    return memo[n];
-}
-
-console.log(fibonacci(10));
