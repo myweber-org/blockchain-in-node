@@ -31,4 +31,21 @@ function displayUserInfo(user) {
 }
 
 // Example usage
-// fetchUserData(1);
+// fetchUserData(1);async function fetchUserData() {
+    const apiUrl = 'https://jsonplaceholder.typicode.com/users';
+
+    try {
+        const response = await fetch(apiUrl);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const users = await response.json();
+        console.log('Fetched users:', users);
+        return users;
+    } catch (error) {
+        console.error('Failed to fetch user data:', error);
+        throw error;
+    }
+}
+
+fetchUserData();
