@@ -1,47 +1,75 @@
-const UserPreferencesManager = (function() {
-    const STORAGE_KEY = 'user_preferences';
-    
-    function getPreferences() {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        return stored ? JSON.parse(stored) : {};
+const UserPreferencesManager = (() => {
+  const PREFIX = 'user_pref_';
+  
+  const setPreference = (key, value) => {
+    try {
+      const serializedValue = JSON.stringify(value);
+      localStorage.setItem(PREFIX + key, serializedValue);
+      return true;
+    } catch (error) {
+      console.error('Failed to save preference:', error);
+      return false;
     }
-    
-    function setPreference(key, value) {
-        const preferences = getPreferences();
-        preferences[key] = value;
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
-        return true;
+  };
+
+  const getPreference = (key, defaultValue = null) => {
+    try {
+      const item = localStorage.getItem(PREFIX + key);
+      return item ? JSON.parse(item) : defaultValue;
+    } catch (error) {
+      console.error('Failed to retrieve preference:', error);
+      return defaultValue;
     }
-    
-    function getPreference(key, defaultValue = null) {
-        const preferences = getPreferences();
-        return preferences.hasOwnProperty(key) ? preferences[key] : defaultValue;
+  };
+
+  const removePreference = (key) => {
+    try {
+      localStorage.removeItem(PREFIX + key);
+      return true;
+    } catch (error) {
+      console.error('Failed to remove preference:', error);
+      return false;
     }
-    
-    function removePreference(key) {
-        const preferences = getPreferences();
-        if (preferences.hasOwnProperty(key)) {
-            delete preferences[key];
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
-            return true;
+  };
+
+  const clearAllPreferences = () => {
+    try {
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith(PREFIX)) {
+          keysToRemove.push(key);
         }
-        return false;
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+      return true;
+    } catch (error) {
+      console.error('Failed to clear preferences:', error);
+      return false;
     }
-    
-    function clearAllPreferences() {
-        localStorage.removeItem(STORAGE_KEY);
-        return true;
+  };
+
+  const getAllPreferences = () => {
+    const preferences = {};
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith(PREFIX)) {
+          const preferenceKey = key.substring(PREFIX.length);
+          preferences[preferenceKey] = getPreference(preferenceKey);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to retrieve all preferences:', error);
     }
-    
-    function getAllPreferences() {
-        return getPreferences();
-    }
-    
-    return {
-        get: getPreference,
-        set: setPreference,
-        remove: removePreference,
-        clear: clearAllPreferences,
-        getAll: getAllPreferences
-    };
+    return preferences;
+  };
+
+  return {
+    set: setPreference,
+    get: getPreference,
+    remove: removePreference,
+    clear: clearAllPreferences,
+    getAll: getAllPreferences
+  };
 })();
