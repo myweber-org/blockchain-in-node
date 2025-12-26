@@ -90,4 +90,47 @@ function getStrengthDescription(score) {
     return descriptions[score] || "Unknown";
 }
 
-export { checkPasswordStrength, calculateStrengthScore };
+export { checkPasswordStrength, calculateStrengthScore };function calculatePasswordEntropy(password) {
+    const charSets = {
+        lowercase: /[a-z]/.test(password),
+        uppercase: /[A-Z]/.test(password),
+        numbers: /\d/.test(password),
+        symbols: /[^a-zA-Z0-9]/.test(password)
+    };
+    
+    let poolSize = 0;
+    if (charSets.lowercase) poolSize += 26;
+    if (charSets.uppercase) poolSize += 26;
+    if (charSets.numbers) poolSize += 10;
+    if (charSets.symbols) poolSize += 32;
+    
+    if (poolSize === 0) return 0;
+    
+    const entropy = Math.log2(Math.pow(poolSize, password.length));
+    return Math.round(entropy * 100) / 100;
+}
+
+function evaluatePasswordStrength(password) {
+    const entropy = calculatePasswordEntropy(password);
+    
+    if (password.length < 8) return 'Very Weak';
+    if (entropy < 40) return 'Weak';
+    if (entropy < 60) return 'Moderate';
+    if (entropy < 80) return 'Strong';
+    return 'Very Strong';
+}
+
+function validatePassword(password) {
+    const strength = evaluatePasswordStrength(password);
+    const entropy = calculatePasswordEntropy(password);
+    
+    return {
+        password: password,
+        length: password.length,
+        entropy: entropy,
+        strength: strength,
+        timestamp: new Date().toISOString()
+    };
+}
+
+export { validatePassword, calculatePasswordEntropy, evaluatePasswordStrength };
