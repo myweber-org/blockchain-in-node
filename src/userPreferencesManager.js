@@ -1,268 +1,92 @@
-const UserPreferences = {
-  storageKey: 'app_preferences',
-
-  defaults: {
+const UserPreferencesManager = (() => {
+  const STORAGE_KEY = 'app_user_preferences';
+  
+  const defaultPreferences = {
     theme: 'light',
     fontSize: 16,
     notifications: true,
-    language: 'en'
-  },
+    language: 'en',
+    autoSave: true,
+    sidebarCollapsed: false
+  };
 
-  load() {
+  const getPreferences = () => {
     try {
-      const stored = localStorage.getItem(this.storageKey);
-      if (stored) {
-        return { ...this.defaults, ...JSON.parse(stored) };
-      }
+      const stored = localStorage.getItem(STORAGE_KEY);
+      return stored ? { ...defaultPreferences, ...JSON.parse(stored) } : { ...defaultPreferences };
     } catch (error) {
-      console.warn('Failed to load preferences:', error);
+      console.error('Failed to load preferences:', error);
+      return { ...defaultPreferences };
     }
-    return { ...this.defaults };
-  },
+  };
 
-  save(preferences) {
+  const savePreferences = (updates) => {
     try {
-      const validPrefs = this.validate(preferences);
-      localStorage.setItem(this.storageKey, JSON.stringify(validPrefs));
-      return true;
+      const current = getPreferences();
+      const updated = { ...current, ...updates };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      return updated;
     } catch (error) {
       console.error('Failed to save preferences:', error);
-      return false;
+      return null;
     }
-  },
+  };
 
-  validate(preferences) {
-    const validated = { ...this.defaults };
-    
-    if (preferences.theme && ['light', 'dark', 'auto'].includes(preferences.theme)) {
-      validated.theme = preferences.theme;
+  const resetPreferences = () => {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      return { ...defaultPreferences };
+    } catch (error) {
+      console.error('Failed to reset preferences:', error);
+      return null;
     }
-    
-    if (typeof preferences.fontSize === 'number' && preferences.fontSize >= 12 && preferences.fontSize <= 24) {
-      validated.fontSize = preferences.fontSize;
-    }
-    
-    if (typeof preferences.notifications === 'boolean') {
-      validated.notifications = preferences.notifications;
-    }
-    
-    if (preferences.language && ['en', 'es', 'fr', 'de'].includes(preferences.language)) {
-      validated.language = preferences.language;
-    }
-    
-    return validated;
-  },
+  };
 
-  reset() {
-    localStorage.removeItem(this.storageKey);
-    return { ...this.defaults };
-  },
+  const exportPreferences = () => {
+    const prefs = getPreferences();
+    return JSON.stringify(prefs, null, 2);
+  };
 
-  subscribe(callback) {
+  const importPreferences = (jsonString) => {
+    try {
+      const imported = JSON.parse(jsonString);
+      return savePreferences(imported);
+    } catch (error) {
+      console.error('Failed to import preferences:', error);
+      return null;
+    }
+  };
+
+  const getPreference = (key) => {
+    const prefs = getPreferences();
+    return prefs[key] !== undefined ? prefs[key] : defaultPreferences[key];
+  };
+
+  const setPreference = (key, value) => {
+    return savePreferences({ [key]: value });
+  };
+
+  const subscribe = (callback) => {
     const handler = (event) => {
-      if (event.key === this.storageKey) {
-        callback(this.load());
+      if (event.key === STORAGE_KEY) {
+        callback(getPreferences());
       }
     };
     window.addEventListener('storage', handler);
+    
     return () => window.removeEventListener('storage', handler);
-  }
-};
+  };
 
-export default UserPreferences;const UserPreferencesManager = (() => {
-    const PREFIX = 'app_pref_';
-    const DEFAULTS = {
-        theme: 'light',
-        language: 'en',
-        notifications: true,
-        fontSize: 16
-    };
-
-    const validateKey = (key) => {
-        if (!key || typeof key !== 'string') {
-            throw new Error('Invalid preference key');
-        }
-        return true;
-    };
-
-    const getFullKey = (key) => `${PREFIX}${key}`;
-
-    const getAll = () => {
-        const preferences = { ...DEFAULTS };
-        Object.keys(localStorage).forEach((key) => {
-            if (key.startsWith(PREFIX)) {
-                const prefKey = key.replace(PREFIX, '');
-                try {
-                    preferences[prefKey] = JSON.parse(localStorage.getItem(key));
-                } catch {
-                    preferences[prefKey] = localStorage.getItem(key);
-                }
-            }
-        });
-        return preferences;
-    };
-
-    const get = (key) => {
-        validateKey(key);
-        const stored = localStorage.getItem(getFullKey(key));
-        if (stored === null) {
-            return DEFAULTS[key] !== undefined ? DEFAULTS[key] : null;
-        }
-        try {
-            return JSON.parse(stored);
-        } catch {
-            return stored;
-        }
-    };
-
-    const set = (key, value) => {
-        validateKey(key);
-        const storageValue = typeof value === 'object' ? JSON.stringify(value) : value;
-        localStorage.setItem(getFullKey(key), storageValue);
-        return true;
-    };
-
-    const remove = (key) => {
-        validateKey(key);
-        localStorage.removeItem(getFullKey(key));
-        return true;
-    };
-
-    const reset = () => {
-        Object.keys(localStorage).forEach((key) => {
-            if (key.startsWith(PREFIX)) {
-                localStorage.removeItem(key);
-            }
-        });
-        return true;
-    };
-
-    const exportPrefs = () => {
-        return JSON.stringify(getAll());
-    };
-
-    const importPrefs = (jsonString) => {
-        try {
-            const prefs = JSON.parse(jsonString);
-            Object.keys(prefs).forEach((key) => {
-                set(key, prefs[key]);
-            });
-            return true;
-        } catch {
-            return false;
-        }
-    };
-
-    return {
-        getAll,
-        get,
-        set,
-        remove,
-        reset,
-        exportPrefs,
-        importPrefs,
-        defaults: DEFAULTS
-    };
+  return {
+    getPreferences,
+    savePreferences,
+    resetPreferences,
+    exportPreferences,
+    importPreferences,
+    getPreference,
+    setPreference,
+    subscribe
+  };
 })();
-
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = UserPreferencesManager;
-}class UserPreferencesManager {
-  constructor() {
-    this.prefs = this.loadPreferences();
-  }
-
-  loadPreferences() {
-    const stored = localStorage.getItem('userPreferences');
-    if (stored) {
-      try {
-        return JSON.parse(stored);
-      } catch (e) {
-        console.warn('Failed to parse stored preferences:', e);
-      }
-    }
-    return this.getDefaultPreferences();
-  }
-
-  getDefaultPreferences() {
-    return {
-      theme: 'light',
-      notifications: true,
-      language: 'en',
-      fontSize: 16,
-      autoSave: true,
-      showTutorial: false
-    };
-  }
-
-  getPreference(key) {
-    return this.prefs[key] !== undefined ? this.prefs[key] : null;
-  }
-
-  setPreference(key, value) {
-    if (key in this.prefs) {
-      this.prefs[key] = value;
-      this.savePreferences();
-      return true;
-    }
-    return false;
-  }
-
-  setMultiplePreferences(preferences) {
-    let updated = false;
-    for (const [key, value] of Object.entries(preferences)) {
-      if (key in this.prefs) {
-        this.prefs[key] = value;
-        updated = true;
-      }
-    }
-    if (updated) {
-      this.savePreferences();
-    }
-    return updated;
-  }
-
-  savePreferences() {
-    try {
-      localStorage.setItem('userPreferences', JSON.stringify(this.prefs));
-      return true;
-    } catch (e) {
-      console.error('Failed to save preferences:', e);
-      return false;
-    }
-  }
-
-  resetToDefaults() {
-    this.prefs = this.getDefaultPreferences();
-    this.savePreferences();
-  }
-
-  getAllPreferences() {
-    return { ...this.prefs };
-  }
-
-  exportPreferences() {
-    return JSON.stringify(this.prefs, null, 2);
-  }
-
-  importPreferences(jsonString) {
-    try {
-      const imported = JSON.parse(jsonString);
-      const validKeys = Object.keys(this.getDefaultPreferences());
-      
-      for (const key of validKeys) {
-        if (key in imported) {
-          this.prefs[key] = imported[key];
-        }
-      }
-      
-      this.savePreferences();
-      return true;
-    } catch (e) {
-      console.error('Failed to import preferences:', e);
-      return false;
-    }
-  }
-}
 
 export default UserPreferencesManager;
