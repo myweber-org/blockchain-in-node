@@ -12,12 +12,12 @@ function validateUserInput(username, email) {
     if (!emailRegex.test(email)) {
         return {
             valid: false,
-            message: "Please provide a valid email address."
+            message: "Please enter a valid email address."
         };
     }
     
     return {
         valid: true,
-        message: "Input validation passed."
+        message: "Input validation successful."
     };
 }
