@@ -167,4 +167,102 @@ export default UserPreferences;const UserPreferencesManager = (() => {
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = UserPreferencesManager;
+}class UserPreferencesManager {
+  constructor() {
+    this.prefs = this.loadPreferences();
+  }
+
+  loadPreferences() {
+    const stored = localStorage.getItem('userPreferences');
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch (e) {
+        console.warn('Failed to parse stored preferences:', e);
+      }
+    }
+    return this.getDefaultPreferences();
+  }
+
+  getDefaultPreferences() {
+    return {
+      theme: 'light',
+      notifications: true,
+      language: 'en',
+      fontSize: 16,
+      autoSave: true,
+      showTutorial: false
+    };
+  }
+
+  getPreference(key) {
+    return this.prefs[key] !== undefined ? this.prefs[key] : null;
+  }
+
+  setPreference(key, value) {
+    if (key in this.prefs) {
+      this.prefs[key] = value;
+      this.savePreferences();
+      return true;
+    }
+    return false;
+  }
+
+  setMultiplePreferences(preferences) {
+    let updated = false;
+    for (const [key, value] of Object.entries(preferences)) {
+      if (key in this.prefs) {
+        this.prefs[key] = value;
+        updated = true;
+      }
+    }
+    if (updated) {
+      this.savePreferences();
+    }
+    return updated;
+  }
+
+  savePreferences() {
+    try {
+      localStorage.setItem('userPreferences', JSON.stringify(this.prefs));
+      return true;
+    } catch (e) {
+      console.error('Failed to save preferences:', e);
+      return false;
+    }
+  }
+
+  resetToDefaults() {
+    this.prefs = this.getDefaultPreferences();
+    this.savePreferences();
+  }
+
+  getAllPreferences() {
+    return { ...this.prefs };
+  }
+
+  exportPreferences() {
+    return JSON.stringify(this.prefs, null, 2);
+  }
+
+  importPreferences(jsonString) {
+    try {
+      const imported = JSON.parse(jsonString);
+      const validKeys = Object.keys(this.getDefaultPreferences());
+      
+      for (const key of validKeys) {
+        if (key in imported) {
+          this.prefs[key] = imported[key];
+        }
+      }
+      
+      this.savePreferences();
+      return true;
+    } catch (e) {
+      console.error('Failed to import preferences:', e);
+      return false;
+    }
+  }
 }
+
+export default UserPreferencesManager;
