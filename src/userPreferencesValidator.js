@@ -37,4 +37,27 @@ function validateUserPreferences(preferences) {
     }
     
     return true;
+}function validateUserPreferences(preferences) {
+    const requiredFields = ['theme', 'notifications', 'language'];
+    const validationRules = {
+        theme: ['light', 'dark', 'auto'],
+        notifications: ['enabled', 'disabled'],
+        language: ['en', 'es', 'fr', 'de']
+    };
+
+    for (const field of requiredFields) {
+        if (!preferences.hasOwnProperty(field)) {
+            throw new Error(`Missing required field: ${field}`);
+        }
+    }
+
+    for (const [field, value] of Object.entries(preferences)) {
+        if (validationRules[field]) {
+            if (!validationRules[field].includes(value)) {
+                throw new Error(`Invalid value for ${field}: ${value}. Allowed values: ${validationRules[field].join(', ')}`);
+            }
+        }
+    }
+
+    return true;
 }
