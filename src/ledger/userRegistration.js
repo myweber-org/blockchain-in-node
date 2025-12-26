@@ -1,23 +1,31 @@
-function validateRegistrationForm(email, password, confirmPassword) {
+function validateEmail(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/;
-    
-    if (!emailRegex.test(email)) {
-        return { isValid: false, message: "Invalid email format" };
+    return emailRegex.test(email);
+}
+
+function validatePassword(password) {
+    return password.length >= 8 && /[A-Z]/.test(password) && /\d/.test(password);
+}
+
+function validateRegistrationForm(email, password, confirmPassword) {
+    const errors = [];
+
+    if (!validateEmail(email)) {
+        errors.push('Invalid email format');
     }
-    
-    if (!passwordRegex.test(password)) {
-        return { 
-            isValid: false, 
-            message: "Password must be at least 8 characters with letters and numbers" 
-        };
+
+    if (!validatePassword(password)) {
+        errors.push('Password must be at least 8 characters with one uppercase letter and one number');
     }
-    
+
     if (password !== confirmPassword) {
-        return { isValid: false, message: "Passwords do not match" };
+        errors.push('Passwords do not match');
     }
-    
-    return { isValid: true, message: "Registration validation successful" };
+
+    return {
+        isValid: errors.length === 0,
+        errors: errors
+    };
 }
 
 function handleRegistrationSubmit(event) {
@@ -29,11 +37,11 @@ function handleRegistrationSubmit(event) {
     
     const validationResult = validateRegistrationForm(email, password, confirmPassword);
     
-    const resultDiv = document.getElementById('validationResult');
-    resultDiv.textContent = validationResult.message;
-    resultDiv.className = validationResult.isValid ? 'success' : 'error';
-    
     if (validationResult.isValid) {
-        console.log('Registration data valid, proceeding with submission...');
+        console.log('Registration successful');
+        return true;
+    } else {
+        console.log('Registration failed:', validationResult.errors);
+        return false;
     }
 }
