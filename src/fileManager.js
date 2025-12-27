@@ -36,4 +36,47 @@ class FileManager {
   }
 }
 
-module.exports = FileManager;
+module.exports = FileManager;class FileManager {
+  constructor() {
+    this.files = new Map();
+  }
+
+  createFile(filename, content) {
+    if (this.files.has(filename)) {
+      throw new Error(`File ${filename} already exists`);
+    }
+    this.files.set(filename, content);
+    return { filename, content };
+  }
+
+  readFile(filename) {
+    if (!this.files.has(filename)) {
+      throw new Error(`File ${filename} not found`);
+    }
+    return this.files.get(filename);
+  }
+
+  deleteFile(filename) {
+    if (!this.files.has(filename)) {
+      throw new Error(`File ${filename} not found`);
+    }
+    this.files.delete(filename);
+    return true;
+  }
+
+  listFiles() {
+    return Array.from(this.files.keys());
+  }
+
+  getFileCount() {
+    return this.files.size;
+  }
+}
+
+const manager = new FileManager();
+manager.createFile('config.json', '{"theme": "dark"}');
+manager.createFile('notes.txt', 'Meeting at 3 PM');
+console.log(manager.listFiles());
+console.log(manager.readFile('config.json'));
+manager.deleteFile('notes.txt');
+console.log(manager.getFileCount());
