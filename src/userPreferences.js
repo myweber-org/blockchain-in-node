@@ -129,4 +129,39 @@ function mergePreferences(existingPrefs, newPrefs) {
   return { ...existingPrefs, ...validatedNewPrefs };
 }
 
-export { defaultPreferences, validatePreferences, mergePreferences };
+export { defaultPreferences, validatePreferences, mergePreferences };const defaultPreferences = {
+  theme: 'light',
+  language: 'en',
+  notifications: true,
+  fontSize: 14,
+  autoSave: false
+};
+
+function validatePreferences(userPrefs) {
+  const validKeys = Object.keys(defaultPreferences);
+  const validatedPrefs = { ...defaultPreferences };
+
+  for (const key in userPrefs) {
+    if (validKeys.includes(key)) {
+      const value = userPrefs[key];
+      const defaultValue = defaultPreferences[key];
+      
+      if (typeof value === typeof defaultValue) {
+        validatedPrefs[key] = value;
+      }
+    }
+  }
+
+  return validatedPrefs;
+}
+
+function mergePreferences(existingPrefs, newPrefs) {
+  const validatedNew = validatePreferences(newPrefs);
+  return { ...existingPrefs, ...validatedNew };
+}
+
+function resetToDefaults() {
+  return { ...defaultPreferences };
+}
+
+export { validatePreferences, mergePreferences, resetToDefaults, defaultPreferences };
