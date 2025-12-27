@@ -87,4 +87,46 @@ function loadPreferences() {
         }
     }
     return validateUserPreferences({});
+}const defaultPreferences = {
+  theme: 'light',
+  fontSize: 16,
+  notifications: true,
+  language: 'en'
+};
+
+function validatePreferences(userPrefs) {
+  const validPrefs = {};
+  
+  Object.keys(defaultPreferences).forEach(key => {
+    if (userPrefs.hasOwnProperty(key)) {
+      const value = userPrefs[key];
+      switch(key) {
+        case 'theme':
+          validPrefs[key] = ['light', 'dark', 'auto'].includes(value) ? value : defaultPreferences[key];
+          break;
+        case 'fontSize':
+          validPrefs[key] = Number.isInteger(value) && value >= 12 && value <= 24 ? value : defaultPreferences[key];
+          break;
+        case 'notifications':
+          validPrefs[key] = typeof value === 'boolean' ? value : defaultPreferences[key];
+          break;
+        case 'language':
+          validPrefs[key] = ['en', 'es', 'fr', 'de'].includes(value) ? value : defaultPreferences[key];
+          break;
+        default:
+          validPrefs[key] = defaultPreferences[key];
+      }
+    } else {
+      validPrefs[key] = defaultPreferences[key];
+    }
+  });
+  
+  return validPrefs;
 }
+
+function mergePreferences(existingPrefs, newPrefs) {
+  const validatedNewPrefs = validatePreferences(newPrefs);
+  return { ...existingPrefs, ...validatedNewPrefs };
+}
+
+export { defaultPreferences, validatePreferences, mergePreferences };
