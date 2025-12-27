@@ -203,4 +203,143 @@ if (typeof module !== 'undefined' && module.exports) {
         resetPreferences,
         getPreference
     };
+})();const UserPreferencesManager = (() => {
+  const STORAGE_KEY = 'user_preferences';
+  
+  const defaultPreferences = {
+    theme: 'light',
+    language: 'en',
+    notifications: true,
+    fontSize: 16,
+    autoSave: true,
+    lastUpdated: null
+  };
+
+  const validatePreference = (key, value) => {
+    const validators = {
+      theme: (val) => ['light', 'dark', 'auto'].includes(val),
+      language: (val) => ['en', 'es', 'fr', 'de'].includes(val),
+      notifications: (val) => typeof val === 'boolean',
+      fontSize: (val) => Number.isInteger(val) && val >= 12 && val <= 24,
+      autoSave: (val) => typeof val === 'boolean',
+      lastUpdated: (val) => val === null || val instanceof Date
+    };
+
+    return validators[key] ? validators[key](value) : false;
+  };
+
+  const loadPreferences = () => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (!stored) return { ...defaultPreferences };
+      
+      const parsed = JSON.parse(stored);
+      const merged = { ...defaultPreferences, ...parsed };
+      
+      Object.keys(merged).forEach(key => {
+        if (!validatePreference(key, merged[key])) {
+          merged[key] = defaultPreferences[key];
+        }
+      });
+      
+      return merged;
+    } catch (error) {
+      console.error('Failed to load preferences:', error);
+      return { ...defaultPreferences };
+    }
+  };
+
+  const savePreferences = (preferences) => {
+    try {
+      const validated = {};
+      
+      Object.keys(preferences).forEach(key => {
+        if (validatePreference(key, preferences[key])) {
+          validated[key] = preferences[key];
+        }
+      });
+      
+      validated.lastUpdated = new Date().toISOString();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(validated));
+      return true;
+    } catch (error) {
+      console.error('Failed to save preferences:', error);
+      return false;
+    }
+  };
+
+  const resetPreferences = () => {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      return true;
+    } catch (error) {
+      console.error('Failed to reset preferences:', error);
+      return false;
+    }
+  };
+
+  const getPreference = (key) => {
+    const preferences = loadPreferences();
+    return preferences[key] !== undefined ? preferences[key] : null;
+  };
+
+  const setPreference = (key, value) => {
+    if (!validatePreference(key, value)) {
+      throw new Error(`Invalid value for preference "${key}"`);
+    }
+    
+    const preferences = loadPreferences();
+    preferences[key] = value;
+    return savePreferences(preferences);
+  };
+
+  const getAllPreferences = () => {
+    return loadPreferences();
+  };
+
+  const setMultiplePreferences = (updates) => {
+    const preferences = loadPreferences();
+    
+    Object.keys(updates).forEach(key => {
+      if (validatePreference(key, updates[key])) {
+        preferences[key] = updates[key];
+      }
+    });
+    
+    return savePreferences(preferences);
+  };
+
+  const exportPreferences = () => {
+    const preferences = loadPreferences();
+    return JSON.stringify(preferences, null, 2);
+  };
+
+  const importPreferences = (jsonString) => {
+    try {
+      const imported = JSON.parse(jsonString);
+      return setMultiplePreferences(imported);
+    } catch (error) {
+      console.error('Failed to import preferences:', error);
+      return false;
+    }
+  };
+
+  const hasUnsavedChanges = (currentPreferences) => {
+    const saved = loadPreferences();
+    return JSON.stringify(currentPreferences) !== JSON.stringify(saved);
+  };
+
+  return {
+    get: getPreference,
+    set: setPreference,
+    getAll: getAllPreferences,
+    setMultiple: setMultiplePreferences,
+    reset: resetPreferences,
+    export: exportPreferences,
+    import: importPreferences,
+    hasUnsavedChanges: hasUnsavedChanges,
+    validate: validatePreference
+  };
 })();
+
+export default UserPreferencesManager;
