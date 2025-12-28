@@ -1,25 +1,19 @@
-function validateUserInput(input) {
-    if (typeof input !== 'string') {
-        throw new TypeError('Input must be a string');
+function validateUserInput(username, email) {
+    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    const errors = [];
+    
+    if (!usernameRegex.test(username)) {
+        errors.push('Username must be 3-20 characters and contain only letters, numbers, and underscores.');
     }
     
-    const trimmedInput = input.trim();
-    
-    if (trimmedInput.length === 0) {
-        throw new Error('Input cannot be empty or whitespace only');
+    if (!emailRegex.test(email)) {
+        errors.push('Please enter a valid email address.');
     }
     
-    const maxLength = 255;
-    if (trimmedInput.length > maxLength) {
-        throw new Error(`Input exceeds maximum length of ${maxLength} characters`);
-    }
-    
-    const dangerousPatterns = /[<>{}[\]]/g;
-    if (dangerousPatterns.test(trimmedInput)) {
-        throw new Error('Input contains potentially dangerous characters');
-    }
-    
-    return trimmedInput;
+    return {
+        isValid: errors.length === 0,
+        errors: errors
+    };
 }
-
-module.exports = validateUserInput;
