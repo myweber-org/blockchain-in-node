@@ -29,4 +29,9 @@ function testEmailValidation() {
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { validateEmail, testEmailValidation };
+}function validateEmail(email) {
+  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return regex.test(email);
 }
+
+module.exports = validateEmail;
