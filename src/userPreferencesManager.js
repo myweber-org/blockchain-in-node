@@ -1,174 +1,61 @@
-const UserPreferences = {
-    preferences: {},
+const UserPreferencesManager = (() => {
+    const STORAGE_KEY = 'app_user_preferences';
+    
+    const defaultPreferences = {
+        theme: 'light',
+        language: 'en',
+        notifications: true,
+        fontSize: 16,
+        autoSave: true,
+        sidebarCollapsed: false
+    };
 
-    init: function() {
-        const stored = localStorage.getItem('userPreferences');
-        if (stored) {
-            this.preferences = JSON.parse(stored);
-        }
-    },
-
-    setPreference: function(key, value) {
-        this.preferences[key] = value;
-        this.save();
-    },
-
-    getPreference: function(key, defaultValue = null) {
-        return this.preferences[key] || defaultValue;
-    },
-
-    removePreference: function(key) {
-        delete this.preferences[key];
-        this.save();
-    },
-
-    save: function() {
-        localStorage.setItem('userPreferences', JSON.stringify(this.preferences));
-    },
-
-    clearAll: function() {
-        this.preferences = {};
-        localStorage.removeItem('userPreferences');
-    }
-};
-
-UserPreferences.init();const USER_PREFERENCES_KEY = 'app_preferences';
-
-class UserPreferencesManager {
-    constructor() {
-        this.preferences = this.loadPreferences();
-    }
-
-    loadPreferences() {
+    const getPreferences = () => {
         try {
-            const stored = localStorage.getItem(USER_PREFERENCES_KEY);
-            return stored ? JSON.parse(stored) : this.getDefaultPreferences();
+            const stored = localStorage.getItem(STORAGE_KEY);
+            return stored ? { ...defaultPreferences, ...JSON.parse(stored) } : { ...defaultPreferences };
         } catch (error) {
             console.error('Failed to load preferences:', error);
-            return this.getDefaultPreferences();
+            return { ...defaultPreferences };
         }
-    }
+    };
 
-    getDefaultPreferences() {
-        return {
-            theme: 'light',
-            language: 'en',
-            notifications: true,
-            fontSize: 16,
-            autoSave: false,
-            lastUpdated: new Date().toISOString()
-        };
-    }
-
-    updatePreference(key, value) {
-        if (key in this.preferences) {
-            this.preferences[key] = value;
-            this.preferences.lastUpdated = new Date().toISOString();
-            this.savePreferences();
-            return true;
-        }
-        return false;
-    }
-
-    savePreferences() {
+    const savePreferences = (updates) => {
         try {
-            localStorage.setItem(USER_PREFERENCES_KEY, JSON.stringify(this.preferences));
-            return true;
+            const current = getPreferences();
+            const updated = { ...current, ...updates };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+            return updated;
         } catch (error) {
             console.error('Failed to save preferences:', error);
-            return false;
+            return null;
         }
-    }
+    };
 
-    getPreference(key) {
-        return this.preferences[key];
-    }
-
-    getAllPreferences() {
-        return { ...this.preferences };
-    }
-
-    resetToDefaults() {
-        this.preferences = this.getDefaultPreferences();
-        this.savePreferences();
-    }
-
-    exportPreferences() {
-        return JSON.stringify(this.preferences, null, 2);
-    }
-
-    importPreferences(jsonString) {
+    const resetPreferences = () => {
         try {
-            const imported = JSON.parse(jsonString);
-            this.preferences = { ...this.getDefaultPreferences(), ...imported };
-            this.savePreferences();
-            return true;
+            localStorage.removeItem(STORAGE_KEY);
+            return { ...defaultPreferences };
         } catch (error) {
-            console.error('Failed to import preferences:', error);
-            return false;
+            console.error('Failed to reset preferences:', error);
+            return null;
         }
-    }
-}
+    };
 
-const preferencesManager = new UserPreferencesManager();const UserPreferences = {
-    preferences: {},
-
-    init() {
-        this.loadPreferences();
-        return this;
-    },
-
-    loadPreferences() {
-        const stored = localStorage.getItem('userPreferences');
-        if (stored) {
-            try {
-                this.preferences = JSON.parse(stored);
-            } catch (error) {
-                console.error('Failed to parse stored preferences:', error);
-                this.preferences = {};
+    const subscribe = (callback) => {
+        const handler = (event) => {
+            if (event.key === STORAGE_KEY) {
+                callback(getPreferences());
             }
-        }
-    },
+        };
+        window.addEventListener('storage', handler);
+        return () => window.removeEventListener('storage', handler);
+    };
 
-    savePreferences() {
-        try {
-            localStorage.setItem('userPreferences', JSON.stringify(this.preferences));
-            return true;
-        } catch (error) {
-            console.error('Failed to save preferences:', error);
-            return false;
-        }
-    },
-
-    setPreference(key, value) {
-        if (typeof key !== 'string' || key.trim() === '') {
-            throw new Error('Preference key must be a non-empty string');
-        }
-        this.preferences[key] = value;
-        return this.savePreferences();
-    },
-
-    getPreference(key, defaultValue = null) {
-        return this.preferences.hasOwnProperty(key) ? this.preferences[key] : defaultValue;
-    },
-
-    removePreference(key) {
-        if (this.preferences.hasOwnProperty(key)) {
-            delete this.preferences[key];
-            return this.savePreferences();
-        }
-        return false;
-    },
-
-    clearAllPreferences() {
-        this.preferences = {};
-        localStorage.removeItem('userPreferences');
-        return true;
-    },
-
-    getAllPreferences() {
-        return { ...this.preferences };
-    }
-};
-
-export default UserPreferences.init();
+    return {
+        getPreferences,
+        savePreferences,
+        resetPreferences,
+        subscribe
+    };
+})();
