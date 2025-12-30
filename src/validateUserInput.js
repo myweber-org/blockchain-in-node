@@ -3,53 +3,37 @@ function validateUsername(username) {
     return usernameRegex.test(username);
 }
 
-function validateEmail(email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+function validatePassword(password) {
+    const minLength = 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumbers = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    
+    return password.length >= minLength && 
+           hasUpperCase && 
+           hasLowerCase && 
+           hasNumbers && 
+           hasSpecialChar;
 }
 
-function validateUserInput(username, email) {
-    const errors = [];
+function validateUserInput(username, password) {
+    const usernameValid = validateUsername(username);
+    const passwordValid = validatePassword(password);
     
-    if (!validateUsername(username)) {
-        errors.push('Username must be 3-20 characters and contain only letters, numbers, and underscores.');
+    if (!usernameValid && !passwordValid) {
+        return { valid: false, message: 'Invalid username and password' };
     }
     
-    if (!validateEmail(email)) {
-        errors.push('Please enter a valid email address.');
+    if (!usernameValid) {
+        return { valid: false, message: 'Invalid username format' };
     }
     
-    return {
-        isValid: errors.length === 0,
-        errors: errors
-    };
-}
-
-export { validateUserInput, validateUsername, validateEmail };function validateUsername(username) {
-    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
-    return usernameRegex.test(username);
-}
-
-function validateEmail(email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-}
-
-function validateUserInput(username, email) {
-    const errors = [];
-    
-    if (!validateUsername(username)) {
-        errors.push('Username must be 3-20 characters and contain only letters, numbers, and underscores');
+    if (!passwordValid) {
+        return { valid: false, message: 'Password does not meet requirements' };
     }
     
-    if (!validateEmail(email)) {
-        errors.push('Please enter a valid email address');
-    }
-    
-    return {
-        isValid: errors.length === 0,
-        errors: errors
-    };
+    return { valid: true, message: 'Validation successful' };
 }
 
-export { validateUserInput, validateUsername, validateEmail };
+export { validateUserInput, validateUsername, validatePassword };
