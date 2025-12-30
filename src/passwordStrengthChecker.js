@@ -133,4 +133,151 @@ function validatePassword(password) {
     };
 }
 
-export { validatePassword, calculatePasswordEntropy, evaluatePasswordStrength };
+export { validatePassword, calculatePasswordEntropy, evaluatePasswordStrength };function PasswordStrengthChecker(config = {}) {
+  const defaultConfig = {
+    minLength: 8,
+    requireUppercase: true,
+    requireLowercase: true,
+    requireNumbers: true,
+    requireSpecialChars: true,
+    specialChars: "!@#$%^&*()_+-=[]{}|;:,.<>?",
+    bannedWords: ["password", "admin", "123456", "qwerty"]
+  };
+
+  this.config = { ...defaultConfig, ...config };
+  this.score = 0;
+  this.maxScore = 100;
+  this.feedback = [];
+
+  this.calculateStrength = function(password) {
+    if (typeof password !== 'string') {
+      throw new Error('Password must be a string');
+    }
+
+    this.score = 0;
+    this.feedback = [];
+
+    if (password.length === 0) {
+      return { score: 0, strength: 'Empty', feedback: this.feedback };
+    }
+
+    this._checkLength(password);
+    this._checkCharacterVariety(password);
+    this._checkPatterns(password);
+    this._checkBannedWords(password);
+    this._calculateEntropy(password);
+
+    const strength = this._getStrengthLabel();
+    
+    return {
+      score: Math.min(this.score, this.maxScore),
+      strength: strength,
+      feedback: this.feedback
+    };
+  };
+
+  this._checkLength = function(password) {
+    const length = password.length;
+    if (length >= this.config.minLength) {
+      this.score += Math.min(20, (length - this.config.minLength) * 2);
+    } else {
+      this.feedback.push(`Password should be at least ${this.config.minLength} characters long`);
+    }
+  };
+
+  this._checkCharacterVariety = function(password) {
+    let varietyScore = 0;
+    
+    if (this.config.requireUppercase && /[A-Z]/.test(password)) {
+      varietyScore += 10;
+    } else if (this.config.requireUppercase) {
+      this.feedback.push('Add uppercase letters');
+    }
+
+    if (this.config.requireLowercase && /[a-z]/.test(password)) {
+      varietyScore += 10;
+    } else if (this.config.requireLowercase) {
+      this.feedback.push('Add lowercase letters');
+    }
+
+    if (this.config.requireNumbers && /\d/.test(password)) {
+      varietyScore += 10;
+    } else if (this.config.requireNumbers) {
+      this.feedback.push('Add numbers');
+    }
+
+    const specialRegex = new RegExp(`[${this.config.specialChars.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}]`);
+    if (this.config.requireSpecialChars && specialRegex.test(password)) {
+      varietyScore += 10;
+    } else if (this.config.requireSpecialChars) {
+      this.feedback.push('Add special characters');
+    }
+
+    this.score += varietyScore;
+  };
+
+  this._checkPatterns = function(password) {
+    const patterns = [
+      /(.)\1{2,}/, // Repeated characters
+      /(abc|bcd|cde|def|efg|fgh|ghi|hij|ijk|jkl|klm|lmn|mno|nop|opq|pqr|qrs|rst|stu|tuv|uvw|vwx|wxy|xyz)/i, // Sequential letters
+      /(012|123|234|345|456|567|678|789|890)/, // Sequential numbers
+      /(qwerty|asdfgh|zxcvbn)/i // Keyboard patterns
+    ];
+
+    let penalty = 0;
+    patterns.forEach(pattern => {
+      if (pattern.test(password)) {
+        penalty += 5;
+        this.feedback.push('Avoid predictable patterns');
+      }
+    });
+
+    this.score = Math.max(0, this.score - penalty);
+  };
+
+  this._checkBannedWords = function(password) {
+    const lowerPassword = password.toLowerCase();
+    this.config.bannedWords.forEach(word => {
+      if (lowerPassword.includes(word)) {
+        this.score = Math.max(0, this.score - 15);
+        this.feedback.push(`Avoid common words like "${word}"`);
+      }
+    });
+  };
+
+  this._calculateEntropy = function(password) {
+    let charsetSize = 0;
+    if (/[a-z]/.test(password)) charsetSize += 26;
+    if (/[A-Z]/.test(password)) charsetSize += 26;
+    if (/\d/.test(password)) charsetSize += 10;
+    
+    const specialRegex = new RegExp(`[${this.config.specialChars.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}]`);
+    if (specialRegex.test(password)) charsetSize += this.config.specialChars.length;
+
+    if (charsetSize > 0) {
+      const entropy = Math.log2(Math.pow(charsetSize, password.length));
+      this.score += Math.min(30, entropy / 4);
+    }
+  };
+
+  this._getStrengthLabel = function() {
+    const percentage = (this.score / this.maxScore) * 100;
+    
+    if (percentage < 40) return 'Weak';
+    if (percentage < 70) return 'Moderate';
+    if (percentage < 90) return 'Strong';
+    return 'Very Strong';
+  };
+
+  this.validate = function(password, requiredStrength = 'Moderate') {
+    const result = this.calculateStrength(password);
+    const strengthOrder = { 'Weak': 0, 'Moderate': 1, 'Strong': 2, 'Very Strong': 3 };
+    
+    return {
+      isValid: strengthOrder[result.strength] >= strengthOrder[requiredStrength],
+      ...result
+    };
+  };
+}
+
+module.exports = PasswordStrengthChecker;
