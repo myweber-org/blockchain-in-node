@@ -136,4 +136,42 @@ if (typeof module !== 'undefined' && module.exports) {
     setPreference,
     subscribe
   };
-})();
+})();const UserPreferences = {
+  preferences: {},
+
+  init() {
+    const stored = localStorage.getItem('userPreferences');
+    if (stored) {
+      this.preferences = JSON.parse(stored);
+    }
+  },
+
+  setPreference(key, value) {
+    this.preferences[key] = value;
+    this.save();
+  },
+
+  getPreference(key) {
+    return this.preferences[key];
+  },
+
+  removePreference(key) {
+    delete this.preferences[key];
+    this.save();
+  },
+
+  clearAll() {
+    this.preferences = {};
+    this.save();
+  },
+
+  save() {
+    localStorage.setItem('userPreferences', JSON.stringify(this.preferences));
+  },
+
+  getAllPreferences() {
+    return { ...this.preferences };
+  }
+};
+
+UserPreferences.init();
