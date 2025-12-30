@@ -51,4 +51,31 @@ function validateUserInput(userData) {
     };
 }
 
-export { validateUserInput, validateUsername, validateEmail };
+export { validateUserInput, validateUsername, validateEmail };function validateUserInput(input, type) {
+    if (!input || typeof input !== 'string') {
+        return null;
+    }
+
+    const trimmedInput = input.trim();
+    
+    switch(type) {
+        case 'email':
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(trimmedInput) ? trimmedInput.toLowerCase() : null;
+        
+        case 'username':
+            const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+            return usernameRegex.test(trimmedInput) ? trimmedInput : null;
+        
+        case 'password':
+            return trimmedInput.length >= 8 ? trimmedInput : null;
+        
+        case 'phone':
+            const phoneRegex = /^[\d\s\-\+\(\)]{10,15}$/;
+            const digitsOnly = trimmedInput.replace(/\D/g, '');
+            return phoneRegex.test(trimmedInput) && digitsOnly.length >= 10 ? digitsOnly : null;
+        
+        default:
+            return trimmedInput.length > 0 ? trimmedInput : null;
+    }
+}
