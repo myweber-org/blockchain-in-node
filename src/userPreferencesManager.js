@@ -174,4 +174,95 @@ if (typeof module !== 'undefined' && module.exports) {
   }
 };
 
-UserPreferences.init();
+UserPreferences.init();const UserPreferencesManager = (() => {
+  const PREFIX = 'user_pref_';
+  const DEFAULT_PREFERENCES = {
+    theme: 'light',
+    language: 'en',
+    notifications: true,
+    fontSize: 16,
+    autoSave: false
+  };
+
+  const validateKey = (key) => {
+    if (!key || typeof key !== 'string') {
+      throw new Error('Key must be a non-empty string');
+    }
+    return true;
+  };
+
+  const getFullKey = (key) => `${PREFIX}${key}`;
+
+  const getAll = () => {
+    const preferences = { ...DEFAULT_PREFERENCES };
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith(PREFIX)) {
+        const prefKey = key.replace(PREFIX, '');
+        try {
+          preferences[prefKey] = JSON.parse(localStorage.getItem(key));
+        } catch {
+          preferences[prefKey] = localStorage.getItem(key);
+        }
+      }
+    });
+    return preferences;
+  };
+
+  const get = (key) => {
+    validateKey(key);
+    const fullKey = getFullKey(key);
+    const value = localStorage.getItem(fullKey);
+    
+    if (value === null) {
+      return DEFAULT_PREFERENCES[key] !== undefined ? DEFAULT_PREFERENCES[key] : null;
+    }
+
+    try {
+      return JSON.parse(value);
+    } catch {
+      return value;
+    }
+  };
+
+  const set = (key, value) => {
+    validateKey(key);
+    const fullKey = getFullKey(key);
+    const storageValue = typeof value === 'object' ? JSON.stringify(value) : value;
+    localStorage.setItem(fullKey, storageValue);
+    return true;
+  };
+
+  const remove = (key) => {
+    validateKey(key);
+    localStorage.removeItem(getFullKey(key));
+    return true;
+  };
+
+  const reset = () => {
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith(PREFIX)) {
+        localStorage.removeItem(key);
+      }
+    });
+    return true;
+  };
+
+  const has = (key) => {
+    validateKey(key);
+    return localStorage.getItem(getFullKey(key)) !== null;
+  };
+
+  return {
+    getAll,
+    get,
+    set,
+    remove,
+    reset,
+    has,
+    DEFAULT_PREFERENCES
+  };
+})();
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = UserPreferencesManager;
+}
