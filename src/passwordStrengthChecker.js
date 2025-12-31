@@ -280,4 +280,61 @@ export { validatePassword, calculatePasswordEntropy, evaluatePasswordStrength };
   };
 }
 
-module.exports = PasswordStrengthChecker;
+module.exports = PasswordStrengthChecker;function checkPasswordStrength(password, options = {}) {
+    const defaults = {
+        minLength: 8,
+        requireUppercase: true,
+        requireLowercase: true,
+        requireNumbers: true,
+        requireSpecialChars: true,
+        specialChars: "!@#$%^&*()_+-=[]{}|;:,.<>?"
+    };
+    
+    const config = { ...defaults, ...options };
+    const errors = [];
+    const score = { total: 0, max: 5 };
+    
+    if (password.length >= config.minLength) {
+        score.total++;
+    } else {
+        errors.push(`Password must be at least ${config.minLength} characters long`);
+    }
+    
+    if (config.requireUppercase && /[A-Z]/.test(password)) {
+        score.total++;
+    } else if (config.requireUppercase) {
+        errors.push("Password must contain at least one uppercase letter");
+    }
+    
+    if (config.requireLowercase && /[a-z]/.test(password)) {
+        score.total++;
+    } else if (config.requireLowercase) {
+        errors.push("Password must contain at least one lowercase letter");
+    }
+    
+    if (config.requireNumbers && /\d/.test(password)) {
+        score.total++;
+    } else if (config.requireNumbers) {
+        errors.push("Password must contain at least one number");
+    }
+    
+    const specialCharRegex = new RegExp(`[${config.specialChars.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}]`);
+    if (config.requireSpecialChars && specialCharRegex.test(password)) {
+        score.total++;
+    } else if (config.requireSpecialChars) {
+        errors.push("Password must contain at least one special character");
+    }
+    
+    const strength = score.total <= 2 ? "weak" : score.total <= 4 ? "medium" : "strong";
+    
+    return {
+        isValid: errors.length === 0,
+        score: score.total,
+        maxScore: score.max,
+        strength: strength,
+        errors: errors,
+        suggestions: errors.length > 0 ? ["Consider adding missing character types", "Increase password length"] : []
+    };
+}
+
+module.exports = { checkPasswordStrength };
