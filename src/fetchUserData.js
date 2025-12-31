@@ -1,44 +1,31 @@
 function fetchUserData(userId) {
-    const apiUrl = `https://jsonplaceholder.typicode.com/users/${userId}`;
+    const apiUrl = `https://api.example.com/users/${userId}`;
     
-    fetch(apiUrl)
+    return fetch(apiUrl)
         .then(response => {
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                throw new Error('Network response was not ok');
             }
             return response.json();
         })
         .then(data => {
-            console.log('User Data:', data);
-            displayUserInfo(data);
+            console.log('User data fetched successfully:', data);
+            return processUserData(data);
         })
         .catch(error => {
             console.error('Error fetching user data:', error);
-            displayErrorMessage(error.message);
+            throw error;
         });
 }
 
-function displayUserInfo(user) {
-    const outputDiv = document.getElementById('userOutput');
-    if (outputDiv) {
-        outputDiv.innerHTML = `
-            <h3>${user.name}</h3>
-            <p>Email: ${user.email}</p>
-            <p>Phone: ${user.phone}</p>
-            <p>Company: ${user.company.name}</p>
-        `;
-    }
+function processUserData(userData) {
+    const processedData = {
+        id: userData.id,
+        name: userData.name.toUpperCase(),
+        email: userData.email,
+        isActive: userData.status === 'active',
+        lastLogin: new Date(userData.lastLogin)
+    };
+    
+    return processedData;
 }
-
-function displayErrorMessage(message) {
-    const outputDiv = document.getElementById('userOutput');
-    if (outputDiv) {
-        outputDiv.innerHTML = `<p class="error">Error: ${message}</p>`;
-    }
-}
-
-// Example usage
-document.addEventListener('DOMContentLoaded', () => {
-    const userId = 1;
-    fetchUserData(userId);
-});
