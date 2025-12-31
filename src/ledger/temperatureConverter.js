@@ -8,17 +8,22 @@ function fahrenheitToCelsius(fahrenheit) {
 
 function convertTemperature(value, unit) {
     if (unit.toLowerCase() === 'c') {
-        return celsiusToFahrenheit(value);
+        return {
+            value: celsiusToFahrenheit(value),
+            unit: 'F'
+        };
     } else if (unit.toLowerCase() === 'f') {
-        return fahrenheitToCelsius(value);
-    } else {
-        throw new Error('Invalid unit. Use "C" for Celsius or "F" for Fahrenheit.');
+        return {
+            value: fahrenheitToCelsius(value),
+            unit: 'C'
+        };
     }
+    throw new Error('Invalid unit. Use "C" for Celsius or "F" for Fahrenheit.');
 }
 
 function formatTemperature(value, unit) {
-    const symbol = unit.toLowerCase() === 'c' ? '°C' : '°F';
-    return `${value.toFixed(2)} ${symbol}`;
+    const symbol = unit === 'C' ? '°C' : '°F';
+    return `${value.toFixed(1)}${symbol}`;
 }
 
 module.exports = {
@@ -26,25 +31,4 @@ module.exports = {
     fahrenheitToCelsius,
     convertTemperature,
     formatTemperature
-};function celsiusToFahrenheit(celsius) {
-    return (celsius * 9/5) + 32;
-}
-
-function fahrenheitToCelsius(fahrenheit) {
-    return (fahrenheit - 32) * 5/9;
-}
-
-function convertTemperature(value, unit) {
-    if (unit.toLowerCase() === 'c') {
-        return celsiusToFahrenheit(value);
-    } else if (unit.toLowerCase() === 'f') {
-        return fahrenheitToCelsius(value);
-    }
-    throw new Error('Invalid unit. Use "C" for Celsius or "F" for Fahrenheit.');
-}
-
-module.exports = {
-    celsiusToFahrenheit,
-    fahrenheitToCelsius,
-    convertTemperature
 };
