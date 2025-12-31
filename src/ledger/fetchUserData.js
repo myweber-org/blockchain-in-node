@@ -132,4 +132,20 @@ async function main() {
 // Export for module usage
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { fetchUserData, isValidUserId };
+}function fetchUserData(userId) {
+  return fetch(`https://api.example.com/users/${userId}`)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('User data retrieved:', data);
+      return data;
+    })
+    .catch(error => {
+      console.error('Error fetching user data:', error);
+      throw error;
+    });
 }
