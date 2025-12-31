@@ -3,21 +3,12 @@ function validateUserInput(username, password) {
     const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/;
 
     if (!usernameRegex.test(username)) {
-        return {
-            isValid: false,
-            message: "Username must be 3-20 characters and contain only letters, numbers, and underscores."
-        };
+        throw new Error('Username must be 3-20 characters and contain only letters, numbers, and underscores.');
     }
 
     if (!passwordRegex.test(password)) {
-        return {
-            isValid: false,
-            message: "Password must be at least 8 characters with at least one letter and one number."
-        };
+        throw new Error('Password must be at least 8 characters long and contain at least one letter and one number.');
     }
 
-    return {
-        isValid: true,
-        message: "Input validation passed."
-    };
+    return true;
 }
