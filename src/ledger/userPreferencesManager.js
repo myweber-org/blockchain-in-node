@@ -133,4 +133,53 @@ const userPreferencesManager = (() => {
   };
 })();
 
-export default userPreferencesManager;
+export default userPreferencesManager;class UserPreferencesManager {
+  constructor() {
+    this.prefs = this.loadPreferences();
+  }
+
+  loadPreferences() {
+    try {
+      const stored = localStorage.getItem('userPreferences');
+      return stored ? JSON.parse(stored) : {};
+    } catch (error) {
+      console.error('Failed to load preferences:', error);
+      return {};
+    }
+  }
+
+  savePreferences() {
+    try {
+      localStorage.setItem('userPreferences', JSON.stringify(this.prefs));
+      return true;
+    } catch (error) {
+      console.error('Failed to save preferences:', error);
+      return false;
+    }
+  }
+
+  setPreference(key, value) {
+    this.prefs[key] = value;
+    return this.savePreferences();
+  }
+
+  getPreference(key, defaultValue = null) {
+    return this.prefs.hasOwnProperty(key) ? this.prefs[key] : defaultValue;
+  }
+
+  removePreference(key) {
+    delete this.prefs[key];
+    return this.savePreferences();
+  }
+
+  clearAllPreferences() {
+    this.prefs = {};
+    return this.savePreferences();
+  }
+
+  getAllPreferences() {
+    return { ...this.prefs };
+  }
+}
+
+const userPrefs = new UserPreferencesManager();
