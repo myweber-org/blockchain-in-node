@@ -53,4 +53,42 @@ function loadPreferences() {
   return defaultPreferences;
 }
 
-export { validatePreferences, savePreferences, loadPreferences, defaultPreferences };
+export { validatePreferences, savePreferences, loadPreferences, defaultPreferences };const defaultPreferences = {
+  theme: 'light',
+  notifications: true,
+  language: 'en',
+  resultsPerPage: 25
+};
+
+function validatePreferences(userPrefs) {
+  const validPreferences = { ...defaultPreferences };
+  
+  if (userPrefs && typeof userPrefs === 'object') {
+    if (['light', 'dark', 'auto'].includes(userPrefs.theme)) {
+      validPreferences.theme = userPrefs.theme;
+    }
+    
+    if (typeof userPrefs.notifications === 'boolean') {
+      validPreferences.notifications = userPrefs.notifications;
+    }
+    
+    if (['en', 'es', 'fr', 'de'].includes(userPrefs.language)) {
+      validPreferences.language = userPrefs.language;
+    }
+    
+    if (Number.isInteger(userPrefs.resultsPerPage) && 
+        userPrefs.resultsPerPage >= 10 && 
+        userPrefs.resultsPerPage <= 100) {
+      validPreferences.resultsPerPage = userPrefs.resultsPerPage;
+    }
+  }
+  
+  return validPreferences;
+}
+
+function mergePreferences(existingPrefs, newPrefs) {
+  const validatedNew = validatePreferences(newPrefs);
+  return { ...existingPrefs, ...validatedNew };
+}
+
+export { defaultPreferences, validatePreferences, mergePreferences };
