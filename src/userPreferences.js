@@ -1,85 +1,69 @@
 const defaultPreferences = {
   theme: 'light',
-  fontSize: 16,
   notifications: true,
-  language: 'en'
+  language: 'en',
+  resultsPerPage: 25
 };
 
 function validatePreferences(userPrefs) {
-  const validPreferences = {};
-  const allowedKeys = Object.keys(defaultPreferences);
+  const validKeys = Object.keys(defaultPreferences);
+  const validated = {};
   
-  for (const key of allowedKeys) {
+  validKeys.forEach(key => {
     if (userPrefs.hasOwnProperty(key)) {
       const value = userPrefs[key];
       
       switch(key) {
         case 'theme':
-          if (['light', 'dark', 'auto'].includes(value)) {
-            validPreferences[key] = value;
-          } else {
-            validPreferences[key] = defaultPreferences[key];
-          }
+          validated[key] = ['light', 'dark', 'auto'].includes(value) ? value : defaultPreferences.theme;
           break;
-          
-        case 'fontSize':
-          if (typeof value === 'number' && value >= 12 && value <= 24) {
-            validPreferences[key] = value;
-          } else {
-            validPreferences[key] = defaultPreferences[key];
-          }
-          break;
-          
         case 'notifications':
-          if (typeof value === 'boolean') {
-            validPreferences[key] = value;
-          } else {
-            validPreferences[key] = defaultPreferences[key];
-          }
+          validated[key] = typeof value === 'boolean' ? value : defaultPreferences.notifications;
           break;
-          
         case 'language':
-          if (['en', 'es', 'fr', 'de'].includes(value)) {
-            validPreferences[key] = value;
-          } else {
-            validPreferences[key] = defaultPreferences[key];
-          }
+          validated[key] = typeof value === 'string' && value.length === 2 ? value : defaultPreferences.language;
           break;
-          
+        case 'resultsPerPage':
+          validated[key] = Number.isInteger(value) && value >= 10 && value <= 100 ? value : defaultPreferences.resultsPerPage;
+          break;
         default:
-          validPreferences[key] = defaultPreferences[key];
+          validated[key] = defaultPreferences[key];
       }
     } else {
-      validPreferences[key] = defaultPreferences[key];
+      validated[key] = defaultPreferences[key];
     }
-  }
+  });
   
-  return validPreferences;
+  return validated;
 }
 
-function mergePreferences(existingPrefs, newPrefs) {
-  const validatedNewPrefs = validatePreferences(newPrefs);
-  return { ...existingPrefs, ...validatedNewPrefs };
+function mergePreferences(existing, updates) {
+  const validatedUpdates = validatePreferences(updates);
+  return { ...existing, ...validatedUpdates };
 }
 
 function savePreferences(prefs) {
-  const validatedPrefs = validatePreferences(prefs);
-  localStorage.setItem('userPreferences', JSON.stringify(validatedPrefs));
-  return validatedPrefs;
+  try {
+    const validated = validatePreferences(prefs);
+    localStorage.setItem('userPreferences', JSON.stringify(validated));
+    return true;
+  } catch (error) {
+    console.error('Failed to save preferences:', error);
+    return false;
+  }
 }
 
 function loadPreferences() {
-  const stored = localStorage.getItem('userPreferences');
-  if (stored) {
-    try {
-      const parsed = JSON.parse(stored);
-      return validatePreferences(parsed);
-    } catch (error) {
-      console.error('Failed to parse stored preferences:', error);
-      return { ...defaultPreferences };
+  try {
+    const stored = localStorage.getItem('userPreferences');
+    if (stored) {
+      return validatePreferences(JSON.parse(stored));
     }
+    return { ...defaultPreferences };
+  } catch (error) {
+    console.error('Failed to load preferences:', error);
+    return { ...defaultPreferences };
   }
-  return { ...defaultPreferences };
 }
 
 export { validatePreferences, mergePreferences, savePreferences, loadPreferences, defaultPreferences };
