@@ -11,8 +11,9 @@ function convertTemperature(value, unit) {
         return celsiusToFahrenheit(value);
     } else if (unit.toLowerCase() === 'f') {
         return fahrenheitToCelsius(value);
+    } else {
+        throw new Error('Invalid unit. Use "C" for Celsius or "F" for Fahrenheit.');
     }
-    throw new Error('Invalid unit. Use "C" for Celsius or "F" for Fahrenheit.');
 }
 
 module.exports = {
