@@ -7,14 +7,15 @@ function formatCurrency(amount, locale = 'en-US', currency = 'USD') {
 
 function parseCurrency(formattedString, locale = 'en-US') {
     const parts = new Intl.NumberFormat(locale).formatToParts(1234.5);
-    const groupSeparator = parts.find(part => part.type === 'group').value;
     const decimalSeparator = parts.find(part => part.type === 'decimal').value;
+    const groupSeparator = parts.find(part => part.type === 'group').value;
     
-    const pattern = new RegExp(`[^0-9${decimalSeparator}]`, 'g');
-    const cleaned = formattedString.replace(pattern, '')
-                                   .replace(decimalSeparator, '.');
+    const cleaned = formattedString
+        .replace(new RegExp(`\\${groupSeparator}`, 'g'), '')
+        .replace(new RegExp(`\\${decimalSeparator}`), '.')
+        .replace(/[^\d.-]/g, '');
     
-    return parseFloat(cleaned) || 0;
+    return parseFloat(cleaned);
 }
 
 export { formatCurrency, parseCurrency };
