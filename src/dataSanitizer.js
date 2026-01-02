@@ -63,4 +63,26 @@ function escapeHtml(text) {
     return text.replace(/[&<>"']/g, function(m) { return map[m]; });
 }
 
-export { sanitizeInput, validateEmail, escapeHtml };
+export { sanitizeInput, validateEmail, escapeHtml };function sanitizeInput(input) {
+    if (typeof input !== 'string') {
+        return '';
+    }
+    
+    const element = document.createElement('div');
+    element.innerText = input;
+    return element.innerHTML;
+}
+
+function validateAndSanitizeUserInput(userInput, maxLength = 1000) {
+    if (!userInput || userInput.trim().length === 0) {
+        return '';
+    }
+    
+    if (userInput.length > maxLength) {
+        userInput = userInput.substring(0, maxLength);
+    }
+    
+    return sanitizeInput(userInput);
+}
+
+export { sanitizeInput, validateAndSanitizeUserInput };
