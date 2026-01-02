@@ -337,4 +337,86 @@ module.exports = PasswordStrengthChecker;function checkPasswordStrength(password
     };
 }
 
-module.exports = { checkPasswordStrength };
+module.exports = { checkPasswordStrength };function passwordStrengthChecker(password, options = {}) {
+    const defaultOptions = {
+        minLength: 8,
+        requireUppercase: true,
+        requireLowercase: true,
+        requireNumbers: true,
+        requireSpecialChars: true,
+        specialChars: "!@#$%^&*()_+-=[]{}|;:,.<>?",
+        bannedWords: ["password", "123456", "qwerty"]
+    };
+
+    const config = { ...defaultOptions, ...options };
+    let score = 0;
+    const feedback = [];
+
+    if (password.length >= config.minLength) {
+        score += 25;
+    } else {
+        feedback.push(`Password must be at least ${config.minLength} characters long`);
+    }
+
+    if (config.requireUppercase && /[A-Z]/.test(password)) {
+        score += 20;
+    } else if (config.requireUppercase) {
+        feedback.push("Password must contain at least one uppercase letter");
+    }
+
+    if (config.requireLowercase && /[a-z]/.test(password)) {
+        score += 20;
+    } else if (config.requireLowercase) {
+        feedback.push("Password must contain at least one lowercase letter");
+    }
+
+    if (config.requireNumbers && /\d/.test(password)) {
+        score += 20;
+    } else if (config.requireNumbers) {
+        feedback.push("Password must contain at least one number");
+    }
+
+    if (config.requireSpecialChars) {
+        const specialCharRegex = new RegExp(`[${config.specialChars.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}]`);
+        if (specialCharRegex.test(password)) {
+            score += 15;
+        } else {
+            feedback.push("Password must contain at least one special character");
+        }
+    }
+
+    const hasUniqueChars = new Set(password).size >= password.length * 0.6;
+    if (hasUniqueChars) {
+        score += 10;
+    } else {
+        feedback.push("Password should have more unique characters");
+    }
+
+    const hasBannedWord = config.bannedWords.some(word => 
+        password.toLowerCase().includes(word.toLowerCase())
+    );
+    if (hasBannedWord) {
+        score = Math.max(0, score - 30);
+        feedback.push("Password contains commonly banned words");
+    }
+
+    let strength;
+    if (score >= 80) {
+        strength = "STRONG";
+    } else if (score >= 60) {
+        strength = "GOOD";
+    } else if (score >= 40) {
+        strength = "WEAK";
+    } else {
+        strength = "VERY_WEAK";
+    }
+
+    return {
+        score: Math.min(100, score),
+        strength,
+        feedback: feedback.length > 0 ? feedback : ["Password meets all requirements"],
+        passed: score >= 60
+    };
+}
+
+export default passwordStrengthChecker;
