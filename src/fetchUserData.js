@@ -1,156 +1,46 @@
-function fetchUserData(userId) {
-    const apiUrl = `https://api.example.com/users/${userId}`;
+async function fetchUserData(userId) {
+  const cacheKey = `user_${userId}`;
+  const cacheExpiry = 5 * 60 * 1000; // 5 minutes
+  
+  try {
+    // Check cache first
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      const { data, timestamp } = JSON.parse(cached);
+      if (Date.now() - timestamp < cacheExpiry) {
+        console.log('Returning cached data for user:', userId);
+        return data;
+      }
+    }
+
+    // Fetch from API
+    const response = await fetch(`https://api.example.com/users/${userId}`);
     
-    return fetch(apiUrl)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('User data fetched successfully:', data);
-            return processUserData(data);
-        })
-        .catch(error => {
-            console.error('Error fetching user data:', error);
-            throw error;
-        });
-}
-
-function processUserData(userData) {
-    const processedData = {
-        id: userData.id,
-        name: userData.name.toUpperCase(),
-        email: userData.email,
-        isActive: userData.status === 'active',
-        lastLogin: new Date(userData.lastLogin)
-    };
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
     
-    return processedData;
-}const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-const userDataCache = new Map();
-
-async function fetchUserData(userId, forceRefresh = false) {
-    const cacheKey = `user_${userId}`;
-    const cached = userDataCache.get(cacheKey);
-
-    if (!forceRefresh && cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
-        console.log(`Returning cached data for user ${userId}`);
-        return cached.data;
-    }
-
-    try {
-        const response = await fetch(`https://api.example.com/users/${userId}`);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const userData = await response.json();
-        
-        userDataCache.set(cacheKey, {
-            data: userData,
-            timestamp: Date.now()
-        });
-
-        console.log(`Fetched fresh data for user ${userId}`);
-        return userData;
-    } catch (error) {
-        console.error(`Failed to fetch data for user ${userId}:`, error);
-        
-        if (cached && cached.data) {
-            console.log(`Falling back to cached data for user ${userId}`);
-            return cached.data;
-        }
-        
-        throw error;
-    }
-}
-
-function clearUserCache(userId = null) {
-    if (userId) {
-        userDataCache.delete(`user_${userId}`);
-    } else {
-        userDataCache.clear();
-    }
-}
-
-export { fetchUserData, clearUserCache };
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-const userCache = new Map();
-
-async function fetchUserData(userId, forceRefresh = false) {
-    const cached = userCache.get(userId);
+    const userData = await response.json();
     
-    if (!forceRefresh && cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
-        console.log(`Returning cached data for user ${userId}`);
-        return cached.data;
-    }
-
-    try {
-        const response = await fetch(`https://api.example.com/users/${userId}`);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const userData = await response.json();
-        
-        userCache.set(userId, {
-            data: userData,
-            timestamp: Date.now()
-        });
-        
-        console.log(`Fetched fresh data for user ${userId}`);
-        return userData;
-    } catch (error) {
-        console.error(`Failed to fetch user data for ${userId}:`, error);
-        
-        if (cached) {
-            console.log(`Returning stale cached data for user ${userId}`);
-            return cached.data;
-        }
-        
-        throw error;
-    }
-}
-
-function invalidateUserCache(userId) {
-    if (userId) {
-        userCache.delete(userId);
-        console.log(`Cache invalidated for user ${userId}`);
-    } else {
-        userCache.clear();
-        console.log('All user cache cleared');
-    }
-}
-
-export { fetchUserData, invalidateUserCache };async function fetchUserData(userId, maxRetries = 3) {
-    const url = `https://api.example.com/users/${userId}`;
+    // Cache the response
+    localStorage.setItem(cacheKey, JSON.stringify({
+      data: userData,
+      timestamp: Date.now()
+    }));
     
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-            const response = await fetch(url);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            
-            const data = await response.json();
-            console.log(`Successfully fetched data for user ${userId}`);
-            return data;
-            
-        } catch (error) {
-            console.error(`Attempt ${attempt} failed:`, error.message);
-            
-            if (attempt === maxRetries) {
-                throw new Error(`Failed to fetch user data after ${maxRetries} attempts`);
-            }
-            
-            const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
-            console.log(`Retrying in ${delay}ms...`);
-            await new Promise(resolve => setTimeout(resolve, delay));
-        }
+    console.log('Fetched fresh data for user:', userId);
+    return userData;
+    
+  } catch (error) {
+    console.error('Error fetching user data:', error);
+    
+    // Return cached data even if expired as fallback
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      console.log('Returning expired cached data as fallback');
+      return JSON.parse(cached).data;
     }
+    
+    throw error;
+  }
 }
