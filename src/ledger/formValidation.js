@@ -1,39 +1,34 @@
 function validateForm() {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    
-    if (!emailPattern.test(email)) {
-        alert('Please enter a valid email address.');
-        return false;
+    const emailError = document.getElementById('emailError');
+    const passwordError = document.getElementById('passwordError');
+    let isValid = true;
+
+    emailError.textContent = '';
+    passwordError.textContent = '';
+
+    if (!email) {
+        emailError.textContent = 'Email address is required';
+        isValid = false;
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+        emailError.textContent = 'Please enter a valid email address';
+        isValid = false;
     }
-    
-    if (password.length < 8) {
-        alert('Password must be at least 8 characters long.');
-        return false;
+
+    if (!password) {
+        passwordError.textContent = 'Password is required';
+        isValid = false;
+    } else if (password.length < 8) {
+        passwordError.textContent = 'Password must be at least 8 characters long';
+        isValid = false;
     }
-    
-    return true;
+
+    return isValid;
 }
 
-document.getElementById('submitBtn').addEventListener('click', function(event) {
+document.getElementById('loginForm').addEventListener('submit', function(event) {
     if (!validateForm()) {
         event.preventDefault();
     }
-});function validateForm() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    
-    if (!emailPattern.test(email)) {
-        alert('Please enter a valid email address.');
-        return false;
-    }
-    
-    if (password.length < 8) {
-        alert('Password must be at least 8 characters long.');
-        return false;
-    }
-    
-    return true;
-}
+});
