@@ -21,3 +21,5 @@ function validateUserInput(username, password) {
         message: "Input validation passed."
     };
 }
+
+module.exports = validateUserInput;
