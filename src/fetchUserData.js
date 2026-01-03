@@ -1,79 +1,40 @@
-async function fetchUserData(userId) {
-  const cacheKey = `user_${userId}`;
-  const cacheExpiry = 5 * 60 * 1000; // 5 minutes
-  
-  try {
-    // Check cache first
-    const cached = localStorage.getItem(cacheKey);
-    if (cached) {
-      const { data, timestamp } = JSON.parse(cached);
-      if (Date.now() - timestamp < cacheExpiry) {
-        console.log('Returning cached data for user:', userId);
-        return data;
+const fetchUserData = async (userId, maxRetries = 3) => {
+  const fetchWithRetry = async (attempt) => {
+    try {
+      const response = await fetch(`https://api.example.com/users/${userId}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+      
+      const data = await response.json();
+      return { success: true, data };
+    } catch (error) {
+      if (attempt < maxRetries) {
+        console.warn(`Attempt ${attempt + 1} failed. Retrying...`);
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        return fetchWithRetry(attempt + 1);
+      }
+      return { 
+        success: false, 
+        error: `Failed after ${maxRetries} attempts: ${error.message}` 
+      };
     }
+  };
+  
+  return fetchWithRetry(0);
+};
 
-    // Fetch from API
-    const response = await fetch(`https://api.example.com/users/${userId}`);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const userData = await response.json();
-    
-    // Cache the response
-    localStorage.setItem(cacheKey, JSON.stringify({
-      data: userData,
-      timestamp: Date.now()
-    }));
-    
-    console.log('Fetched fresh data for user:', userId);
-    return userData;
-    
-  } catch (error) {
-    console.error('Error fetching user data:', error);
-    
-    // Return cached data even if expired as fallback
-    const cached = localStorage.getItem(cacheKey);
-    if (cached) {
-      console.log('Returning expired cached data as fallback');
-      return JSON.parse(cached).data;
-    }
-    
-    throw error;
+const processUserData = async (userId) => {
+  const result = await fetchUserData(userId);
+  
+  if (result.success) {
+    console.log('User data retrieved:', result.data);
+    return result.data;
+  } else {
+    console.error('Error fetching user data:', result.error);
+    throw new Error(result.error);
   }
-}function fetchUserData(userId) {
-    const apiUrl = `https://jsonplaceholder.typicode.com/users/${userId}`;
-    
-    fetch(apiUrl)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('User Data:', data);
-            displayUserData(data);
-        })
-        .catch(error => {
-            console.error('Error fetching user data:', error);
-        });
-}
+};
 
-function displayUserData(user) {
-    const outputDiv = document.getElementById('userOutput');
-    if (outputDiv) {
-        outputDiv.innerHTML = `
-            <h3>${user.name}</h3>
-            <p>Email: ${user.email}</p>
-            <p>Phone: ${user.phone}</p>
-            <p>Website: ${user.website}</p>
-            <p>Company: ${user.company.name}</p>
-        `;
-    }
-}
-
-// Example usage
-fetchUserData(1);
+export { fetchUserData, processUserData };
