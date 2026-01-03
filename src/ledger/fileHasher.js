@@ -26,4 +26,10 @@ function formatFileSize(bytes) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-export { generateFileHash, validateFileType, formatFileSize };
+export { generateFileHash, validateFileType, formatFileSize };function calculateFileHash(fileContent) {
+  return crypto.subtle.digest('SHA-256', new TextEncoder().encode(fileContent))
+    .then(hashBuffer => {
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    });
+}
