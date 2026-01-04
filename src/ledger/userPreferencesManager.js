@@ -98,4 +98,63 @@ const UserPreferencesManager = (function() {
         clear: clearAllPreferences,
         getAll: getAllPreferences
     };
+})();const userPreferencesManager = (function() {
+    const STORAGE_KEY = 'user_preferences';
+    
+    const defaultPreferences = {
+        theme: 'light',
+        language: 'en',
+        notifications: true,
+        fontSize: 16,
+        autoSave: true
+    };
+
+    function getPreferences() {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        return stored ? JSON.parse(stored) : {...defaultPreferences};
+    }
+
+    function updatePreferences(newPreferences) {
+        const current = getPreferences();
+        const updated = {...current, ...newPreferences};
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        dispatchChangeEvent(updated);
+        return updated;
+    }
+
+    function resetPreferences() {
+        localStorage.removeItem(STORAGE_KEY);
+        dispatchChangeEvent({...defaultPreferences});
+        return {...defaultPreferences};
+    }
+
+    function getPreference(key) {
+        const prefs = getPreferences();
+        return prefs[key] !== undefined ? prefs[key] : defaultPreferences[key];
+    }
+
+    function dispatchChangeEvent(preferences) {
+        const event = new CustomEvent('preferencesChanged', {
+            detail: { preferences }
+        });
+        window.dispatchEvent(event);
+    }
+
+    function subscribe(callback) {
+        window.addEventListener('preferencesChanged', (e) => callback(e.detail.preferences));
+        return () => window.removeEventListener('preferencesChanged', callback);
+    }
+
+    return {
+        get: getPreference,
+        getAll: getPreferences,
+        update: updatePreferences,
+        reset: resetPreferences,
+        subscribe: subscribe,
+        default: defaultPreferences
+    };
 })();
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = userPreferencesManager;
+}
