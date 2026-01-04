@@ -17,4 +17,13 @@ function formatUserData(users) {
         isActive: user.status === 'active',
         createdAt: new Date(user.createdAt).toLocaleDateString('en-US')
     }));
+}function formatUserData(users) {
+    return users.map(user => ({
+        id: user.id,
+        fullName: `${user.firstName} ${user.lastName}`.trim(),
+        email: user.email.toLowerCase(),
+        age: user.age,
+        isActive: user.status === 'active',
+        formattedDate: new Date(user.createdAt).toLocaleDateString('en-US')
+    }));
 }
