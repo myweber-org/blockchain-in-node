@@ -47,4 +47,11 @@ function displayFibonacci(limit) {
     return fibSequence;
 }
 
-module.exports = { generateFibonacci, displayFibonacci };
+module.exports = { generateFibonacci, displayFibonacci };function fibonacci(n, memo = {}) {
+    if (n in memo) return memo[n];
+    if (n <= 2) return 1;
+    memo[n] = fibonacci(n - 1, memo) + fibonacci(n - 2, memo);
+    return memo[n];
+}
+
+console.log(fibonacci(10));
