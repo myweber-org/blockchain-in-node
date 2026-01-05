@@ -1,29 +1,37 @@
-async function fetchUserData() {
-    const url = 'https://jsonplaceholder.typicode.com/users';
+function fetchUserData(userId) {
+    const apiUrl = `https://jsonplaceholder.typicode.com/users/${userId}`;
     
-    try {
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const users = await response.json();
-        console.log('Fetched users:', users);
-        return users;
-    } catch (error) {
-        console.error('Failed to fetch user data:', error);
-        return null;
+    fetch(apiUrl)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('User Data:', data);
+            displayUserInfo(data);
+        })
+        .catch(error => {
+            console.error('Error fetching user data:', error);
+        });
+}
+
+function displayUserInfo(user) {
+    const outputDiv = document.getElementById('userInfo');
+    
+    if (outputDiv) {
+        outputDiv.innerHTML = `
+            <h3>${user.name}</h3>
+            <p>Email: ${user.email}</p>
+            <p>Phone: ${user.phone}</p>
+            <p>Website: ${user.website}</p>
+            <p>Company: ${user.company.name}</p>
+        `;
     }
 }
 
-function displayUserData(users) {
-    if (!users || users.length === 0) {
-        console.log('No user data available');
-        return;
-    }
-    
-    users.forEach(user => {
-        console.log(`Name: ${user.name}, Email: ${user.email}`);
-    });
-}
-
-fetchUserData().then(displayUserData);
+document.addEventListener('DOMContentLoaded', function() {
+    const userId = 1;
+    fetchUserData(userId);
+});
