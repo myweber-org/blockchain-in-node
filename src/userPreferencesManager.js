@@ -1,114 +1,53 @@
-const userPreferencesManager = {
-    preferences: {
-        theme: 'light',
-        language: 'en',
-        fontSize: 16,
-        notifications: true
-    },
-
-    init: function() {
-        const savedPreferences = localStorage.getItem('userPreferences');
-        if (savedPreferences) {
-            this.preferences = JSON.parse(savedPreferences);
-        }
-        this.applyPreferences();
-    },
-
-    savePreferences: function() {
-        localStorage.setItem('userPreferences', JSON.stringify(this.preferences));
-        this.applyPreferences();
-    },
-
-    applyPreferences: function() {
-        document.documentElement.setAttribute('data-theme', this.preferences.theme);
-        document.documentElement.lang = this.preferences.language;
-        document.body.style.fontSize = this.preferences.fontSize + 'px';
-        
-        const notificationElement = document.getElementById('notifications');
-        if (notificationElement) {
-            notificationElement.style.display = this.preferences.notifications ? 'block' : 'none';
-        }
-    },
-
-    updatePreference: function(key, value) {
-        if (this.preferences.hasOwnProperty(key)) {
-            this.preferences[key] = value;
-            this.savePreferences();
-            return true;
-        }
-        return false;
-    },
-
-    getPreference: function(key) {
-        return this.preferences[key] || null;
-    },
-
-    resetPreferences: function() {
-        this.preferences = {
-            theme: 'light',
-            language: 'en',
-            fontSize: 16,
-            notifications: true
-        };
-        this.savePreferences();
-    },
-
-    exportPreferences: function() {
-        const dataStr = JSON.stringify(this.preferences, null, 2);
-        const dataBlob = new Blob([dataStr], { type: 'application/json' });
-        return URL.createObjectURL(dataBlob);
-    },
-
-    importPreferences: function(jsonString) {
+const UserPreferencesManager = (function() {
+    const PREFIX = 'user_pref_';
+    
+    function setPreference(key, value) {
         try {
-            const importedPrefs = JSON.parse(jsonString);
-            Object.keys(importedPrefs).forEach(key => {
-                if (this.preferences.hasOwnProperty(key)) {
-                    this.preferences[key] = importedPrefs[key];
-                }
-            });
-            this.savePreferences();
+            const serialized = JSON.stringify(value);
+            localStorage.setItem(PREFIX + key, serialized);
             return true;
         } catch (error) {
-            console.error('Invalid preferences format:', error);
+            console.error('Failed to save preference:', error);
             return false;
         }
     }
-};
-
-document.addEventListener('DOMContentLoaded', function() {
-    userPreferencesManager.init();
     
-    const themeToggle = document.getElementById('themeToggle');
-    const languageSelect = document.getElementById('languageSelect');
-    const fontSizeSlider = document.getElementById('fontSizeSlider');
-    const notificationsToggle = document.getElementById('notificationsToggle');
-    
-    if (themeToggle) {
-        themeToggle.value = userPreferencesManager.getPreference('theme');
-        themeToggle.addEventListener('change', function(e) {
-            userPreferencesManager.updatePreference('theme', e.target.value);
-        });
+    function getPreference(key, defaultValue = null) {
+        try {
+            const item = localStorage.getItem(PREFIX + key);
+            return item ? JSON.parse(item) : defaultValue;
+        } catch (error) {
+            console.error('Failed to retrieve preference:', error);
+            return defaultValue;
+        }
     }
     
-    if (languageSelect) {
-        languageSelect.value = userPreferencesManager.getPreference('language');
-        languageSelect.addEventListener('change', function(e) {
-            userPreferencesManager.updatePreference('language', e.target.value);
-        });
+    function removePreference(key) {
+        localStorage.removeItem(PREFIX + key);
     }
     
-    if (fontSizeSlider) {
-        fontSizeSlider.value = userPreferencesManager.getPreference('fontSize');
-        fontSizeSlider.addEventListener('input', function(e) {
-            userPreferencesManager.updatePreference('fontSize', parseInt(e.target.value));
-        });
+    function clearAllPreferences() {
+        Object.keys(localStorage)
+            .filter(key => key.startsWith(PREFIX))
+            .forEach(key => localStorage.removeItem(key));
     }
     
-    if (notificationsToggle) {
-        notificationsToggle.checked = userPreferencesManager.getPreference('notifications');
-        notificationsToggle.addEventListener('change', function(e) {
-            userPreferencesManager.updatePreference('notifications', e.target.checked);
-        });
+    function getAllPreferences() {
+        const preferences = {};
+        Object.keys(localStorage)
+            .filter(key => key.startsWith(PREFIX))
+            .forEach(key => {
+                const prefKey = key.replace(PREFIX, '');
+                preferences[prefKey] = getPreference(prefKey);
+            });
+        return preferences;
     }
-});
+    
+    return {
+        set: setPreference,
+        get: getPreference,
+        remove: removePreference,
+        clear: clearAllPreferences,
+        getAll: getAllPreferences
+    };
+})();
