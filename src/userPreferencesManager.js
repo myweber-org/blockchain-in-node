@@ -1,85 +1,114 @@
-const UserPreferencesManager = (function() {
-    const STORAGE_KEY = 'user_preferences';
-    
-    function getPreferences() {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        return stored ? JSON.parse(stored) : {};
-    }
-    
-    function setPreference(key, value) {
-        const preferences = getPreferences();
-        preferences[key] = value;
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
-        return true;
-    }
-    
-    function getPreference(key, defaultValue = null) {
-        const preferences = getPreferences();
-        return preferences.hasOwnProperty(key) ? preferences[key] : defaultValue;
-    }
-    
-    function removePreference(key) {
-        const preferences = getPreferences();
-        if (preferences.hasOwnProperty(key)) {
-            delete preferences[key];
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
+const userPreferencesManager = {
+    preferences: {
+        theme: 'light',
+        language: 'en',
+        fontSize: 16,
+        notifications: true
+    },
+
+    init: function() {
+        const savedPreferences = localStorage.getItem('userPreferences');
+        if (savedPreferences) {
+            this.preferences = JSON.parse(savedPreferences);
+        }
+        this.applyPreferences();
+    },
+
+    savePreferences: function() {
+        localStorage.setItem('userPreferences', JSON.stringify(this.preferences));
+        this.applyPreferences();
+    },
+
+    applyPreferences: function() {
+        document.documentElement.setAttribute('data-theme', this.preferences.theme);
+        document.documentElement.lang = this.preferences.language;
+        document.body.style.fontSize = this.preferences.fontSize + 'px';
+        
+        const notificationElement = document.getElementById('notifications');
+        if (notificationElement) {
+            notificationElement.style.display = this.preferences.notifications ? 'block' : 'none';
+        }
+    },
+
+    updatePreference: function(key, value) {
+        if (this.preferences.hasOwnProperty(key)) {
+            this.preferences[key] = value;
+            this.savePreferences();
             return true;
         }
         return false;
-    }
-    
-    function clearAllPreferences() {
-        localStorage.removeItem(STORAGE_KEY);
-        return true;
-    }
-    
-    function getAllPreferences() {
-        return getPreferences();
-    }
-    
-    return {
-        get: getPreference,
-        set: setPreference,
-        remove: removePreference,
-        clear: clearAllPreferences,
-        getAll: getAllPreferences
-    };
-})();
+    },
 
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = UserPreferencesManager;
-}const UserPreferencesManager = {
-    preferences: {},
+    getPreference: function(key) {
+        return this.preferences[key] || null;
+    },
 
-    init: function() {
-        const stored = localStorage.getItem('userPreferences');
-        if (stored) {
-            this.preferences = JSON.parse(stored);
+    resetPreferences: function() {
+        this.preferences = {
+            theme: 'light',
+            language: 'en',
+            fontSize: 16,
+            notifications: true
+        };
+        this.savePreferences();
+    },
+
+    exportPreferences: function() {
+        const dataStr = JSON.stringify(this.preferences, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        return URL.createObjectURL(dataBlob);
+    },
+
+    importPreferences: function(jsonString) {
+        try {
+            const importedPrefs = JSON.parse(jsonString);
+            Object.keys(importedPrefs).forEach(key => {
+                if (this.preferences.hasOwnProperty(key)) {
+                    this.preferences[key] = importedPrefs[key];
+                }
+            });
+            this.savePreferences();
+            return true;
+        } catch (error) {
+            console.error('Invalid preferences format:', error);
+            return false;
         }
-    },
-
-    setPreference: function(key, value) {
-        this.preferences[key] = value;
-        this.save();
-    },
-
-    getPreference: function(key, defaultValue = null) {
-        return this.preferences[key] || defaultValue;
-    },
-
-    removePreference: function(key) {
-        delete this.preferences[key];
-        this.save();
-    },
-
-    save: function() {
-        localStorage.setItem('userPreferences', JSON.stringify(this.preferences));
-    },
-
-    clearAll: function() {
-        this.preferences = {};
-        localStorage.removeItem('userPreferences');
     }
 };
 
-UserPreferencesManager.init();
+document.addEventListener('DOMContentLoaded', function() {
+    userPreferencesManager.init();
+    
+    const themeToggle = document.getElementById('themeToggle');
+    const languageSelect = document.getElementById('languageSelect');
+    const fontSizeSlider = document.getElementById('fontSizeSlider');
+    const notificationsToggle = document.getElementById('notificationsToggle');
+    
+    if (themeToggle) {
+        themeToggle.value = userPreferencesManager.getPreference('theme');
+        themeToggle.addEventListener('change', function(e) {
+            userPreferencesManager.updatePreference('theme', e.target.value);
+        });
+    }
+    
+    if (languageSelect) {
+        languageSelect.value = userPreferencesManager.getPreference('language');
+        languageSelect.addEventListener('change', function(e) {
+            userPreferencesManager.updatePreference('language', e.target.value);
+        });
+    }
+    
+    if (fontSizeSlider) {
+        fontSizeSlider.value = userPreferencesManager.getPreference('fontSize');
+        fontSizeSlider.addEventListener('input', function(e) {
+            userPreferencesManager.updatePreference('fontSize', parseInt(e.target.value));
+        });
+    }
+    
+    if (notificationsToggle) {
+        notificationsToggle.checked = userPreferencesManager.getPreference('notifications');
+        notificationsToggle.addEventListener('change', function(e) {
+            userPreferencesManager.updatePreference('notifications', e.target.checked);
+        });
+    }
+});
