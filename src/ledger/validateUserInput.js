@@ -20,7 +20,7 @@ function validateUserInput(username, password) {
         throw new Error('Password must be at least 8 characters with uppercase, lowercase, number and special character');
     }
     
-    return { usernameValid, passwordValid };
+    return true;
 }
 
 module.exports = { validateUserInput, validateUsername, validatePassword };
