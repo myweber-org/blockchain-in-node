@@ -171,4 +171,29 @@ module.exports = {
     convertCurrency,
     getSupportedCurrencies,
     updateExchangeRate
+};const fetchExchangeRate = async (fromCurrency, toCurrency) => {
+  try {
+    const response = await fetch(`https://api.exchangerate-api.com/v4/latest/${fromCurrency}`);
+    const data = await response.json();
+    return data.rates[toCurrency];
+  } catch (error) {
+    console.error('Error fetching exchange rate:', error);
+    return null;
+  }
 };
+
+const convertCurrency = async (amount, fromCurrency, toCurrency) => {
+  const rate = await fetchExchangeRate(fromCurrency, toCurrency);
+  if (rate === null) {
+    return 'Conversion failed';
+  }
+  const convertedAmount = amount * rate;
+  return `${amount} ${fromCurrency} = ${convertedAmount.toFixed(2)} ${toCurrency}`;
+};
+
+const CurrencyConverter = {
+  convert: convertCurrency,
+  getRate: fetchExchangeRate
+};
+
+export default CurrencyConverter;
