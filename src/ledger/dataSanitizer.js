@@ -68,4 +68,35 @@ module.exports = {
     sanitizeInput,
     validateEmail,
     escapeHtml
-};
+};function sanitizeInput(input) {
+    if (typeof input !== 'string') return '';
+    
+    const div = document.createElement('div');
+    div.textContent = input;
+    return div.innerHTML;
+}
+
+function validateEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+}
+
+function processUserData(userInput) {
+    const cleanInput = sanitizeInput(userInput);
+    
+    if (validateEmail(cleanInput)) {
+        return { 
+            type: 'email', 
+            value: cleanInput,
+            timestamp: new Date().toISOString()
+        };
+    }
+    
+    return { 
+        type: 'text', 
+        value: cleanInput,
+        timestamp: new Date().toISOString()
+    };
+}
+
+module.exports = { sanitizeInput, validateEmail, processUserData };
