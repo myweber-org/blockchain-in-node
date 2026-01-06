@@ -213,4 +213,116 @@ if (typeof module !== 'undefined' && module.exports) {
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = UserPreferencesManager;
+}const UserPreferencesManager = (function() {
+    const PREFIX = 'user_pref_';
+    
+    const storageAvailable = function(type) {
+        try {
+            const storage = window[type];
+            const testKey = '__storage_test__';
+            storage.setItem(testKey, testKey);
+            storage.removeItem(testKey);
+            return true;
+        } catch (e) {
+            return false;
+        }
+    };
+
+    const isLocalStorageAvailable = storageAvailable('localStorage');
+
+    const setPreference = function(key, value) {
+        if (!isLocalStorageAvailable) {
+            console.warn('localStorage is not available');
+            return false;
+        }
+        
+        try {
+            const serializedValue = JSON.stringify(value);
+            localStorage.setItem(PREFIX + key, serializedValue);
+            return true;
+        } catch (error) {
+            console.error('Failed to save preference:', error);
+            return false;
+        }
+    };
+
+    const getPreference = function(key, defaultValue = null) {
+        if (!isLocalStorageAvailable) {
+            return defaultValue;
+        }
+        
+        try {
+            const item = localStorage.getItem(PREFIX + key);
+            return item ? JSON.parse(item) : defaultValue;
+        } catch (error) {
+            console.error('Failed to retrieve preference:', error);
+            return defaultValue;
+        }
+    };
+
+    const removePreference = function(key) {
+        if (!isLocalStorageAvailable) {
+            return false;
+        }
+        
+        try {
+            localStorage.removeItem(PREFIX + key);
+            return true;
+        } catch (error) {
+            console.error('Failed to remove preference:', error);
+            return false;
+        }
+    };
+
+    const clearAllPreferences = function() {
+        if (!isLocalStorageAvailable) {
+            return false;
+        }
+        
+        try {
+            Object.keys(localStorage).forEach(key => {
+                if (key.startsWith(PREFIX)) {
+                    localStorage.removeItem(key);
+                }
+            });
+            return true;
+        } catch (error) {
+            console.error('Failed to clear preferences:', error);
+            return false;
+        }
+    };
+
+    const getAllPreferences = function() {
+        if (!isLocalStorageAvailable) {
+            return {};
+        }
+        
+        const preferences = {};
+        
+        try {
+            Object.keys(localStorage).forEach(key => {
+                if (key.startsWith(PREFIX)) {
+                    const prefKey = key.substring(PREFIX.length);
+                    preferences[prefKey] = getPreference(prefKey);
+                }
+            });
+        } catch (error) {
+            console.error('Failed to get all preferences:', error);
+        }
+        
+        return preferences;
+    };
+
+    return {
+        set: setPreference,
+        get: getPreference,
+        remove: removePreference,
+        clear: clearAllPreferences,
+        getAll: getAllPreferences,
+        isAvailable: isLocalStorageAvailable
+    };
+})();
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = UserPreferencesManager;
 }
