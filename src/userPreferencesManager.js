@@ -204,4 +204,71 @@ export default UserPreferencesManager;const userPreferencesManager = (function()
         clear: clearPreferences,
         getAll: getAllPreferences
     };
-})();
+})();const defaultPreferences = {
+  theme: 'light',
+  fontSize: 16,
+  notifications: true,
+  language: 'en'
+};
+
+class UserPreferencesManager {
+  constructor() {
+    this.prefs = this.loadPreferences();
+  }
+
+  loadPreferences() {
+    try {
+      const stored = localStorage.getItem('userPreferences');
+      if (stored) {
+        return { ...defaultPreferences, ...JSON.parse(stored) };
+      }
+    } catch (error) {
+      console.warn('Failed to load preferences:', error);
+    }
+    return { ...defaultPreferences };
+  }
+
+  savePreferences() {
+    try {
+      localStorage.setItem('userPreferences', JSON.stringify(this.prefs));
+      return true;
+    } catch (error) {
+      console.error('Failed to save preferences:', error);
+      return false;
+    }
+  }
+
+  getPreference(key) {
+    return this.prefs[key] !== undefined ? this.prefs[key] : defaultPreferences[key];
+  }
+
+  setPreference(key, value) {
+    if (key in defaultPreferences) {
+      this.prefs[key] = value;
+      this.savePreferences();
+      this.dispatchPreferenceChange(key, value);
+      return true;
+    }
+    return false;
+  }
+
+  resetPreferences() {
+    this.prefs = { ...defaultPreferences };
+    localStorage.removeItem('userPreferences');
+    this.dispatchPreferenceChange('all', null);
+  }
+
+  dispatchPreferenceChange(key, value) {
+    const event = new CustomEvent('preferenceChange', {
+      detail: { key, value, preferences: this.prefs }
+    });
+    window.dispatchEvent(event);
+  }
+
+  getAllPreferences() {
+    return { ...this.prefs };
+  }
+}
+
+const userPrefs = new UserPreferencesManager();
+export default userPrefs;
