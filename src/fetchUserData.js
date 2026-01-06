@@ -10,16 +10,15 @@ function fetchUserData(userId) {
         })
         .then(data => {
             console.log('User Data:', data);
-            displayUserInfo(data);
+            displayUserData(data);
         })
         .catch(error => {
             console.error('Error fetching user data:', error);
         });
 }
 
-function displayUserInfo(user) {
-    const outputDiv = document.getElementById('userInfo');
-    
+function displayUserData(user) {
+    const outputDiv = document.getElementById('userOutput');
     if (outputDiv) {
         outputDiv.innerHTML = `
             <h3>${user.name}</h3>
@@ -31,7 +30,5 @@ function displayUserInfo(user) {
     }
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    const userId = 1;
-    fetchUserData(userId);
-});
+// Example usage
+// fetchUserData(1);
