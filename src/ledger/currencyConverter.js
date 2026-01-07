@@ -1,67 +1,53 @@
 const axios = require('axios');
 
 class CurrencyConverter {
-    constructor(apiKey) {
-        this.apiKey = apiKey;
-        this.baseUrl = 'https://api.exchangerate-api.com/v4/latest';
-        this.cache = {};
-        this.cacheDuration = 3600000; // 1 hour
+  constructor(apiKey) {
+    this.apiKey = apiKey;
+    this.baseUrl = 'https://api.exchangerate-api.com/v4/latest';
+  }
+
+  async convert(amount, fromCurrency, toCurrency) {
+    try {
+      const response = await axios.get(`${this.baseUrl}/${fromCurrency}`);
+      const rate = response.data.rates[toCurrency];
+      
+      if (!rate) {
+        throw new Error(`Exchange rate for ${toCurrency} not found`);
+      }
+      
+      const convertedAmount = amount * rate;
+      return {
+        originalAmount: amount,
+        fromCurrency: fromCurrency,
+        toCurrency: toCurrency,
+        exchangeRate: rate,
+        convertedAmount: parseFloat(convertedAmount.toFixed(2))
+      };
+    } catch (error) {
+      console.error('Conversion error:', error.message);
+      throw error;
     }
+  }
 
-    async convert(amount, fromCurrency, toCurrency) {
-        try {
-            const rate = await this.getExchangeRate(fromCurrency, toCurrency);
-            const convertedAmount = amount * rate;
-            return {
-                original: amount,
-                converted: convertedAmount,
-                from: fromCurrency,
-                to: toCurrency,
-                rate: rate,
-                timestamp: new Date().toISOString()
-            };
-        } catch (error) {
-            throw new Error(`Conversion failed: ${error.message}`);
-        }
+  async getAvailableCurrencies() {
+    try {
+      const response = await axios.get(`${this.baseUrl}/USD`);
+      return Object.keys(response.data.rates);
+    } catch (error) {
+      console.error('Failed to fetch currencies:', error.message);
+      return [];
     }
+  }
 
-    async getExchangeRate(fromCurrency, toCurrency) {
-        const cacheKey = `${fromCurrency}_${toCurrency}`;
-        const cached = this.cache[cacheKey];
-
-        if (cached && Date.now() - cached.timestamp < this.cacheDuration) {
-            return cached.rate;
-        }
-
-        const response = await axios.get(`${this.baseUrl}/${fromCurrency}`);
-        const rates = response.data.rates;
-        
-        if (!rates[toCurrency]) {
-            throw new Error(`Invalid currency code: ${toCurrency}`);
-        }
-
-        const rate = rates[toCurrency];
-        
-        this.cache[cacheKey] = {
-            rate: rate,
-            timestamp: Date.now()
-        };
-
-        return rate;
+  async getExchangeRate(fromCurrency, toCurrency) {
+    try {
+      const response = await axios.get(`${this.baseUrl}/${fromCurrency}`);
+      return response.data.rates[toCurrency];
+    } catch (error) {
+      console.error('Failed to fetch exchange rate:', error.message);
+      return null;
     }
-
-    async getAvailableCurrencies() {
-        try {
-            const response = await axios.get(`${this.baseUrl}/USD`);
-            return Object.keys(response.data.rates);
-        } catch (error) {
-            throw new Error(`Failed to fetch currencies: ${error.message}`);
-        }
-    }
-
-    clearCache() {
-        this.cache = {};
-    }
+  }
 }
 
 module.exports = CurrencyConverter;
