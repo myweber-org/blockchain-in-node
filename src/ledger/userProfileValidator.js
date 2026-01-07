@@ -139,4 +139,27 @@ module.exports = validateUserProfile;function validateUserProfile(profile) {
     isValid: Object.keys(errors).length === 0,
     errors
   };
+}function validateUserProfile(profile) {
+    const errors = [];
+
+    if (!profile.username || profile.username.trim().length < 3) {
+        errors.push('Username must be at least 3 characters long');
+    }
+
+    if (!profile.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profile.email)) {
+        errors.push('Please provide a valid email address');
+    }
+
+    if (profile.age && (profile.age < 0 || profile.age > 150)) {
+        errors.push('Age must be between 0 and 150');
+    }
+
+    if (profile.bio && profile.bio.length > 500) {
+        errors.push('Bio cannot exceed 500 characters');
+    }
+
+    return {
+        isValid: errors.length === 0,
+        errors: errors
+    };
 }
