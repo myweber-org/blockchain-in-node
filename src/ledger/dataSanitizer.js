@@ -27,4 +27,27 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-export { sanitizeInput, validateEmail, escapeHtml };
+export { sanitizeInput, validateEmail, escapeHtml };function sanitizeInput(input) {
+    const div = document.createElement('div');
+    div.textContent = input;
+    return div.innerHTML;
+}
+
+function validateAndSanitize(userInput) {
+    if (typeof userInput !== 'string') {
+        return '';
+    }
+    
+    const trimmed = userInput.trim();
+    const sanitized = sanitizeInput(trimmed);
+    
+    const regex = /^[a-zA-Z0-9\s.,!?@'-]+$/;
+    if (!regex.test(trimmed)) {
+        console.warn('Input contains potentially dangerous characters');
+        return '';
+    }
+    
+    return sanitized;
+}
+
+export { validateAndSanitize };
