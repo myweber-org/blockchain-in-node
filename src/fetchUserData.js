@@ -1,59 +1,4 @@
-function fetchUserData(userId) {
-    const apiUrl = `https://jsonplaceholder.typicode.com/users/${userId}`;
-    
-    fetch(apiUrl)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('User Data:', data);
-            return data;
-        })
-        .catch(error => {
-            console.error('Error fetching user data:', error);
-        });
-}function fetchUserData(userId) {
-    const apiUrl = `https://jsonplaceholder.typicode.com/users/${userId}`;
-    
-    fetch(apiUrl)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('User Data:', data);
-            displayUserInfo(data);
-        })
-        .catch(error => {
-            console.error('Error fetching user data:', error);
-            displayErrorMessage(error.message);
-        });
-}
-
-function displayUserInfo(user) {
-    const outputDiv = document.getElementById('userOutput');
-    if (outputDiv) {
-        outputDiv.innerHTML = `
-            <h3>${user.name}</h3>
-            <p>Email: ${user.email}</p>
-            <p>Phone: ${user.phone}</p>
-            <p>Website: ${user.website}</p>
-            <p>Company: ${user.company.name}</p>
-        `;
-    }
-}
-
-function displayErrorMessage(message) {
-    const outputDiv = document.getElementById('userOutput');
-    if (outputDiv) {
-        outputDiv.innerHTML = `<p class="error">Error: ${message}</p>`;
-    }
-}const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 const userDataCache = new Map();
 
 async function fetchUserData(userId, forceRefresh = false) {
@@ -82,10 +27,10 @@ async function fetchUserData(userId, forceRefresh = false) {
         console.log(`Fetched fresh data for user ${userId}`);
         return userData;
     } catch (error) {
-        console.error(`Failed to fetch user data for ${userId}:`, error);
+        console.error(`Failed to fetch data for user ${userId}:`, error);
         
-        if (cached) {
-            console.log(`Returning stale cached data for user ${userId}`);
+        if (cached && cached.data) {
+            console.log(`Falling back to stale cached data for user ${userId}`);
             return cached.data;
         }
         
@@ -101,47 +46,4 @@ function clearUserCache(userId = null) {
     }
 }
 
-export { fetchUserData, clearUserCache };function fetchUserData(userId) {
-    const apiUrl = `https://jsonplaceholder.typicode.com/users/${userId}`;
-    
-    fetch(apiUrl)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('User Data:', data);
-            displayUserData(data);
-        })
-        .catch(error => {
-            console.error('Error fetching user data:', error);
-        });
-}
-
-function displayUserData(user) {
-    const outputDiv = document.getElementById('userDataOutput') || createOutputElement();
-    
-    outputDiv.innerHTML = `
-        <h3>User Information</h3>
-        <p><strong>Name:</strong> ${user.name}</p>
-        <p><strong>Email:</strong> ${user.email}</p>
-        <p><strong>Phone:</strong> ${user.phone}</p>
-        <p><strong>Website:</strong> ${user.website}</p>
-        <p><strong>Company:</strong> ${user.company.name}</p>
-    `;
-}
-
-function createOutputElement() {
-    const div = document.createElement('div');
-    div.id = 'userDataOutput';
-    document.body.appendChild(div);
-    return div;
-}
-
-// Example usage
-document.addEventListener('DOMContentLoaded', () => {
-    const userId = 1;
-    fetchUserData(userId);
-});
+export { fetchUserData, clearUserCache };
