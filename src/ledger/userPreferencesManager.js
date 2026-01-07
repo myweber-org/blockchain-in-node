@@ -69,4 +69,44 @@ const UserPreferencesManager = (function() {
         setPreference,
         subscribe
     };
-})();
+})();const UserPreferences = {
+  storageKey: 'app_preferences',
+
+  defaultPreferences: {
+    theme: 'light',
+    language: 'en',
+    notifications: true,
+    fontSize: 16
+  },
+
+  getPreferences() {
+    const stored = localStorage.getItem(this.storageKey);
+    return stored ? JSON.parse(stored) : { ...this.defaultPreferences };
+  },
+
+  updatePreferences(newPreferences) {
+    const current = this.getPreferences();
+    const updated = { ...current, ...newPreferences };
+    localStorage.setItem(this.storageKey, JSON.stringify(updated));
+    return updated;
+  },
+
+  resetToDefaults() {
+    localStorage.setItem(this.storageKey, JSON.stringify(this.defaultPreferences));
+    return { ...this.defaultPreferences };
+  },
+
+  getPreference(key) {
+    const prefs = this.getPreferences();
+    return prefs[key] !== undefined ? prefs[key] : this.defaultPreferences[key];
+  },
+
+  setPreference(key, value) {
+    const prefs = this.getPreferences();
+    prefs[key] = value;
+    localStorage.setItem(this.storageKey, JSON.stringify(prefs));
+    return prefs;
+  }
+};
+
+export default UserPreferences;
