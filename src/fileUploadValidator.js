@@ -1,14 +1,25 @@
-function validateFileUpload(file) {
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-    const maxSize = 5 * 1024 * 1024; // 5MB
-
-    if (!allowedTypes.includes(file.type)) {
-        throw new Error('Invalid file type. Only JPEG, PNG, and GIF are allowed.');
+function validateFileUpload(file, allowedTypes, maxSizeMB) {
+    if (!file) {
+        throw new Error('No file provided');
     }
 
-    if (file.size > maxSize) {
-        throw new Error('File size exceeds the 5MB limit.');
+    const allowedTypesSet = new Set(allowedTypes);
+    const fileExtension = file.name.split('.').pop().toLowerCase();
+    const fileType = file.type;
+
+    if (!allowedTypesSet.has(fileExtension) && !allowedTypesSet.has(fileType)) {
+        throw new Error(`File type not allowed. Allowed types: ${Array.from(allowedTypes).join(', ')}`);
     }
 
-    return true;
+    const maxSizeBytes = maxSizeMB * 1024 * 1024;
+    if (file.size > maxSizeBytes) {
+        throw new Error(`File size exceeds limit of ${maxSizeMB}MB`);
+    }
+
+    return {
+        isValid: true,
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: fileType
+    };
 }
