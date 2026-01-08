@@ -317,4 +317,75 @@ export default userPreferencesManager;const UserPreferencesManager = (() => {
     };
 })();
 
-export default UserPreferencesManager;
+export default UserPreferencesManager;const UserPreferences = {
+  preferences: {},
+
+  init() {
+    this.loadPreferences();
+    this.setupListeners();
+  },
+
+  loadPreferences() {
+    const stored = localStorage.getItem('userPreferences');
+    if (stored) {
+      try {
+        this.preferences = JSON.parse(stored);
+      } catch (e) {
+        console.error('Failed to parse stored preferences:', e);
+        this.preferences = {};
+      }
+    }
+    this.applyPreferences();
+  },
+
+  savePreferences() {
+    localStorage.setItem('userPreferences', JSON.stringify(this.preferences));
+    this.dispatchChangeEvent();
+  },
+
+  setPreference(key, value) {
+    this.preferences[key] = value;
+    this.savePreferences();
+  },
+
+  getPreference(key) {
+    return this.preferences[key];
+  },
+
+  removePreference(key) {
+    delete this.preferences[key];
+    this.savePreferences();
+  },
+
+  applyPreferences() {
+    if (this.preferences.theme) {
+      document.documentElement.setAttribute('data-theme', this.preferences.theme);
+    }
+    if (this.preferences.fontSize) {
+      document.documentElement.style.fontSize = this.preferences.fontSize;
+    }
+  },
+
+  setupListeners() {
+    window.addEventListener('storage', (event) => {
+      if (event.key === 'userPreferences') {
+        this.loadPreferences();
+      }
+    });
+
+    document.addEventListener('preferenceChange', (event) => {
+      if (event.detail && event.detail.key) {
+        this.setPreference(event.detail.key, event.detail.value);
+      }
+    });
+  },
+
+  dispatchChangeEvent() {
+    const event = new CustomEvent('preferencesUpdated', {
+      detail: { preferences: this.preferences }
+    });
+    window.dispatchEvent(event);
+  }
+};
+
+UserPreferences.init();
