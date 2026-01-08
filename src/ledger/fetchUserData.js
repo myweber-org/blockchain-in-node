@@ -1,67 +1,19 @@
-function fetchUserData(userId, cacheDuration = 300000) {
-  const cacheKey = `user_${userId}`;
-  const cachedData = localStorage.getItem(cacheKey);
-  const now = Date.now();
-
-  if (cachedData) {
-    const { data, timestamp } = JSON.parse(cachedData);
-    if (now - timestamp < cacheDuration) {
-      console.log('Returning cached user data');
-      return Promise.resolve(data);
-    }
-  }
-
-  return fetch(`https://api.example.com/users/${userId}`)
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      return response.json();
-    })
-    .then(userData => {
-      const cacheData = {
-        data: userData,
-        timestamp: now
-      };
-      localStorage.setItem(cacheKey, JSON.stringify(cacheData));
-      return userData;
-    })
-    .catch(error => {
-      console.error('Failed to fetch user data:', error);
-      if (cachedData) {
-        console.log('Returning stale cached data due to fetch failure');
-        return JSON.parse(cachedData).data;
-      }
-      throw error;
-    });
-}function fetchUserData(userId, cacheDuration = 300000) {
-  const cacheKey = `user_${userId}`;
-  const cachedData = localStorage.getItem(cacheKey);
-
-  if (cachedData) {
-    const { data, timestamp } = JSON.parse(cachedData);
-    if (Date.now() - timestamp < cacheDuration) {
-      return Promise.resolve(data);
-    }
-  }
-
-  return fetch(`https://api.example.com/users/${userId}`)
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      return response.json();
-    })
-    .then(userData => {
-      const cacheObject = {
-        data: userData,
-        timestamp: Date.now()
-      };
-      localStorage.setItem(cacheKey, JSON.stringify(cacheObject));
-      return userData;
-    })
-    .catch(error => {
-      console.error('Failed to fetch user data:', error);
-      throw error;
-    });
+function fetchUserData(userId) {
+    const apiUrl = `https://api.example.com/users/${userId}`;
+    
+    return fetch(apiUrl)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('User data fetched successfully:', data);
+            return data;
+        })
+        .catch(error => {
+            console.error('Error fetching user data:', error);
+            throw error;
+        });
 }
