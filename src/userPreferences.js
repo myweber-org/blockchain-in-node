@@ -66,4 +66,56 @@ function loadPreferences() {
   }
 }
 
-export { validatePreferences, mergePreferences, savePreferences, loadPreferences, defaultPreferences };
+export { validatePreferences, mergePreferences, savePreferences, loadPreferences, defaultPreferences };function validateUserPreferences(prefs) {
+    const defaults = {
+        theme: 'light',
+        language: 'en',
+        notifications: true,
+        fontSize: 16,
+        autoSave: false
+    };
+
+    const validated = { ...defaults, ...prefs };
+
+    if (!['light', 'dark', 'auto'].includes(validated.theme)) {
+        validated.theme = defaults.theme;
+    }
+
+    if (!['en', 'es', 'fr', 'de'].includes(validated.language)) {
+        validated.language = defaults.language;
+    }
+
+    if (typeof validated.notifications !== 'boolean') {
+        validated.notifications = defaults.notifications;
+    }
+
+    if (typeof validated.fontSize !== 'number' || validated.fontSize < 12 || validated.fontSize > 24) {
+        validated.fontSize = defaults.fontSize;
+    }
+
+    if (typeof validated.autoSave !== 'boolean') {
+        validated.autoSave = defaults.autoSave;
+    }
+
+    return validated;
+}
+
+function saveUserPreferences(prefs) {
+    const validatedPrefs = validateUserPreferences(prefs);
+    localStorage.setItem('userPreferences', JSON.stringify(validatedPrefs));
+    return validatedPrefs;
+}
+
+function loadUserPreferences() {
+    const stored = localStorage.getItem('userPreferences');
+    if (stored) {
+        try {
+            return validateUserPreferences(JSON.parse(stored));
+        } catch (error) {
+            console.error('Failed to parse stored preferences:', error);
+        }
+    }
+    return validateUserPreferences({});
+}
+
+export { validateUserPreferences, saveUserPreferences, loadUserPreferences };
