@@ -96,4 +96,35 @@ function validateUserPreferences(preferences) {
     }
 
     return true;
+}function validateUserPreferences(preferences) {
+    const requiredFields = ['theme', 'notifications', 'language'];
+    const allowedThemes = ['light', 'dark', 'auto'];
+    const allowedLanguages = ['en', 'es', 'fr', 'de'];
+
+    for (const field of requiredFields) {
+        if (!preferences.hasOwnProperty(field)) {
+            throw new Error(`Missing required field: ${field}`);
+        }
+    }
+
+    if (!allowedThemes.includes(preferences.theme)) {
+        throw new Error(`Invalid theme. Allowed values: ${allowedThemes.join(', ')}`);
+    }
+
+    if (typeof preferences.notifications !== 'boolean') {
+        throw new Error('Notifications must be a boolean value');
+    }
+
+    if (!allowedLanguages.includes(preferences.language)) {
+        throw new Error(`Invalid language. Allowed values: ${allowedLanguages.join(', ')}`);
+    }
+
+    if (preferences.hasOwnProperty('itemsPerPage')) {
+        const items = parseInt(preferences.itemsPerPage);
+        if (isNaN(items) || items < 5 || items > 100) {
+            throw new Error('Items per page must be a number between 5 and 100');
+        }
+    }
+
+    return true;
 }
