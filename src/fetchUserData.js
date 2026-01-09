@@ -24,4 +24,37 @@ async function fetchUserData(userId, maxRetries = 3) {
     }
 
     throw new Error(`Failed to fetch user data after ${maxRetries} attempts: ${lastError.message}`);
+}async function fetchUserData(userId) {
+  const cacheKey = `user_${userId}`;
+  const cachedData = localStorage.getItem(cacheKey);
+  
+  if (cachedData) {
+    const { data, timestamp } = JSON.parse(cachedData);
+    const isExpired = Date.now() - timestamp > 300000;
+    
+    if (!isExpired) {
+      return data;
+    }
+  }
+  
+  try {
+    const response = await fetch(`https://api.example.com/users/${userId}`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const userData = await response.json();
+    const cacheData = {
+      data: userData,
+      timestamp: Date.now()
+    };
+    
+    localStorage.setItem(cacheKey, JSON.stringify(cacheData));
+    return userData;
+    
+  } catch (error) {
+    console.error('Failed to fetch user data:', error);
+    throw error;
+  }
 }
