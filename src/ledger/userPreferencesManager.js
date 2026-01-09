@@ -388,4 +388,83 @@ export default UserPreferencesManager;const UserPreferences = {
   }
 };
 
-UserPreferences.init();
+UserPreferences.init();const userPreferencesManager = (() => {
+    const STORAGE_KEY = 'app_preferences';
+    const DEFAULT_PREFERENCES = {
+        theme: 'light',
+        fontSize: 16,
+        notifications: true,
+        language: 'en',
+        autoSave: false,
+        lastUpdated: null
+    };
+
+    let currentPreferences = { ...DEFAULT_PREFERENCES };
+
+    const loadPreferences = () => {
+        try {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                currentPreferences = { ...DEFAULT_PREFERENCES, ...parsed };
+                return currentPreferences;
+            }
+        } catch (error) {
+            console.warn('Failed to load preferences:', error);
+        }
+        return currentPreferences;
+    };
+
+    const savePreferences = (updates) => {
+        try {
+            currentPreferences = {
+                ...currentPreferences,
+                ...updates,
+                lastUpdated: new Date().toISOString()
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(currentPreferences));
+            return true;
+        } catch (error) {
+            console.error('Failed to save preferences:', error);
+            return false;
+        }
+    };
+
+    const resetToDefaults = () => {
+        currentPreferences = { ...DEFAULT_PREFERENCES };
+        localStorage.removeItem(STORAGE_KEY);
+        return currentPreferences;
+    };
+
+    const getPreference = (key) => {
+        return currentPreferences[key] ?? DEFAULT_PREFERENCES[key];
+    };
+
+    const getAllPreferences = () => {
+        return { ...currentPreferences };
+    };
+
+    const subscribe = (callback) => {
+        window.addEventListener('storage', (event) => {
+            if (event.key === STORAGE_KEY) {
+                loadPreferences();
+                callback(getAllPreferences());
+            }
+        });
+    };
+
+    loadPreferences();
+
+    return {
+        save: savePreferences,
+        load: loadPreferences,
+        reset: resetToDefaults,
+        get: getPreference,
+        getAll: getAllPreferences,
+        subscribe,
+        constants: {
+            THEMES: ['light', 'dark', 'auto'],
+            LANGUAGES: ['en', 'es', 'fr', 'de']
+        }
+    };
+})();
