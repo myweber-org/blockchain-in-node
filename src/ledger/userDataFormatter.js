@@ -6,7 +6,7 @@ function formatUserData(users) {
     email: user.email.toLowerCase(),
     age: calculateAge(user.birthDate),
     isActive: user.status === 'active',
-    lastLogin: formatDate(user.lastLogin)
+    formattedDate: new Date(user.createdAt).toLocaleDateString('en-US')
   }));
 }
 
@@ -21,13 +21,4 @@ function calculateAge(birthDate) {
   }
   
   return age;
-}
-
-function formatDate(dateString) {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  });
 }
