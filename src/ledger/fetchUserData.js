@@ -48,4 +48,40 @@ function clearUserCache(userId = null) {
     }
 }
 
-export { fetchUserData, clearUserCache };
+export { fetchUserData, clearUserCache };async function fetchUserData(userId) {
+  const cacheKey = `user_${userId}`;
+  const cacheExpiry = 5 * 60 * 1000; // 5 minutes
+
+  // Check cache first
+  const cached = localStorage.getItem(cacheKey);
+  if (cached) {
+    const { data, timestamp } = JSON.parse(cached);
+    if (Date.now() - timestamp < cacheExpiry) {
+      return data;
+    }
+  }
+
+  try {
+    const response = await fetch(`https://api.example.com/users/${userId}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const userData = await response.json();
+
+    // Cache the response
+    localStorage.setItem(cacheKey, JSON.stringify({
+      data: userData,
+      timestamp: Date.now()
+    }));
+
+    return userData;
+  } catch (error) {
+    console.error('Failed to fetch user data:', error);
+    // Return cached data even if expired as fallback
+    if (cached) {
+      const { data } = JSON.parse(cached);
+      return data;
+    }
+    throw error;
+  }
+}
