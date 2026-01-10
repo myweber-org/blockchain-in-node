@@ -73,4 +73,25 @@ function validateUserInput(userData) {
     };
 }
 
-export { validateEmail, validatePassword, validateUserInput };
+export { validateEmail, validatePassword, validateUserInput };function validateUserData(user) {
+    const errors = [];
+
+    if (!user.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email)) {
+        errors.push('Invalid email format');
+    }
+
+    if (!user.password || user.password.length < 8) {
+        errors.push('Password must be at least 8 characters');
+    }
+
+    if (user.age !== undefined && (typeof user.age !== 'number' || user.age < 0 || user.age > 150)) {
+        errors.push('Age must be a number between 0 and 150');
+    }
+
+    return {
+        isValid: errors.length === 0,
+        errors: errors
+    };
+}
+
+module.exports = { validateUserData };
