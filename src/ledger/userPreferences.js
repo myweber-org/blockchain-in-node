@@ -1,47 +1,81 @@
-function validateUserPreferences(prefs) {
-    const defaults = {
-        theme: 'light',
-        language: 'en',
-        notifications: true,
-        timezone: 'UTC'
-    };
+const userPreferences = {
+  theme: 'light',
+  notifications: true,
+  language: 'en',
+  resultsPerPage: 10
+};
 
-    const validatedPrefs = { ...defaults, ...prefs };
+const validThemes = ['light', 'dark', 'auto'];
+const validLanguages = ['en', 'es', 'fr', 'de'];
+const minResultsPerPage = 5;
+const maxResultsPerPage = 100;
 
-    if (!['light', 'dark', 'auto'].includes(validatedPrefs.theme)) {
-        validatedPrefs.theme = defaults.theme;
-    }
-
-    if (!['en', 'es', 'fr', 'de'].includes(validatedPrefs.language)) {
-        validatedPrefs.language = defaults.language;
-    }
-
-    if (typeof validatedPrefs.notifications !== 'boolean') {
-        validatedPrefs.notifications = defaults.notifications;
-    }
-
-    if (!/^[A-Za-z_]+\/[A-Za-z_]+$/.test(validatedPrefs.timezone)) {
-        validatedPrefs.timezone = defaults.timezone;
-    }
-
-    return validatedPrefs;
+function validatePreferences(prefs) {
+  const errors = [];
+  
+  if (!validThemes.includes(prefs.theme)) {
+    errors.push(`Invalid theme. Must be one of: ${validThemes.join(', ')}`);
+  }
+  
+  if (typeof prefs.notifications !== 'boolean') {
+    errors.push('Notifications must be a boolean value');
+  }
+  
+  if (!validLanguages.includes(prefs.language)) {
+    errors.push(`Invalid language. Must be one of: ${validLanguages.join(', ')}`);
+  }
+  
+  if (typeof prefs.resultsPerPage !== 'number' || 
+      prefs.resultsPerPage < minResultsPerPage || 
+      prefs.resultsPerPage > maxResultsPerPage) {
+    errors.push(`Results per page must be between ${minResultsPerPage} and ${maxResultsPerPage}`);
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    errors: errors
+  };
 }
 
-function initializeUserPreferences() {
-    const storedPrefs = JSON.parse(localStorage.getItem('userPreferences') || '{}');
-    const validatedPrefs = validateUserPreferences(storedPrefs);
-    
+function applyDefaultPreferences(prefs) {
+  return {
+    theme: prefs.theme || userPreferences.theme,
+    notifications: typeof prefs.notifications === 'boolean' ? prefs.notifications : userPreferences.notifications,
+    language: prefs.language || userPreferences.language,
+    resultsPerPage: prefs.resultsPerPage || userPreferences.resultsPerPage
+  };
+}
+
+function savePreferences(prefs) {
+  const validatedPrefs = applyDefaultPreferences(prefs);
+  const validation = validatePreferences(validatedPrefs);
+  
+  if (!validation.isValid) {
+    console.error('Invalid preferences:', validation.errors);
+    return false;
+  }
+  
+  try {
     localStorage.setItem('userPreferences', JSON.stringify(validatedPrefs));
-    return validatedPrefs;
+    return true;
+  } catch (error) {
+    console.error('Failed to save preferences:', error);
+    return false;
+  }
 }
 
-function updateUserPreferences(newPrefs) {
-    const currentPrefs = JSON.parse(localStorage.getItem('userPreferences') || '{}');
-    const mergedPrefs = { ...currentPrefs, ...newPrefs };
-    const validatedPrefs = validateUserPreferences(mergedPrefs);
-    
-    localStorage.setItem('userPreferences', JSON.stringify(validatedPrefs));
-    return validatedPrefs;
+function loadPreferences() {
+  try {
+    const saved = localStorage.getItem('userPreferences');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return applyDefaultPreferences(parsed);
+    }
+  } catch (error) {
+    console.error('Failed to load preferences:', error);
+  }
+  
+  return {...userPreferences};
 }
 
-export { validateUserPreferences, initializeUserPreferences, updateUserPreferences };
+export { validatePreferences, applyDefaultPreferences, savePreferences, loadPreferences };
