@@ -1,28 +1,43 @@
 function validateUserPreferences(preferences) {
-    const errors = {};
+    const requiredFields = ['theme', 'language', 'notifications'];
+    const validThemes = ['light', 'dark', 'auto'];
+    const validLanguages = ['en', 'es', 'fr', 'de'];
     
-    if (!preferences.username || preferences.username.trim().length < 3) {
-        errors.username = 'Username must be at least 3 characters long';
+    if (!preferences || typeof preferences !== 'object') {
+        throw new Error('Preferences must be an object');
     }
     
-    if (!preferences.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(preferences.email)) {
-        errors.email = 'Please enter a valid email address';
+    for (const field of requiredFields) {
+        if (!preferences.hasOwnProperty(field)) {
+            throw new Error(`Missing required field: ${field}`);
+        }
     }
     
-    if (preferences.age && (preferences.age < 18 || preferences.age > 120)) {
-        errors.age = 'Age must be between 18 and 120';
+    if (!validThemes.includes(preferences.theme)) {
+        throw new Error(`Invalid theme. Must be one of: ${validThemes.join(', ')}`);
     }
     
-    if (preferences.theme && !['light', 'dark', 'auto'].includes(preferences.theme)) {
-        errors.theme = 'Theme must be light, dark, or auto';
+    if (!validLanguages.includes(preferences.language)) {
+        throw new Error(`Invalid language. Must be one of: ${validLanguages.join(', ')}`);
     }
     
-    if (preferences.notificationFrequency && !['daily', 'weekly', 'monthly'].includes(preferences.notificationFrequency)) {
-        errors.notificationFrequency = 'Notification frequency must be daily, weekly, or monthly';
+    if (typeof preferences.notifications !== 'boolean') {
+        throw new Error('Notifications must be a boolean value');
     }
     
-    return {
-        isValid: Object.keys(errors).length === 0,
-        errors: errors
-    };
+    if (preferences.hasOwnProperty('timezone')) {
+        const timezoneRegex = /^[A-Za-z_]+\/[A-Za-z_]+$/;
+        if (!timezoneRegex.test(preferences.timezone)) {
+            throw new Error('Invalid timezone format');
+        }
+    }
+    
+    if (preferences.hasOwnProperty('itemsPerPage')) {
+        const items = parseInt(preferences.itemsPerPage);
+        if (isNaN(items) || items < 5 || items > 100) {
+            throw new Error('Items per page must be between 5 and 100');
+        }
+    }
+    
+    return true;
 }
