@@ -1,18 +1,11 @@
 function formatUserData(users) {
-    return users.map(user => {
-        const fullName = `${user.firstName} ${user.lastName}`.trim();
-        const age = calculateAge(user.birthDate);
-        const status = user.isActive ? 'Active' : 'Inactive';
-        
-        return {
-            id: user.id,
-            name: fullName,
-            age: age,
-            email: user.email,
-            status: status,
-            lastLogin: formatDate(user.lastLogin)
-        };
-    });
+    return users.map(user => ({
+        id: user.id,
+        fullName: `${user.firstName} ${user.lastName}`.trim(),
+        email: user.email.toLowerCase(),
+        age: calculateAge(user.birthDate),
+        isActive: user.status === 'active'
+    }));
 }
 
 function calculateAge(birthDate) {
@@ -26,9 +19,4 @@ function calculateAge(birthDate) {
     }
     
     return age;
-}
-
-function formatDate(dateString) {
-    const options = { year: 'numeric', month: 'short', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString('en-US', options);
 }
