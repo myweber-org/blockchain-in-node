@@ -114,4 +114,35 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-export { sanitizeInput, validateEmail, escapeHtml };
+export { sanitizeInput, validateEmail, escapeHtml };function sanitizeInput(input) {
+    if (typeof input !== 'string') {
+        return '';
+    }
+    
+    const element = document.createElement('div');
+    element.innerText = input;
+    return element.innerHTML.replace(/[&<>"']/g, function(match) {
+        const escapeMap = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#x27;'
+        };
+        return escapeMap[match] || match;
+    });
+}
+
+function validateAndSanitize(userInput, maxLength = 1000) {
+    if (!userInput || userInput.trim().length === 0) {
+        return '';
+    }
+    
+    if (userInput.length > maxLength) {
+        userInput = userInput.substring(0, maxLength);
+    }
+    
+    return sanitizeInput(userInput);
+}
+
+export { sanitizeInput, validateAndSanitize };
