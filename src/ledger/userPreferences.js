@@ -1,81 +1,70 @@
-const userPreferences = {
-  theme: 'light',
-  notifications: true,
-  language: 'en',
-  resultsPerPage: 10
-};
-
-const validThemes = ['light', 'dark', 'auto'];
-const validLanguages = ['en', 'es', 'fr', 'de'];
-const minResultsPerPage = 5;
-const maxResultsPerPage = 100;
-
-function validatePreferences(prefs) {
-  const errors = [];
-  
-  if (!validThemes.includes(prefs.theme)) {
-    errors.push(`Invalid theme. Must be one of: ${validThemes.join(', ')}`);
-  }
-  
-  if (typeof prefs.notifications !== 'boolean') {
-    errors.push('Notifications must be a boolean value');
-  }
-  
-  if (!validLanguages.includes(prefs.language)) {
-    errors.push(`Invalid language. Must be one of: ${validLanguages.join(', ')}`);
-  }
-  
-  if (typeof prefs.resultsPerPage !== 'number' || 
-      prefs.resultsPerPage < minResultsPerPage || 
-      prefs.resultsPerPage > maxResultsPerPage) {
-    errors.push(`Results per page must be between ${minResultsPerPage} and ${maxResultsPerPage}`);
-  }
-  
-  return {
-    isValid: errors.length === 0,
-    errors: errors
-  };
-}
-
-function applyDefaultPreferences(prefs) {
-  return {
-    theme: prefs.theme || userPreferences.theme,
-    notifications: typeof prefs.notifications === 'boolean' ? prefs.notifications : userPreferences.notifications,
-    language: prefs.language || userPreferences.language,
-    resultsPerPage: prefs.resultsPerPage || userPreferences.resultsPerPage
-  };
-}
-
-function savePreferences(prefs) {
-  const validatedPrefs = applyDefaultPreferences(prefs);
-  const validation = validatePreferences(validatedPrefs);
-  
-  if (!validation.isValid) {
-    console.error('Invalid preferences:', validation.errors);
-    return false;
-  }
-  
-  try {
-    localStorage.setItem('userPreferences', JSON.stringify(validatedPrefs));
+function validatePreferences(preferences) {
+    const allowedThemes = ['light', 'dark', 'auto'];
+    const allowedLanguages = ['en', 'es', 'fr', 'de'];
+    
+    if (!preferences || typeof preferences !== 'object') {
+        throw new Error('Preferences must be an object');
+    }
+    
+    if (preferences.theme && !allowedThemes.includes(preferences.theme)) {
+        throw new Error(`Theme must be one of: ${allowedThemes.join(', ')}`);
+    }
+    
+    if (preferences.language && !allowedLanguages.includes(preferences.language)) {
+        throw new Error(`Language must be one of: ${allowedLanguages.join(', ')}`);
+    }
+    
+    if (preferences.fontSize && (typeof preferences.fontSize !== 'number' || preferences.fontSize < 8 || preferences.fontSize > 72)) {
+        throw new Error('Font size must be a number between 8 and 72');
+    }
+    
     return true;
-  } catch (error) {
-    console.error('Failed to save preferences:', error);
-    return false;
-  }
+}
+
+function savePreferences(preferences) {
+    try {
+        validatePreferences(preferences);
+        const currentPrefs = loadPreferences();
+        const mergedPrefs = { ...currentPrefs, ...preferences };
+        localStorage.setItem('userPreferences', JSON.stringify(mergedPrefs));
+        return mergedPrefs;
+    } catch (error) {
+        console.error('Failed to save preferences:', error.message);
+        throw error;
+    }
 }
 
 function loadPreferences() {
-  try {
-    const saved = localStorage.getItem('userPreferences');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      return applyDefaultPreferences(parsed);
+    try {
+        const stored = localStorage.getItem('userPreferences');
+        return stored ? JSON.parse(stored) : {};
+    } catch (error) {
+        console.error('Failed to load preferences:', error.message);
+        return {};
     }
-  } catch (error) {
-    console.error('Failed to load preferences:', error);
-  }
-  
-  return {...userPreferences};
 }
 
-export { validatePreferences, applyDefaultPreferences, savePreferences, loadPreferences };
+function resetPreferences() {
+    localStorage.removeItem('userPreferences');
+    return {};
+}
+
+function applyPreferences() {
+    const prefs = loadPreferences();
+    
+    if (prefs.theme) {
+        document.documentElement.setAttribute('data-theme', prefs.theme);
+    }
+    
+    if (prefs.fontSize) {
+        document.documentElement.style.fontSize = `${prefs.fontSize}px`;
+    }
+    
+    if (prefs.language) {
+        document.documentElement.lang = prefs.language;
+    }
+    
+    return prefs;
+}
+
+export { validatePreferences, savePreferences, loadPreferences, resetPreferences, applyPreferences };
