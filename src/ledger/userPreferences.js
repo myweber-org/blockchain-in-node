@@ -1,70 +1,77 @@
-function validatePreferences(preferences) {
-    const allowedThemes = ['light', 'dark', 'auto'];
-    const allowedLanguages = ['en', 'es', 'fr', 'de'];
-    
-    if (!preferences || typeof preferences !== 'object') {
-        throw new Error('Preferences must be an object');
+const defaultPreferences = {
+  theme: 'light',
+  notifications: true,
+  language: 'en',
+  fontSize: 14,
+  autoSave: true
+};
+
+const validThemes = ['light', 'dark', 'system'];
+const validLanguages = ['en', 'es', 'fr', 'de'];
+const minFontSize = 8;
+const maxFontSize = 32;
+
+function validatePreferences(userPrefs) {
+  const validated = { ...defaultPreferences };
+  
+  if (userPrefs && typeof userPrefs === 'object') {
+    if (validThemes.includes(userPrefs.theme)) {
+      validated.theme = userPrefs.theme;
     }
     
-    if (preferences.theme && !allowedThemes.includes(preferences.theme)) {
-        throw new Error(`Theme must be one of: ${allowedThemes.join(', ')}`);
+    if (typeof userPrefs.notifications === 'boolean') {
+      validated.notifications = userPrefs.notifications;
     }
     
-    if (preferences.language && !allowedLanguages.includes(preferences.language)) {
-        throw new Error(`Language must be one of: ${allowedLanguages.join(', ')}`);
+    if (validLanguages.includes(userPrefs.language)) {
+      validated.language = userPrefs.language;
     }
     
-    if (preferences.fontSize && (typeof preferences.fontSize !== 'number' || preferences.fontSize < 8 || preferences.fontSize > 72)) {
-        throw new Error('Font size must be a number between 8 and 72');
+    if (typeof userPrefs.fontSize === 'number' && 
+        userPrefs.fontSize >= minFontSize && 
+        userPrefs.fontSize <= maxFontSize) {
+      validated.fontSize = userPrefs.fontSize;
     }
     
-    return true;
+    if (typeof userPrefs.autoSave === 'boolean') {
+      validated.autoSave = userPrefs.autoSave;
+    }
+  }
+  
+  return validated;
 }
 
-function savePreferences(preferences) {
-    try {
-        validatePreferences(preferences);
-        const currentPrefs = loadPreferences();
-        const mergedPrefs = { ...currentPrefs, ...preferences };
-        localStorage.setItem('userPreferences', JSON.stringify(mergedPrefs));
-        return mergedPrefs;
-    } catch (error) {
-        console.error('Failed to save preferences:', error.message);
-        throw error;
-    }
+function savePreferences(prefs) {
+  const validatedPrefs = validatePreferences(prefs);
+  try {
+    localStorage.setItem('userPreferences', JSON.stringify(validatedPrefs));
+    return { success: true, preferences: validatedPrefs };
+  } catch (error) {
+    console.error('Failed to save preferences:', error);
+    return { success: false, error: 'Storage error' };
+  }
 }
 
 function loadPreferences() {
-    try {
-        const stored = localStorage.getItem('userPreferences');
-        return stored ? JSON.parse(stored) : {};
-    } catch (error) {
-        console.error('Failed to load preferences:', error.message);
-        return {};
+  try {
+    const stored = localStorage.getItem('userPreferences');
+    if (stored) {
+      return validatePreferences(JSON.parse(stored));
     }
+  } catch (error) {
+    console.error('Failed to load preferences:', error);
+  }
+  return { ...defaultPreferences };
 }
 
 function resetPreferences() {
+  try {
     localStorage.removeItem('userPreferences');
-    return {};
+    return { success: true, preferences: { ...defaultPreferences } };
+  } catch (error) {
+    console.error('Failed to reset preferences:', error);
+    return { success: false, error: 'Reset failed' };
+  }
 }
 
-function applyPreferences() {
-    const prefs = loadPreferences();
-    
-    if (prefs.theme) {
-        document.documentElement.setAttribute('data-theme', prefs.theme);
-    }
-    
-    if (prefs.fontSize) {
-        document.documentElement.style.fontSize = `${prefs.fontSize}px`;
-    }
-    
-    if (prefs.language) {
-        document.documentElement.lang = prefs.language;
-    }
-    
-    return prefs;
-}
-
-export { validatePreferences, savePreferences, loadPreferences, resetPreferences, applyPreferences };
+export { validatePreferences, savePreferences, loadPreferences, resetPreferences, defaultPreferences };
