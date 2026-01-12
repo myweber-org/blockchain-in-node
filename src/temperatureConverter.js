@@ -8,21 +8,25 @@ function fahrenheitToCelsius(fahrenheit) {
 
 function convertTemperature(value, unit) {
     if (unit.toLowerCase() === 'c') {
-        return {
-            celsius: value,
-            fahrenheit: celsiusToFahrenheit(value)
-        };
+        return celsiusToFahrenheit(value);
     } else if (unit.toLowerCase() === 'f') {
-        return {
-            celsius: fahrenheitToCelsius(value),
-            fahrenheit: value
-        };
+        return fahrenheitToCelsius(value);
+    } else {
+        throw new Error('Invalid unit. Use "C" for Celsius or "F" for Fahrenheit.');
     }
-    throw new Error('Invalid unit. Use "C" for Celsius or "F" for Fahrenheit.');
+}
+
+function formatTemperature(value, fromUnit, toUnit) {
+    const converted = convertTemperature(value, fromUnit);
+    const fromSymbol = fromUnit.toUpperCase() === 'C' ? '°C' : '°F';
+    const toSymbol = toUnit.toUpperCase() === 'C' ? '°C' : '°F';
+    
+    return `${value}${fromSymbol} = ${converted.toFixed(2)}${toSymbol}`;
 }
 
 module.exports = {
     celsiusToFahrenheit,
     fahrenheitToCelsius,
-    convertTemperature
+    convertTemperature,
+    formatTemperature
 };
