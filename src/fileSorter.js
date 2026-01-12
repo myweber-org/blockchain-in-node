@@ -1,3 +1,4 @@
+
 function sortFiles(files) {
     return files.sort((a, b) => {
         const extA = a.name.split('.').pop().toLowerCase();
@@ -12,17 +13,17 @@ function sortFiles(files) {
 }
 
 function groupFilesByExtension(files) {
-    const groups = {};
+    const grouped = {};
     
     files.forEach(file => {
         const ext = file.name.split('.').pop().toLowerCase();
-        if (!groups[ext]) {
-            groups[ext] = [];
+        if (!grouped[ext]) {
+            grouped[ext] = [];
         }
-        groups[ext].push(file);
+        grouped[ext].push(file);
     });
     
-    return groups;
+    return grouped;
 }
 
 function getTotalSize(files) {
