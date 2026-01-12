@@ -1,61 +1,40 @@
 const UserPreferences = {
-  preferences: {},
+    _prefs: {},
 
-  init() {
-    this.loadPreferences();
-    this.setupListeners();
-  },
+    init() {
+        const stored = localStorage.getItem('userPrefs');
+        this._prefs = stored ? JSON.parse(stored) : {};
+    },
 
-  loadPreferences() {
-    const stored = localStorage.getItem('userPreferences');
-    if (stored) {
-      try {
-        this.preferences = JSON.parse(stored);
-      } catch (e) {
-        console.error('Failed to parse preferences:', e);
-        this.preferences = {};
-      }
+    set(key, value) {
+        this._prefs[key] = value;
+        this._save();
+        return this;
+    },
+
+    get(key, defaultValue = null) {
+        return this._prefs.hasOwnProperty(key) ? this._prefs[key] : defaultValue;
+    },
+
+    remove(key) {
+        delete this._prefs[key];
+        this._save();
+        return this;
+    },
+
+    getAll() {
+        return { ...this._prefs };
+    },
+
+    clear() {
+        this._prefs = {};
+        localStorage.removeItem('userPrefs');
+        return this;
+    },
+
+    _save() {
+        localStorage.setItem('userPrefs', JSON.stringify(this._prefs));
     }
-  },
-
-  savePreferences() {
-    localStorage.setItem('userPreferences', JSON.stringify(this.preferences));
-  },
-
-  getPreference(key, defaultValue = null) {
-    return this.preferences[key] !== undefined ? this.preferences[key] : defaultValue;
-  },
-
-  setPreference(key, value) {
-    this.preferences[key] = value;
-    this.savePreferences();
-    this.dispatchChangeEvent(key, value);
-  },
-
-  removePreference(key) {
-    delete this.preferences[key];
-    this.savePreferences();
-  },
-
-  clearAll() {
-    this.preferences = {};
-    localStorage.removeItem('userPreferences');
-  },
-
-  dispatchChangeEvent(key, value) {
-    const event = new CustomEvent('preferenceChanged', {
-      detail: { key, value }
-    });
-    window.dispatchEvent(event);
-  },
-
-  setupListeners() {
-    window.addEventListener('storage', (e) => {
-      if (e.key === 'userPreferences') {
-        this.loadPreferences();
-      }
-    });
-  }
 };
 
 UserPreferences.init();
