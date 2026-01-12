@@ -122,4 +122,56 @@ class FileUploadHandler {
   }
 }
 
-export default FileUploadHandler;
+export default FileUploadHandler;function validateFile(file, maxSize) {
+    const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+    
+    if (!allowedTypes.includes(file.type)) {
+        throw new Error('Invalid file type. Only JPEG, PNG, and PDF files are allowed.');
+    }
+    
+    if (file.size > maxSize) {
+        throw new Error(`File size exceeds the limit of ${maxSize / 1024 / 1024}MB.`);
+    }
+    
+    return {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        lastModified: file.lastModified
+    };
+}
+
+function handleFileUpload(event, maxSize = 5 * 1024 * 1024) {
+    const file = event.target.files[0];
+    
+    if (!file) {
+        console.log('No file selected.');
+        return;
+    }
+    
+    try {
+        const validatedFile = validateFile(file, maxSize);
+        console.log('File validated successfully:', validatedFile);
+        
+        // Simulate upload process
+        uploadFile(validatedFile);
+    } catch (error) {
+        console.error('Validation failed:', error.message);
+        alert(error.message);
+        event.target.value = '';
+    }
+}
+
+function uploadFile(fileData) {
+    // Simulate API call
+    console.log(`Uploading ${fileData.name}...`);
+    
+    setTimeout(() => {
+        console.log(`File ${fileData.name} uploaded successfully.`);
+    }, 2000);
+}
+
+// Example usage
+document.getElementById('fileInput').addEventListener('change', (event) => {
+    handleFileUpload(event, 10 * 1024 * 1024);
+});
