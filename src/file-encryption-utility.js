@@ -11,40 +11,61 @@ class FileEncryptionUtility {
         return crypto.randomBytes(this.keyLength);
     }
 
-    encryptFile(data, key) {
-        const iv = crypto.randomBytes(this.ivLength);
+    generateIV() {
+        return crypto.randomBytes(this.ivLength);
+    }
+
+    encryptFile(data, key, iv) {
+        if (!Buffer.isBuffer(data)) {
+            data = Buffer.from(data);
+        }
+
         const cipher = crypto.createCipheriv(this.algorithm, key, iv);
-        
-        let encrypted = cipher.update(data, 'utf8', 'hex');
-        encrypted += cipher.final('hex');
+        const encrypted = Buffer.concat([cipher.update(data), cipher.final()]);
         
         return {
-            iv: iv.toString('hex'),
-            encryptedData: encrypted
+            encryptedData: encrypted,
+            iv: iv,
+            key: key
         };
     }
 
     decryptFile(encryptedData, key, iv) {
-        const decipher = crypto.createDecipheriv(
-            this.algorithm, 
-            key, 
-            Buffer.from(iv, 'hex')
-        );
-        
-        let decrypted = decipher.update(encryptedData, 'hex', 'utf8');
-        decrypted += decipher.final('utf8');
+        const decipher = crypto.createDecipheriv(this.algorithm, key, iv);
+        const decrypted = Buffer.concat([decipher.update(encryptedData), decipher.final()]);
         
         return decrypted;
     }
 
-    createKeyFromPassword(password, salt) {
-        return crypto.pbkdf2Sync(
-            password, 
-            salt, 
-            100000, 
-            this.keyLength, 
-            'sha256'
-        );
+    encryptWithPassword(data, password) {
+        const salt = crypto.randomBytes(16);
+        const key = crypto.scryptSync(password, salt, this.keyLength);
+        const iv = this.generateIV();
+        
+        const cipher = crypto.createCipheriv(this.algorithm, key, iv);
+        const encrypted = Buffer.concat([cipher.update(data), cipher.final()]);
+        
+        return Buffer.concat([salt, iv, encrypted]);
+    }
+
+    decryptWithPassword(encryptedData, password) {
+        const salt = encryptedData.slice(0, 16);
+        const iv = encryptedData.slice(16, 32);
+        const data = encryptedData.slice(32);
+        
+        const key = crypto.scryptSync(password, salt, this.keyLength);
+        const decipher = crypto.createDecipheriv(this.algorithm, key, iv);
+        
+        return Buffer.concat([decipher.update(data), decipher.final()]);
+    }
+
+    calculateHash(data, algorithm = 'sha256') {
+        return crypto.createHash(algorithm).update(data).digest('hex');
+    }
+
+    verifyIntegrity(data, expectedHash, algorithm = 'sha256') {
+        const actualHash = this.calculateHash(data, algorithm);
+        return actualHash === expectedHash;
     }
 }
 
