@@ -1,56 +1,28 @@
-function fetchUserData(userId, maxRetries = 3) {
-    const apiUrl = `https://api.example.com/users/${userId}`;
-    
-    async function attemptFetch(retryCount) {
-        try {
-            const response = await fetch(apiUrl);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            return data;
-        } catch (error) {
-            if (retryCount < maxRetries) {
-                console.warn(`Attempt ${retryCount + 1} failed. Retrying...`);
-                return attemptFetch(retryCount + 1);
-            } else {
-                console.error(`Failed after ${maxRetries} attempts:`, error);
-                throw error;
-            }
-        }
-    }
-    
-    return attemptFetch(0);
-}
+function fetchUserData(userId, timeout = 5000) {
+    return new Promise((resolve, reject) => {
+        const controller = new AbortController();
+        const signal = controller.signal;
+        const timer = setTimeout(() => {
+            controller.abort();
+            reject(new Error('Request timed out'));
+        }, timeout);
 
-function validateUserData(userData) {
-    const requiredFields = ['id', 'name', 'email'];
-    
-    for (const field of requiredFields) {
-        if (!userData[field]) {
-            throw new Error(`Missing required field: ${field}`);
-        }
-    }
-    
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(userData.email)) {
-        throw new Error('Invalid email format');
-    }
-    
-    return true;
+        fetch(`https://api.example.com/users/${userId}`, { signal })
+            .then(response => {
+                clearTimeout(timer);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => resolve(data))
+            .catch(error => {
+                clearTimeout(timer);
+                if (error.name === 'AbortError') {
+                    reject(new Error('Request was aborted due to timeout'));
+                } else {
+                    reject(error);
+                }
+            });
+    });
 }
-
-async function getUserData(userId) {
-    try {
-        const userData = await fetchUserData(userId);
-        validateUserData(userData);
-        return userData;
-    } catch (error) {
-        console.error('Failed to get user data:', error);
-        return null;
-    }
-}
-
-export { fetchUserData, validateUserData, getUserData };
