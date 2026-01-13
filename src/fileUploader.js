@@ -376,4 +376,35 @@ if (typeof module !== 'undefined' && module.exports) {
     };
 })();
 
-export default fileUploader;
+export default fileUploader;function uploadFile(file, url, onProgress, onSuccess, onError) {
+    if (!file || !url) {
+        onError('File or URL is missing');
+        return;
+    }
+
+    const xhr = new XMLHttpRequest();
+    const formData = new FormData();
+    formData.append('file', file);
+
+    xhr.upload.addEventListener('progress', (event) => {
+        if (event.lengthComputable) {
+            const percentComplete = (event.loaded / event.total) * 100;
+            onProgress(percentComplete);
+        }
+    });
+
+    xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+            onSuccess(xhr.responseText);
+        } else {
+            onError(`Upload failed with status: ${xhr.status}`);
+        }
+    });
+
+    xhr.addEventListener('error', () => {
+        onError('Network error occurred');
+    });
+
+    xhr.open('POST', url, true);
+    xhr.send(formData);
+}
