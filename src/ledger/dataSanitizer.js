@@ -1,33 +1,4 @@
 function sanitizeInput(input) {
-  if (typeof input !== 'string') {
-    return '';
-  }
-  
-  const map = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#x27;',
-    '/': '&#x2F;'
-  };
-  
-  const reg = /[&<>"'/]/ig;
-  return input.replace(reg, (match) => map[match]);
-}
-
-function validateEmail(email) {
-  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return re.test(email);
-}
-
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-export { sanitizeInput, validateEmail, escapeHtml };function sanitizeInput(input) {
     const div = document.createElement('div');
     div.textContent = input;
     return div.innerHTML;
@@ -39,15 +10,14 @@ function validateAndSanitize(userInput) {
     }
     
     const trimmed = userInput.trim();
-    const sanitized = sanitizeInput(trimmed);
-    
-    const regex = /^[a-zA-Z0-9\s.,!?@'-]+$/;
-    if (!regex.test(trimmed)) {
-        console.warn('Input contains potentially dangerous characters');
+    if (trimmed.length === 0) {
         return '';
     }
     
-    return sanitized;
+    const sanitized = sanitizeInput(trimmed);
+    const maxLength = 1000;
+    
+    return sanitized.length > maxLength ? sanitized.substring(0, maxLength) : sanitized;
 }
 
-export { validateAndSanitize };
+module.exports = { validateAndSanitize };
