@@ -580,4 +580,101 @@ if (typeof module !== 'undefined' && module.exports) {
     subscribe: subscribe,
     defaults: DEFAULT_PREFERENCES
   };
-})();
+})();class UserPreferencesManager {
+    constructor() {
+        this.prefs = {};
+        this.storageKey = 'app_user_preferences';
+        this.loadPreferences();
+    }
+
+    setPreference(key, value) {
+        this.prefs[key] = value;
+        this.savePreferences();
+        return this;
+    }
+
+    getPreference(key, defaultValue = null) {
+        return this.prefs[key] !== undefined ? this.prefs[key] : defaultValue;
+    }
+
+    removePreference(key) {
+        delete this.prefs[key];
+        this.savePreferences();
+        return this;
+    }
+
+    clearAll() {
+        this.prefs = {};
+        this.savePreferences();
+        return this;
+    }
+
+    getAllPreferences() {
+        return { ...this.prefs };
+    }
+
+    savePreferences() {
+        const data = JSON.stringify(this.prefs);
+        
+        try {
+            if (typeof localStorage !== 'undefined') {
+                localStorage.setItem(this.storageKey, data);
+            } else {
+                this.saveToCookies(data);
+            }
+        } catch (e) {
+            this.saveToCookies(data);
+        }
+    }
+
+    loadPreferences() {
+        let data = null;
+        
+        try {
+            if (typeof localStorage !== 'undefined') {
+                data = localStorage.getItem(this.storageKey);
+            }
+            
+            if (!data) {
+                data = this.loadFromCookies();
+            }
+        } catch (e) {
+            data = this.loadFromCookies();
+        }
+        
+        if (data) {
+            try {
+                this.prefs = JSON.parse(data);
+            } catch (e) {
+                this.prefs = {};
+            }
+        }
+    }
+
+    saveToCookies(data) {
+        if (typeof document === 'undefined') return;
+        
+        const date = new Date();
+        date.setTime(date.getTime() + (365 * 24 * 60 * 60 * 1000));
+        const expires = "expires=" + date.toUTCString();
+        document.cookie = this.storageKey + "=" + encodeURIComponent(data) + ";" + expires + ";path=/";
+    }
+
+    loadFromCookies() {
+        if (typeof document === 'undefined') return null;
+        
+        const name = this.storageKey + "=";
+        const decodedCookie = decodeURIComponent(document.cookie);
+        const ca = decodedCookie.split(';');
+        
+        for (let i = 0; i < ca.length; i++) {
+            let c = ca[i].trim();
+            if (c.indexOf(name) === 0) {
+                return c.substring(name.length, c.length);
+            }
+        }
+        return null;
+    }
+}
+
+export default UserPreferencesManager;
