@@ -58,4 +58,49 @@ class CurrencyConverter {
   }
 }
 
-module.exports = CurrencyConverter;
+module.exports = CurrencyConverter;const exchangeRates = {
+  USD: 1.0,
+  EUR: 0.85,
+  GBP: 0.73,
+  JPY: 110.0,
+  CAD: 1.25
+};
+
+class CurrencyConverter {
+  constructor(rates = exchangeRates) {
+    this.rates = rates;
+    this.cache = new Map();
+  }
+
+  convert(amount, fromCurrency, toCurrency) {
+    if (!this.rates[fromCurrency] || !this.rates[toCurrency]) {
+      throw new Error('Unsupported currency');
+    }
+
+    const cacheKey = `${amount}_${fromCurrency}_${toCurrency}`;
+    if (this.cache.has(cacheKey)) {
+      return this.cache.get(cacheKey);
+    }
+
+    const baseAmount = amount / this.rates[fromCurrency];
+    const convertedAmount = baseAmount * this.rates[toCurrency];
+    const result = parseFloat(convertedAmount.toFixed(2));
+
+    this.cache.set(cacheKey, result);
+    return result;
+  }
+
+  updateRate(currency, rate) {
+    if (rate <= 0) {
+      throw new Error('Rate must be positive');
+    }
+    this.rates[currency] = rate;
+    this.cache.clear();
+  }
+
+  getSupportedCurrencies() {
+    return Object.keys(this.rates);
+  }
+}
+
+export default CurrencyConverter;
