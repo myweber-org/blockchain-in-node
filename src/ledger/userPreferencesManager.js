@@ -1,39 +1,57 @@
 const UserPreferences = {
-    _prefs: {},
+    storageKey: 'app_preferences',
+
+    defaults: {
+        theme: 'light',
+        language: 'en',
+        notifications: true,
+        fontSize: 16
+    },
 
     init() {
-        const stored = localStorage.getItem('userPrefs');
-        this._prefs = stored ? JSON.parse(stored) : {};
+        if (!this.load()) {
+            this.save(this.defaults);
+        }
+    },
+
+    load() {
+        try {
+            const data = localStorage.getItem(this.storageKey);
+            return data ? JSON.parse(data) : null;
+        } catch (error) {
+            console.error('Failed to load preferences:', error);
+            return null;
+        }
+    },
+
+    save(preferences) {
+        try {
+            const merged = { ...this.defaults, ...preferences };
+            localStorage.setItem(this.storageKey, JSON.stringify(merged));
+            return true;
+        } catch (error) {
+            console.error('Failed to save preferences:', error);
+            return false;
+        }
+    },
+
+    get(key) {
+        const prefs = this.load();
+        return prefs ? prefs[key] : this.defaults[key];
     },
 
     set(key, value) {
-        this._prefs[key] = value;
-        this._save();
-        return this;
+        const prefs = this.load() || this.defaults;
+        prefs[key] = value;
+        return this.save(prefs);
     },
 
-    get(key, defaultValue = null) {
-        return this._prefs.hasOwnProperty(key) ? this._prefs[key] : defaultValue;
-    },
-
-    remove(key) {
-        delete this._prefs[key];
-        this._save();
-        return this;
+    reset() {
+        return this.save(this.defaults);
     },
 
     getAll() {
-        return { ...this._prefs };
-    },
-
-    clear() {
-        this._prefs = {};
-        localStorage.removeItem('userPrefs');
-        return this;
-    },
-
-    _save() {
-        localStorage.setItem('userPrefs', JSON.stringify(this._prefs));
+        return this.load() || this.defaults;
     }
 };
 
