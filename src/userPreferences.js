@@ -1,46 +1,48 @@
-const defaultPreferences = {
-  theme: 'light',
-  fontSize: 16,
-  notifications: true,
-  language: 'en'
-};
+function validateUserPreferences(preferences) {
+    const defaults = {
+        theme: 'light',
+        language: 'en',
+        notifications: true,
+        timezone: 'UTC'
+    };
 
-function validatePreferences(userPrefs) {
-  const validPrefs = { ...defaultPreferences };
-  
-  for (const key in userPrefs) {
-    if (key in defaultPreferences) {
-      if (key === 'theme' && ['light', 'dark', 'auto'].includes(userPrefs[key])) {
-        validPrefs[key] = userPrefs[key];
-      } else if (key === 'fontSize' && typeof userPrefs[key] === 'number' && userPrefs[key] >= 12 && userPrefs[key] <= 24) {
-        validPrefs[key] = userPrefs[key];
-      } else if (key === 'notifications' && typeof userPrefs[key] === 'boolean') {
-        validPrefs[key] = userPrefs[key];
-      } else if (key === 'language' && ['en', 'es', 'fr', 'de'].includes(userPrefs[key])) {
-        validPrefs[key] = userPrefs[key];
-      }
+    const validated = { ...defaults };
+
+    if (preferences && typeof preferences === 'object') {
+        if (preferences.theme && ['light', 'dark', 'auto'].includes(preferences.theme)) {
+            validated.theme = preferences.theme;
+        }
+
+        if (preferences.language && /^[a-z]{2}(-[A-Z]{2})?$/.test(preferences.language)) {
+            validated.language = preferences.language;
+        }
+
+        if (typeof preferences.notifications === 'boolean') {
+            validated.notifications = preferences.notifications;
+        }
+
+        if (preferences.timezone && Intl.supportedValuesOf('timeZone').includes(preferences.timezone)) {
+            validated.timezone = preferences.timezone;
+        }
     }
-  }
-  
-  return validPrefs;
+
+    return validated;
 }
 
-function savePreferences(preferences) {
-  const validated = validatePreferences(preferences);
-  localStorage.setItem('userPreferences', JSON.stringify(validated));
-  return validated;
-}
+function initializeUserSettings(userId) {
+    const stored = localStorage.getItem(`user_prefs_${userId}`);
+    let preferences = null;
 
-function loadPreferences() {
-  const stored = localStorage.getItem('userPreferences');
-  if (stored) {
     try {
-      return validatePreferences(JSON.parse(stored));
-    } catch {
-      return defaultPreferences;
+        preferences = stored ? JSON.parse(stored) : null;
+    } catch (error) {
+        console.warn('Failed to parse stored preferences, using defaults');
     }
-  }
-  return defaultPreferences;
+
+    const validatedPrefs = validateUserPreferences(preferences);
+    localStorage.setItem(`user_prefs_${userId}`, JSON.stringify(validatedPrefs));
+    
+    return validatedPrefs;
 }
 
-export { validatePreferences, savePreferences, loadPreferences, defaultPreferences };
+export { validateUserPreferences, initializeUserSettings };
