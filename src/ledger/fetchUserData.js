@@ -1,58 +1,38 @@
-function fetchUserData(userId) {
-    const apiUrl = `https://jsonplaceholder.typicode.com/users/${userId}`;
-    
-    fetch(apiUrl)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('User Data:', data);
-            displayUserInfo(data);
-        })
-        .catch(error => {
-            console.error('Error fetching user data:', error);
-        });
-}
-
-function displayUserInfo(user) {
-    const userInfoDiv = document.getElementById('userInfo');
-    
-    if (userInfoDiv) {
-        userInfoDiv.innerHTML = `
-            <h3>${user.name}</h3>
-            <p>Email: ${user.email}</p>
-            <p>Phone: ${user.phone}</p>
-            <p>Website: ${user.website}</p>
-            <p>Company: ${user.company.name}</p>
-        `;
+async function fetchUserData() {
+    try {
+        const response = await fetch('https://jsonplaceholder.typicode.com/users');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const users = await response.json();
+        console.log('Fetched users:', users);
+        return users;
+    } catch (error) {
+        console.error('Failed to fetch user data:', error);
+        return [];
     }
 }
 
-fetchUserData(1);function fetchUserData(userId) {
-    const apiUrl = `https://api.example.com/users/${userId}`;
-    
-    return fetch(apiUrl)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            const processedData = {
-                id: data.id,
-                name: data.name,
-                email: data.email,
-                isActive: data.status === 'active',
-                lastLogin: new Date(data.last_login)
-            };
-            return processedData;
-        })
-        .catch(error => {
-            console.error('Error fetching user data:', error);
-            throw error;
-        });
+function displayUserData(users) {
+    const container = document.getElementById('userContainer');
+    if (!container) {
+        console.error('Container element not found');
+        return;
+    }
+    container.innerHTML = '';
+    users.forEach(user => {
+        const userElement = document.createElement('div');
+        userElement.className = 'user-card';
+        userElement.innerHTML = `
+            <h3>${user.name}</h3>
+            <p>Email: ${user.email}</p>
+            <p>Company: ${user.company.name}</p>
+        `;
+        container.appendChild(userElement);
+    });
 }
+
+document.addEventListener('DOMContentLoaded', async () => {
+    const users = await fetchUserData();
+    displayUserData(users);
+});
