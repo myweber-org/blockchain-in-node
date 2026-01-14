@@ -1,28 +1,40 @@
 function validateUsername(username) {
-    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
-    return usernameRegex.test(username);
+    const minLength = 3;
+    const maxLength = 20;
+    const regex = /^[a-zA-Z0-9_]+$/;
+    
+    if (typeof username !== 'string') return false;
+    if (username.length < minLength || username.length > maxLength) return false;
+    if (!regex.test(username)) return false;
+    
+    return true;
 }
 
-function validateEmail(email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+function validatePassword(password) {
+    const minLength = 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumbers = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+    
+    if (typeof password !== 'string') return false;
+    if (password.length < minLength) return false;
+    if (!hasUpperCase || !hasLowerCase) return false;
+    if (!hasNumbers) return false;
+    if (!hasSpecialChar) return false;
+    
+    return true;
 }
 
-function validateUserInput(username, email) {
-    const errors = [];
-    
-    if (!validateUsername(username)) {
-        errors.push('Username must be 3-20 characters and contain only letters, numbers, and underscores');
-    }
-    
-    if (!validateEmail(email)) {
-        errors.push('Please enter a valid email address');
-    }
+function validateUserInput(username, password) {
+    const usernameValid = validateUsername(username);
+    const passwordValid = validatePassword(password);
     
     return {
-        isValid: errors.length === 0,
-        errors: errors
+        isValid: usernameValid && passwordValid,
+        usernameError: usernameValid ? null : 'Username must be 3-20 characters and contain only letters, numbers, and underscores',
+        passwordError: passwordValid ? null : 'Password must be at least 8 characters with uppercase, lowercase, number, and special character'
     };
 }
 
-export { validateUsername, validateEmail, validateUserInput };
+export { validateUsername, validatePassword, validateUserInput };
