@@ -56,4 +56,44 @@ const userPreferencesManager = (() => {
         resetPreferences,
         subscribe
     };
-})();
+})();const UserPreferencesManager = {
+  storageKey: 'app_user_preferences',
+
+  getPreferences() {
+    const stored = localStorage.getItem(this.storageKey);
+    return stored ? JSON.parse(stored) : {};
+  },
+
+  setPreference(key, value) {
+    const preferences = this.getPreferences();
+    preferences[key] = value;
+    localStorage.setItem(this.storageKey, JSON.stringify(preferences));
+    return true;
+  },
+
+  removePreference(key) {
+    const preferences = this.getPreferences();
+    if (preferences.hasOwnProperty(key)) {
+      delete preferences[key];
+      localStorage.setItem(this.storageKey, JSON.stringify(preferences));
+      return true;
+    }
+    return false;
+  },
+
+  clearAllPreferences() {
+    localStorage.removeItem(this.storageKey);
+    return true;
+  },
+
+  hasPreference(key) {
+    const preferences = this.getPreferences();
+    return preferences.hasOwnProperty(key);
+  },
+
+  getAllPreferences() {
+    return this.getPreferences();
+  }
+};
+
+export default UserPreferencesManager;
