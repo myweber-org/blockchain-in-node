@@ -1,31 +1,23 @@
-function validateEmail(email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-}
-
-function validatePassword(password) {
-    return password.length >= 8 && /[A-Z]/.test(password) && /\d/.test(password);
-}
-
 function validateRegistrationForm(email, password, confirmPassword) {
-    const errors = [];
-
-    if (!validateEmail(email)) {
-        errors.push('Invalid email format');
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/;
+    
+    if (!emailRegex.test(email)) {
+        return { isValid: false, message: "Invalid email format" };
     }
-
-    if (!validatePassword(password)) {
-        errors.push('Password must be at least 8 characters with one uppercase letter and one number');
+    
+    if (!passwordRegex.test(password)) {
+        return { 
+            isValid: false, 
+            message: "Password must be at least 8 characters with letters and numbers" 
+        };
     }
-
+    
     if (password !== confirmPassword) {
-        errors.push('Passwords do not match');
+        return { isValid: false, message: "Passwords do not match" };
     }
-
-    return {
-        isValid: errors.length === 0,
-        errors: errors
-    };
+    
+    return { isValid: true, message: "Registration validation successful" };
 }
 
 function handleRegistrationSubmit(event) {
@@ -38,47 +30,19 @@ function handleRegistrationSubmit(event) {
     const validationResult = validateRegistrationForm(email, password, confirmPassword);
     
     if (validationResult.isValid) {
-        console.log('Registration successful');
+        console.log("Registration data is valid. Proceeding with submission...");
+        // Submit form or make API call here
         return true;
     } else {
-        console.log('Registration failed:', validationResult.errors);
+        alert(validationResult.message);
         return false;
     }
-}function validateRegistrationForm(email, password) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
-
-    if (!emailRegex.test(email)) {
-        return { valid: false, message: 'Invalid email format' };
-    }
-
-    if (!passwordRegex.test(password)) {
-        return { valid: false, message: 'Password must be at least 8 characters with letters and numbers' };
-    }
-
-    return { valid: true, message: 'Registration data is valid' };
 }
 
-function handleRegistrationSubmit(event) {
-    event.preventDefault();
-    
-    const email = document.getElementById('emailInput').value;
-    const password = document.getElementById('passwordInput').value;
-    
-    const validationResult = validateRegistrationForm(email, password);
-    
-    const resultDiv = document.getElementById('validationResult');
-    resultDiv.textContent = validationResult.message;
-    resultDiv.className = validationResult.valid ? 'success' : 'error';
-    
-    if (validationResult.valid) {
-        console.log('Registration data submitted:', { email, password });
-    }
-}
-
+// Example usage when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('registrationForm');
-    if (form) {
-        form.addEventListener('submit', handleRegistrationSubmit);
+    const registrationForm = document.getElementById('registrationForm');
+    if (registrationForm) {
+        registrationForm.addEventListener('submit', handleRegistrationSubmit);
     }
 });
