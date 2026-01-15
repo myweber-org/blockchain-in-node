@@ -9,4 +9,10 @@ function formatArea(area, precision = 2) {
     return area.toFixed(precision);
 }
 
-module.exports = { calculateCircleArea, formatArea };
+module.exports = { calculateCircleArea, formatArea };function calculateCircleArea(radius) {
+    if (typeof radius !== 'number' || radius <= 0) {
+        throw new Error('Radius must be a positive number');
+    }
+    const area = Math.PI * Math.pow(radius, 2);
+    return parseFloat(area.toFixed(2));
+}
