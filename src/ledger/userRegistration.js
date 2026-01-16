@@ -45,4 +45,31 @@ document.addEventListener('DOMContentLoaded', function() {
     if (registrationForm) {
         registrationForm.addEventListener('submit', handleRegistrationSubmit);
     }
-});
+});function validateRegistrationForm() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    if (!emailPattern.test(email)) {
+        alert('Please enter a valid email address.');
+        return false;
+    }
+    
+    if (password.length < 8) {
+        alert('Password must be at least 8 characters long.');
+        return false;
+    }
+    
+    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
+        alert('Password must contain at least one uppercase letter, one lowercase letter, and one number.');
+        return false;
+    }
+    
+    if (password !== confirmPassword) {
+        alert('Passwords do not match.');
+        return false;
+    }
+    
+    return true;
+}
