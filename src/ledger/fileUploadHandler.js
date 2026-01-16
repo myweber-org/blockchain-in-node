@@ -174,4 +174,54 @@ function uploadFile(fileData) {
 // Example usage
 document.getElementById('fileInput').addEventListener('change', (event) => {
     handleFileUpload(event, 10 * 1024 * 1024);
+});const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'application/pdf'];
+
+function validateFile(file) {
+    if (!ALLOWED_TYPES.includes(file.type)) {
+        throw new Error('Invalid file type. Only JPEG, PNG, and PDF files are allowed.');
+    }
+    
+    if (file.size > MAX_FILE_SIZE) {
+        throw new Error('File size exceeds the 5MB limit.');
+    }
+    
+    return true;
+}
+
+function handleFileUpload(event) {
+    const files = event.target.files;
+    const validFiles = [];
+    const errors = [];
+
+    Array.from(files).forEach(file => {
+        try {
+            if (validateFile(file)) {
+                validFiles.push(file);
+            }
+        } catch (error) {
+            errors.push(`${file.name}: ${error.message}`);
+        }
+    });
+
+    if (errors.length > 0) {
+        console.error('Upload errors:', errors);
+        alert(`Some files were rejected:\n${errors.join('\n')}`);
+    }
+
+    if (validFiles.length > 0) {
+        console.log('Valid files ready for upload:', validFiles);
+        // Proceed with upload logic here
+        return validFiles;
+    }
+
+    return [];
+}
+
+// Example usage with event listener
+document.addEventListener('DOMContentLoaded', () => {
+    const fileInput = document.getElementById('fileInput');
+    if (fileInput) {
+        fileInput.addEventListener('change', handleFileUpload);
+    }
 });
