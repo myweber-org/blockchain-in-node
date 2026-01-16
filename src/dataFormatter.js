@@ -72,4 +72,37 @@ function formatDateWithTimezone(date) {
     const offsetMinutes = pad(Math.abs(offset) % 60);
 
     return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}${offsetSign}${offsetHours}:${offsetMinutes}`;
+}function formatDate(dateString, locale = 'en-US') {
+    const date = new Date(dateString);
+    
+    if (isNaN(date.getTime())) {
+        throw new Error('Invalid date string provided');
+    }
+    
+    const options = {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZoneName: 'short'
+    };
+    
+    return date.toLocaleDateString(locale, options);
 }
+
+function calculateTimeAgo(dateString) {
+    const now = new Date();
+    const past = new Date(dateString);
+    const diffInSeconds = Math.floor((now - past) / 1000);
+    
+    if (diffInSeconds < 60) return 'just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+    if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)} days ago`;
+    if (diffInSeconds < 31536000) return `${Math.floor(diffInSeconds / 2592000)} months ago`;
+    
+    return `${Math.floor(diffInSeconds / 31536000)} years ago`;
+}
+
+export { formatDate, calculateTimeAgo };
