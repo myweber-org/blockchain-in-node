@@ -101,4 +101,47 @@ class FileManager {
   }
 }
 
+module.exports = FileManager;const fs = require('fs').promises;
+const path = require('path');
+
+class FileManager {
+    constructor(basePath) {
+        this.basePath = basePath;
+    }
+
+    async readJSON(filename) {
+        try {
+            const filePath = path.join(this.basePath, filename);
+            const data = await fs.readFile(filePath, 'utf8');
+            return JSON.parse(data);
+        } catch (error) {
+            if (error.code === 'ENOENT') {
+                console.warn(`File not found: ${filename}`);
+                return null;
+            }
+            throw new Error(`Failed to read JSON file ${filename}: ${error.message}`);
+        }
+    }
+
+    async writeJSON(filename, data) {
+        try {
+            const filePath = path.join(this.basePath, filename);
+            const jsonString = JSON.stringify(data, null, 2);
+            await fs.writeFile(filePath, jsonString, 'utf8');
+            return true;
+        } catch (error) {
+            throw new Error(`Failed to write JSON file ${filename}: ${error.message}`);
+        }
+    }
+
+    async listFiles(pattern = /.*/) {
+        try {
+            const files = await fs.readdir(this.basePath);
+            return files.filter(file => pattern.test(file));
+        } catch (error) {
+            throw new Error(`Failed to list files: ${error.message}`);
+        }
+    }
+}
+
 module.exports = FileManager;
