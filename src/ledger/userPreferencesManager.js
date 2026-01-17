@@ -1,155 +1,56 @@
-const userPreferencesManager = {
-  storageKey: 'app_preferences',
-
-  getPreferences() {
-    try {
-      const stored = localStorage.getItem(this.storageKey);
-      return stored ? JSON.parse(stored) : {};
-    } catch (error) {
-      console.error('Error reading preferences:', error);
-      return {};
-    }
-  },
-
-  setPreference(key, value) {
-    try {
-      const preferences = this.getPreferences();
-      preferences[key] = value;
-      localStorage.setItem(this.storageKey, JSON.stringify(preferences));
-      return true;
-    } catch (error) {
-      console.error('Error saving preference:', error);
-      return false;
-    }
-  },
-
-  removePreference(key) {
-    try {
-      const preferences = this.getPreferences();
-      delete preferences[key];
-      localStorage.setItem(this.storageKey, JSON.stringify(preferences));
-      return true;
-    } catch (error) {
-      console.error('Error removing preference:', error);
-      return false;
-    }
-  },
-
-  clearAll() {
-    try {
-      localStorage.removeItem(this.storageKey);
-      return true;
-    } catch (error) {
-      console.error('Error clearing preferences:', error);
-      return false;
-    }
-  },
-
-  getAllKeys() {
-    const preferences = this.getPreferences();
-    return Object.keys(preferences);
-  },
-
-  hasPreference(key) {
-    const preferences = this.getPreferences();
-    return key in preferences;
-  }
-};
-
-export default userPreferencesManager;const UserPreferencesManager = (() => {
-    const STORAGE_KEY = 'app_user_preferences';
-    
+const userPreferencesManager = (() => {
+    const STORAGE_KEY = 'app_preferences';
     const defaultPreferences = {
         theme: 'light',
         language: 'en',
         notifications: true,
         fontSize: 16,
-        autoSave: false,
-        lastUpdated: null
+        autoSave: true
     };
 
-    const getPreferences = () => {
-        try {
-            const stored = localStorage.getItem(STORAGE_KEY);
-            if (stored) {
-                const parsed = JSON.parse(stored);
-                return { ...defaultPreferences, ...parsed };
+    function getPreferences() {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+            try {
+                return { ...defaultPreferences, ...JSON.parse(stored) };
+            } catch (e) {
+                console.error('Failed to parse stored preferences:', e);
+                return defaultPreferences;
             }
-        } catch (error) {
-            console.warn('Failed to load preferences:', error);
         }
-        return { ...defaultPreferences };
-    };
+        return defaultPreferences;
+    }
 
-    const savePreferences = (updates) => {
-        try {
-            const current = getPreferences();
-            const updated = {
-                ...current,
-                ...updates,
-                lastUpdated: new Date().toISOString()
-            };
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-            return updated;
-        } catch (error) {
-            console.error('Failed to save preferences:', error);
-            return null;
-        }
-    };
+    function updatePreferences(newPreferences) {
+        const current = getPreferences();
+        const updated = { ...current, ...newPreferences };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        dispatchPreferenceChange(updated);
+        return updated;
+    }
 
-    const resetPreferences = () => {
-        try {
-            localStorage.removeItem(STORAGE_KEY);
-            return { ...defaultPreferences };
-        } catch (error) {
-            console.error('Failed to reset preferences:', error);
-            return null;
-        }
-    };
+    function resetPreferences() {
+        localStorage.removeItem(STORAGE_KEY);
+        dispatchPreferenceChange(defaultPreferences);
+        return defaultPreferences;
+    }
 
-    const exportPreferences = () => {
-        const prefs = getPreferences();
-        const dataStr = JSON.stringify(prefs, null, 2);
-        const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
-        return dataUri;
-    };
+    function dispatchPreferenceChange(preferences) {
+        const event = new CustomEvent('preferencesChanged', {
+            detail: preferences
+        });
+        window.dispatchEvent(event);
+    }
 
-    const importPreferences = (jsonString) => {
-        try {
-            const imported = JSON.parse(jsonString);
-            return savePreferences(imported);
-        } catch (error) {
-            console.error('Failed to import preferences:', error);
-            return null;
-        }
-    };
-
-    const subscribe = (callback) => {
-        const handler = (event) => {
-            if (event.key === STORAGE_KEY && event.newValue) {
-                try {
-                    const newPrefs = JSON.parse(event.newValue);
-                    callback(newPrefs);
-                } catch (error) {
-                    console.warn('Failed to parse updated preferences:', error);
-                }
-            }
-        };
-        window.addEventListener('storage', handler);
-        return () => window.removeEventListener('storage', handler);
-    };
+    function subscribe(callback) {
+        window.addEventListener('preferencesChanged', (e) => callback(e.detail));
+        return () => window.removeEventListener('preferencesChanged', (e) => callback(e.detail));
+    }
 
     return {
-        get: getPreferences,
-        save: savePreferences,
-        reset: resetPreferences,
-        export: exportPreferences,
-        import: importPreferences,
-        subscribe: subscribe,
-        getDefaults: () => ({ ...defaultPreferences })
+        getPreferences,
+        updatePreferences,
+        resetPreferences,
+        subscribe
     };
 })();
-
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = UserPreferencesManager;
-}
