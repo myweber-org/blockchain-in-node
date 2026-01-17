@@ -1,25 +1,38 @@
-function validateFileUpload(file, allowedTypes, maxSizeMB) {
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif'];
+
+function validateFile(file) {
     if (!file) {
-        throw new Error('No file provided');
+        return { valid: false, error: 'No file selected' };
     }
 
-    const allowedTypesSet = new Set(allowedTypes);
-    const fileExtension = file.name.split('.').pop().toLowerCase();
-    const fileType = file.type;
-
-    if (!allowedTypesSet.has(fileExtension) && !allowedTypesSet.has(fileType)) {
-        throw new Error(`File type not allowed. Allowed types: ${Array.from(allowedTypes).join(', ')}`);
+    if (!ALLOWED_TYPES.includes(file.type)) {
+        return { valid: false, error: 'Invalid file type. Only JPEG, PNG and GIF are allowed' };
     }
 
-    const maxSizeBytes = maxSizeMB * 1024 * 1024;
-    if (file.size > maxSizeBytes) {
-        throw new Error(`File size exceeds limit of ${maxSizeMB}MB`);
+    if (file.size > MAX_FILE_SIZE) {
+        return { valid: false, error: 'File size exceeds 5MB limit' };
+    }
+
+    return { valid: true, error: null };
+}
+
+function validateMultipleFiles(files) {
+    const results = [];
+    let hasError = false;
+
+    for (let i = 0; i < files.length; i++) {
+        const result = validateFile(files[i]);
+        results.push(result);
+        if (!result.valid) {
+            hasError = true;
+        }
     }
 
     return {
-        isValid: true,
-        fileName: file.name,
-        fileSize: file.size,
-        fileType: fileType
+        allValid: !hasError,
+        results: results
     };
 }
+
+export { validateFile, validateMultipleFiles };
