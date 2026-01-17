@@ -461,4 +461,88 @@ export default UserPreferencesManager;const UserPreferencesManager = (function()
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = UserPreferencesManager;
-}
+}const UserPreferencesManager = {
+    defaults: {
+        theme: 'light',
+        fontSize: 16,
+        notifications: true,
+        language: 'en'
+    },
+
+    init() {
+        if (!this._isLocalStorageAvailable()) {
+            console.warn('LocalStorage not available, using defaults');
+            return this.defaults;
+        }
+
+        const saved = this.load();
+        if (!saved) {
+            this.save(this.defaults);
+            return this.defaults;
+        }
+
+        return { ...this.defaults, ...saved };
+    },
+
+    save(preferences) {
+        if (!this._isLocalStorageAvailable()) return false;
+
+        try {
+            const validated = this._validatePreferences(preferences);
+            localStorage.setItem('userPreferences', JSON.stringify(validated));
+            return true;
+        } catch (error) {
+            console.error('Failed to save preferences:', error);
+            return false;
+        }
+    },
+
+    load() {
+        if (!this._isLocalStorageAvailable()) return null;
+
+        try {
+            const data = localStorage.getItem('userPreferences');
+            return data ? JSON.parse(data) : null;
+        } catch (error) {
+            console.error('Failed to load preferences:', error);
+            return null;
+        }
+    },
+
+    update(key, value) {
+        const current = this.load() || this.defaults;
+        const updated = { ...current, [key]: value };
+        return this.save(updated);
+    },
+
+    reset() {
+        return this.save(this.defaults);
+    },
+
+    _validatePreferences(prefs) {
+        const validated = {};
+
+        for (const [key, defaultValue] of Object.entries(this.defaults)) {
+            if (key in prefs && typeof prefs[key] === typeof defaultValue) {
+                validated[key] = prefs[key];
+            } else {
+                validated[key] = defaultValue;
+            }
+        }
+
+        return validated;
+    },
+
+    _isLocalStorageAvailable() {
+        try {
+            const testKey = '__test__';
+            localStorage.setItem(testKey, testKey);
+            localStorage.removeItem(testKey);
+            return true;
+        } catch {
+            return false;
+        }
+    }
+};
+
+export default UserPreferencesManager;
