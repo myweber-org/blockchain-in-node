@@ -1,38 +1,29 @@
 function validateUserPreferences(preferences) {
-  const defaults = {
-    theme: 'light',
-    notifications: true,
-    language: 'en',
-    timezone: 'UTC',
-    resultsPerPage: 25
-  };
+    const requiredFields = ['theme', 'notifications', 'language'];
+    const fieldTypes = {
+        theme: 'string',
+        notifications: 'boolean',
+        language: 'string'
+    };
 
-  const validators = {
-    theme: value => ['light', 'dark', 'auto'].includes(value),
-    notifications: value => typeof value === 'boolean',
-    language: value => /^[a-z]{2}(-[A-Z]{2})?$/.test(value),
-    timezone: value => Intl.supportedValuesOf('timeZone').includes(value),
-    resultsPerPage: value => Number.isInteger(value) && value >= 10 && value <= 100
-  };
-
-  const errors = [];
-  const validated = { ...defaults };
-
-  for (const [key, value] of Object.entries(preferences || {})) {
-    if (validators[key]) {
-      if (validators[key](value)) {
-        validated[key] = value;
-      } else {
-        errors.push(`Invalid value for ${key}: ${value}`);
-      }
+    for (const field of requiredFields) {
+        if (!preferences.hasOwnProperty(field)) {
+            throw new Error(`Missing required field: ${field}`);
+        }
+        if (typeof preferences[field] !== fieldTypes[field]) {
+            throw new Error(`Invalid type for field ${field}. Expected ${fieldTypes[field]}, got ${typeof preferences[field]}`);
+        }
     }
-  }
 
-  return {
-    preferences: validated,
-    isValid: errors.length === 0,
-    errors: errors.length > 0 ? errors : null
-  };
+    const validThemes = ['light', 'dark', 'auto'];
+    if (!validThemes.includes(preferences.theme)) {
+        throw new Error(`Invalid theme value. Must be one of: ${validThemes.join(', ')}`);
+    }
+
+    const validLanguages = ['en', 'es', 'fr', 'de'];
+    if (!validLanguages.includes(preferences.language)) {
+        throw new Error(`Invalid language value. Must be one of: ${validLanguages.join(', ')}`);
+    }
+
+    return true;
 }
-
-export default validateUserPreferences;
