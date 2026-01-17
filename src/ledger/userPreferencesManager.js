@@ -1,56 +1,101 @@
-const userPreferencesManager = (() => {
-    const STORAGE_KEY = 'app_preferences';
-    const defaultPreferences = {
-        theme: 'light',
-        language: 'en',
-        notifications: true,
-        fontSize: 16,
-        autoSave: true
-    };
+const UserPreferencesManager = (() => {
+  const STORAGE_KEY = 'app_preferences';
+  const DEFAULT_PREFERENCES = {
+    theme: 'light',
+    notifications: true,
+    fontSize: 16,
+    language: 'en',
+    autoSave: false
+  };
 
-    function getPreferences() {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) {
-            try {
-                return { ...defaultPreferences, ...JSON.parse(stored) };
-            } catch (e) {
-                console.error('Failed to parse stored preferences:', e);
-                return defaultPreferences;
-            }
+  let currentPreferences = { ...DEFAULT_PREFERENCES };
+
+  const saveToLocalStorage = (preferences) => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
+      return true;
+    } catch (error) {
+      console.warn('LocalStorage save failed:', error);
+      return false;
+    }
+  };
+
+  const loadFromLocalStorage = () => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      return stored ? JSON.parse(stored) : null;
+    } catch (error) {
+      console.warn('LocalStorage load failed:', error);
+      return null;
+    }
+  };
+
+  const validatePreference = (key, value) => {
+    const validators = {
+      theme: (v) => ['light', 'dark', 'auto'].includes(v),
+      notifications: (v) => typeof v === 'boolean',
+      fontSize: (v) => Number.isInteger(v) && v >= 12 && v <= 24,
+      language: (v) => /^[a-z]{2}(-[A-Z]{2})?$/.test(v),
+      autoSave: (v) => typeof v === 'boolean'
+    };
+    return validators[key] ? validators[key](value) : false;
+  };
+
+  const updatePreference = (key, value) => {
+    if (!validatePreference(key, value)) {
+      throw new Error(`Invalid preference value for ${key}: ${value}`);
+    }
+    
+    const oldValue = currentPreferences[key];
+    currentPreferences[key] = value;
+    
+    if (!saveToLocalStorage(currentPreferences)) {
+      currentPreferences[key] = oldValue;
+      throw new Error('Failed to persist preference change');
+    }
+    
+    return { key, oldValue, newValue: value };
+  };
+
+  const resetToDefaults = () => {
+    currentPreferences = { ...DEFAULT_PREFERENCES };
+    saveToLocalStorage(currentPreferences);
+    return currentPreferences;
+  };
+
+  const initialize = () => {
+    const stored = loadFromLocalStorage();
+    if (stored) {
+      Object.keys(DEFAULT_PREFERENCES).forEach(key => {
+        if (validatePreference(key, stored[key])) {
+          currentPreferences[key] = stored[key];
         }
-        return defaultPreferences;
+      });
+      saveToLocalStorage(currentPreferences);
     }
+    return currentPreferences;
+  };
 
-    function updatePreferences(newPreferences) {
-        const current = getPreferences();
-        const updated = { ...current, ...newPreferences };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-        dispatchPreferenceChange(updated);
-        return updated;
+  return {
+    initialize,
+    getPreferences: () => ({ ...currentPreferences }),
+    getPreference: (key) => currentPreferences[key],
+    updatePreference,
+    resetToDefaults,
+    subscribe: (callback) => {
+      const handler = (event) => {
+        if (event.key === STORAGE_KEY) {
+          const stored = loadFromLocalStorage();
+          if (stored) {
+            currentPreferences = stored;
+            callback(currentPreferences);
+          }
+        }
+      };
+      window.addEventListener('storage', handler);
+      return () => window.removeEventListener('storage', handler);
     }
-
-    function resetPreferences() {
-        localStorage.removeItem(STORAGE_KEY);
-        dispatchPreferenceChange(defaultPreferences);
-        return defaultPreferences;
-    }
-
-    function dispatchPreferenceChange(preferences) {
-        const event = new CustomEvent('preferencesChanged', {
-            detail: preferences
-        });
-        window.dispatchEvent(event);
-    }
-
-    function subscribe(callback) {
-        window.addEventListener('preferencesChanged', (e) => callback(e.detail));
-        return () => window.removeEventListener('preferencesChanged', (e) => callback(e.detail));
-    }
-
-    return {
-        getPreferences,
-        updatePreferences,
-        resetPreferences,
-        subscribe
-    };
+  };
 })();
+
+export default UserPreferencesManager;
