@@ -7,33 +7,31 @@ function validatePassword(password) {
     const minLength = 8;
     const hasUpperCase = /[A-Z]/.test(password);
     const hasLowerCase = /[a-z]/.test(password);
-    const hasNumber = /[0-9]/.test(password);
+    const hasNumbers = /\d/.test(password);
     const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
     
     return password.length >= minLength && 
            hasUpperCase && 
            hasLowerCase && 
-           hasNumber && 
+           hasNumbers && 
            hasSpecialChar;
 }
 
 function validateUserInput(username, password) {
-    const usernameValid = validateUsername(username);
-    const passwordValid = validatePassword(password);
+    const errors = [];
     
-    if (!usernameValid && !passwordValid) {
-        return { valid: false, message: 'Invalid username and password' };
+    if (!validateUsername(username)) {
+        errors.push("Username must be 3-20 characters and contain only letters, numbers, and underscores.");
     }
     
-    if (!usernameValid) {
-        return { valid: false, message: 'Invalid username format' };
+    if (!validatePassword(password)) {
+        errors.push("Password must be at least 8 characters long and contain uppercase, lowercase, numbers, and special characters.");
     }
     
-    if (!passwordValid) {
-        return { valid: false, message: 'Password does not meet requirements' };
-    }
-    
-    return { valid: true, message: 'Validation successful' };
+    return {
+        isValid: errors.length === 0,
+        errors: errors
+    };
 }
 
 module.exports = { validateUserInput, validateUsername, validatePassword };
