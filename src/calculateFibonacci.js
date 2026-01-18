@@ -8,23 +8,3 @@ function calculateFibonacci(n) {
     }
     return sequence;
 }
-
-function validateInput(input) {
-    return Number.isInteger(input) && input > 0;
-}
-
-function displayFibonacciResult(n) {
-    if (!validateInput(n)) {
-        console.error('Invalid input: Please provide a positive integer.');
-        return;
-    }
-    
-    const result = calculateFibonacci(n);
-    console.log(`Fibonacci sequence (first ${n} numbers):`, result);
-}
-
-module.exports = {
-    calculateFibonacci,
-    validateInput,
-    displayFibonacciResult
-};
