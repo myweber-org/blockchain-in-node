@@ -224,4 +224,66 @@ document.addEventListener('DOMContentLoaded', () => {
     if (fileInput) {
         fileInput.addEventListener('change', handleFileUpload);
     }
+});function validateFile(file, maxSize) {
+    const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+    
+    if (!allowedTypes.includes(file.type)) {
+        throw new Error('Invalid file type. Only JPEG, PNG, and PDF files are allowed.');
+    }
+    
+    if (file.size > maxSize) {
+        throw new Error(`File size exceeds the limit of ${maxSize / 1024 / 1024}MB.`);
+    }
+    
+    return {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        lastModified: file.lastModified
+    };
+}
+
+function handleFileUpload(event, maxSize = 5 * 1024 * 1024) {
+    const file = event.target.files[0];
+    
+    if (!file) {
+        console.log('No file selected.');
+        return;
+    }
+    
+    try {
+        const validatedFile = validateFile(file, maxSize);
+        console.log('File validated successfully:', validatedFile);
+        
+        // Simulate upload process
+        const uploadPromise = new Promise((resolve) => {
+            setTimeout(() => {
+                resolve({
+                    id: Date.now(),
+                    ...validatedFile,
+                    uploadDate: new Date().toISOString()
+                });
+            }, 1000);
+        });
+        
+        uploadPromise.then(uploadedFile => {
+            console.log('File uploaded:', uploadedFile);
+        }).catch(error => {
+            console.error('Upload failed:', error);
+        });
+        
+    } catch (error) {
+        console.error('Validation error:', error.message);
+        event.target.value = '';
+    }
+}
+
+// Example usage
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('fileInput');
+    if (fileInput) {
+        fileInput.addEventListener('change', (event) => {
+            handleFileUpload(event);
+        });
+    }
 });
