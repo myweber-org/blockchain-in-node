@@ -91,4 +91,20 @@ export { fetchUserData, clearUserCache };async function fetchUserData(userId) {
     
     throw error;
   }
+}function fetchUserData(apiUrl) {
+    return fetch(apiUrl)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('User data fetched successfully:', data);
+            return data;
+        })
+        .catch(error => {
+            console.error('Error fetching user data:', error);
+            throw error;
+        });
 }
