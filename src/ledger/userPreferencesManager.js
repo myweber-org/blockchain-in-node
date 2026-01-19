@@ -289,4 +289,106 @@ if (typeof module !== 'undefined' && module.exports) {
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = UserPreferencesManager;
-}
+}const UserPreferencesManager = (() => {
+  const PREFERENCE_KEYS = {
+    THEME: 'user_theme_preference',
+    LANGUAGE: 'user_language_preference',
+    NOTIFICATIONS: 'user_notifications_enabled',
+    TIMEZONE: 'user_timezone_setting'
+  };
+
+  const DEFAULT_PREFERENCES = {
+    [PREFERENCE_KEYS.THEME]: 'light',
+    [PREFERENCE_KEYS.LANGUAGE]: 'en',
+    [PREFERENCE_KEYS.NOTIFICATIONS]: true,
+    [PREFERENCE_KEYS.TIMEZONE]: 'UTC'
+  };
+
+  const validatePreference = (key, value) => {
+    const validators = {
+      [PREFERENCE_KEYS.THEME]: (val) => ['light', 'dark', 'auto'].includes(val),
+      [PREFERENCE_KEYS.LANGUAGE]: (val) => /^[a-z]{2}$/.test(val),
+      [PREFERENCE_KEYS.NOTIFICATIONS]: (val) => typeof val === 'boolean',
+      [PREFERENCE_KEYS.TIMEZONE]: (val) => Intl.supportedValuesOf('timeZone').includes(val)
+    };
+
+    return validators[key] ? validators[key](value) : false;
+  };
+
+  const getPreference = (key) => {
+    if (!PREFERENCE_KEYS.hasOwnProperty(key)) {
+      console.warn(`Invalid preference key: ${key}`);
+      return null;
+    }
+
+    const storedValue = localStorage.getItem(key);
+    if (storedValue !== null) {
+      try {
+        const parsedValue = JSON.parse(storedValue);
+        if (validatePreference(key, parsedValue)) {
+          return parsedValue;
+        }
+      } catch {
+        return DEFAULT_PREFERENCES[key];
+      }
+    }
+    
+    return DEFAULT_PREFERENCES[key];
+  };
+
+  const setPreference = (key, value) => {
+    if (!PREFERENCE_KEYS.hasOwnProperty(key)) {
+      throw new Error(`Invalid preference key: ${key}`);
+    }
+
+    if (!validatePreference(key, value)) {
+      throw new Error(`Invalid value for preference ${key}: ${value}`);
+    }
+
+    localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  };
+
+  const resetPreferences = () => {
+    Object.keys(PREFERENCE_KEYS).forEach(key => {
+      localStorage.removeItem(PREFERENCE_KEYS[key]);
+    });
+  };
+
+  const getAllPreferences = () => {
+    return Object.keys(PREFERENCE_KEYS).reduce((prefs, key) => {
+      prefs[key] = getPreference(PREFERENCE_KEYS[key]);
+      return prefs;
+    }, {});
+  };
+
+  const exportPreferences = () => {
+    const prefs = getAllPreferences();
+    return JSON.stringify(prefs, null, 2);
+  };
+
+  const importPreferences = (jsonString) => {
+    try {
+      const importedPrefs = JSON.parse(jsonString);
+      Object.keys(importedPrefs).forEach(key => {
+        if (PREFERENCE_KEYS.hasOwnProperty(key)) {
+          setPreference(PREFERENCE_KEYS[key], importedPrefs[key]);
+        }
+      });
+      return true;
+    } catch (error) {
+      console.error('Failed to import preferences:', error);
+      return false;
+    }
+  };
+
+  return {
+    get: getPreference,
+    set: setPreference,
+    reset: resetPreferences,
+    getAll: getAllPreferences,
+    export: exportPreferences,
+    import: importPreferences,
+    keys: PREFERENCE_KEYS
+  };
+})();
