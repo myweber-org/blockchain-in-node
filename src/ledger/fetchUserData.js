@@ -41,10 +41,8 @@ async function fetchUserData(userId) {
 function clearUserCache(userId = null) {
     if (userId) {
         userDataCache.delete(`user_${userId}`);
-        console.log(`Cleared cache for user ${userId}`);
     } else {
         userDataCache.clear();
-        console.log('Cleared all user cache');
     }
 }
 
