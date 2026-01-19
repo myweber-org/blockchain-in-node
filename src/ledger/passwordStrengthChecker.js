@@ -281,4 +281,63 @@ function calculatePasswordScore(password, config) {
     return Math.max(0, Math.min(100, score));
 }
 
-export { validatePassword, calculatePasswordScore };
+export { validatePassword, calculatePasswordScore };function validatePassword(password, options = {}) {
+    const defaults = {
+        minLength: 8,
+        requireUppercase: true,
+        requireLowercase: true,
+        requireNumbers: true,
+        requireSpecialChars: true,
+        specialChars: "!@#$%^&*()_+-=[]{}|;:,.<>?"
+    };
+    
+    const config = { ...defaults, ...options };
+    const errors = [];
+    
+    if (password.length < config.minLength) {
+        errors.push(`Password must be at least ${config.minLength} characters long`);
+    }
+    
+    if (config.requireUppercase && !/[A-Z]/.test(password)) {
+        errors.push("Password must contain at least one uppercase letter");
+    }
+    
+    if (config.requireLowercase && !/[a-z]/.test(password)) {
+        errors.push("Password must contain at least one lowercase letter");
+    }
+    
+    if (config.requireNumbers && !/\d/.test(password)) {
+        errors.push("Password must contain at least one number");
+    }
+    
+    if (config.requireSpecialChars) {
+        const specialRegex = new RegExp(`[${config.specialChars.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}]`);
+        if (!specialRegex.test(password)) {
+            errors.push(`Password must contain at least one special character (${config.specialChars})`);
+        }
+    }
+    
+    const score = Math.max(0, 100 - (errors.length * 20));
+    const strength = score >= 80 ? "strong" : score >= 60 ? "medium" : "weak";
+    
+    return {
+        isValid: errors.length === 0,
+        score,
+        strength,
+        errors
+    };
+}
+
+function generatePassword(length = 12) {
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?";
+    let password = "";
+    
+    for (let i = 0; i < length; i++) {
+        const randomIndex = Math.floor(Math.random() * charset.length);
+        password += charset[randomIndex];
+    }
+    
+    return password;
+}
+
+export { validatePassword, generatePassword };
