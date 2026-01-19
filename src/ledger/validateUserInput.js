@@ -12,5 +12,3 @@ function validateUserInput(username, email) {
     
     return { valid: true, message: 'Input validation successful.' };
 }
-
-module.exports = validateUserInput;
