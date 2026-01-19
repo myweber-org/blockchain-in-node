@@ -391,4 +391,73 @@ if (typeof module !== 'undefined' && module.exports) {
     import: importPreferences,
     keys: PREFERENCE_KEYS
   };
+})();const userPreferencesManager = (function() {
+    const STORAGE_KEY = 'user_preferences';
+    
+    const defaultPreferences = {
+        theme: 'light',
+        language: 'en',
+        notifications: true,
+        fontSize: 16,
+        autoSave: true,
+        showTutorial: false
+    };
+
+    function getPreferences() {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+            try {
+                return { ...defaultPreferences, ...JSON.parse(stored) };
+            } catch (e) {
+                console.error('Failed to parse stored preferences:', e);
+                return defaultPreferences;
+            }
+        }
+        return defaultPreferences;
+    }
+
+    function updatePreferences(updates) {
+        const current = getPreferences();
+        const updated = { ...current, ...updates };
+        
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+            return updated;
+        } catch (e) {
+            console.error('Failed to save preferences:', e);
+            return current;
+        }
+    }
+
+    function resetPreferences() {
+        try {
+            localStorage.removeItem(STORAGE_KEY);
+            return defaultPreferences;
+        } catch (e) {
+            console.error('Failed to reset preferences:', e);
+            return getPreferences();
+        }
+    }
+
+    function getPreference(key) {
+        const prefs = getPreferences();
+        return prefs[key] !== undefined ? prefs[key] : defaultPreferences[key];
+    }
+
+    function subscribe(callback) {
+        window.addEventListener('storage', function(e) {
+            if (e.key === STORAGE_KEY) {
+                callback(getPreferences());
+            }
+        });
+    }
+
+    return {
+        get: getPreferences,
+        update: updatePreferences,
+        reset: resetPreferences,
+        getPreference: getPreference,
+        subscribe: subscribe,
+        defaultPreferences: defaultPreferences
+    };
 })();
