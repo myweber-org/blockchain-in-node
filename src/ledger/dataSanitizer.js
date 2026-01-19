@@ -1,23 +1,25 @@
 function sanitizeInput(input) {
-    const div = document.createElement('div');
-    div.textContent = input;
-    return div.innerHTML;
+  if (typeof input !== 'string') {
+    return '';
+  }
+  
+  const div = document.createElement('div');
+  div.textContent = input;
+  return div.innerHTML;
 }
 
-function validateAndSanitize(userInput) {
-    if (typeof userInput !== 'string') {
-        return '';
+function validateAndSanitizeFormData(formData) {
+  const sanitizedData = {};
+  
+  for (const [key, value] of Object.entries(formData)) {
+    if (typeof value === 'string') {
+      sanitizedData[key] = sanitizeInput(value);
+    } else {
+      sanitizedData[key] = value;
     }
-    
-    const trimmed = userInput.trim();
-    if (trimmed.length === 0) {
-        return '';
-    }
-    
-    const sanitized = sanitizeInput(trimmed);
-    const maxLength = 1000;
-    
-    return sanitized.length > maxLength ? sanitized.substring(0, maxLength) : sanitized;
+  }
+  
+  return sanitizedData;
 }
 
-module.exports = { validateAndSanitize };
+export { sanitizeInput, validateAndSanitizeFormData };
