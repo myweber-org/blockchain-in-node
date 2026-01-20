@@ -16,9 +16,9 @@ function convertTemperature(value, unit) {
     }
 }
 
-function formatTemperature(value, fromUnit, toUnit) {
-    const converted = convertTemperature(value, fromUnit);
-    return `${value}°${fromUnit.toUpperCase()} = ${converted.toFixed(2)}°${toUnit.toUpperCase()}`;
+function formatTemperature(value, originalUnit) {
+    const convertedUnit = originalUnit.toLowerCase() === 'c' ? 'F' : 'C';
+    return `${value.toFixed(2)}°${convertedUnit}`;
 }
 
 module.exports = {
