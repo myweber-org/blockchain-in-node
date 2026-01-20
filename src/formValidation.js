@@ -215,4 +215,34 @@ document.getElementById('submitBtn').addEventListener('click', function(event) {
     if (!validateForm()) {
         event.preventDefault();
     }
-});
+});function validateForm() {
+    const email = document.getElementById('email');
+    const password = document.getElementById('password');
+    const emailError = document.getElementById('emailError');
+    const passwordError = document.getElementById('passwordError');
+    let isValid = true;
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.value)) {
+        emailError.textContent = 'Please enter a valid email address.';
+        email.classList.add('invalid');
+        isValid = false;
+    } else {
+        emailError.textContent = '';
+        email.classList.remove('invalid');
+    }
+
+    if (password.value.length < 8) {
+        passwordError.textContent = 'Password must be at least 8 characters long.';
+        password.classList.add('invalid');
+        isValid = false;
+    } else {
+        passwordError.textContent = '';
+        password.classList.remove('invalid');
+    }
+
+    return isValid;
+}
+
+document.getElementById('email').addEventListener('input', validateForm);
+document.getElementById('password').addEventListener('input', validateForm);
