@@ -47,4 +47,39 @@ export { validateUsername, validateEmail, validateUserInput };function validateU
         isValid: true,
         message: "Input validation passed."
     };
+}function sanitizeInput(input) {
+    if (typeof input !== 'string') {
+        return '';
+    }
+    return input
+        .replace(/[<>&"']/g, function(match) {
+            const escapeMap = {
+                '<': '&lt;',
+                '>': '&gt;',
+                '&': '&amp;',
+                '"': '&quot;',
+                "'": '&#x27;'
+            };
+            return escapeMap[match] || match;
+        })
+        .trim();
 }
+
+function validateEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(sanitizeInput(email));
+}
+
+function validatePassword(password) {
+    const sanitizedPassword = sanitizeInput(password);
+    return sanitizedPassword.length >= 8 &&
+           /[A-Z]/.test(sanitizedPassword) &&
+           /[a-z]/.test(sanitizedPassword) &&
+           /[0-9]/.test(sanitizedPassword);
+}
+
+module.exports = {
+    sanitizeInput,
+    validateEmail,
+    validatePassword
+};
