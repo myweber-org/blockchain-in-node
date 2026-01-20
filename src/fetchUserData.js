@@ -1,36 +1,11 @@
-const fetchUserData = async (userId, maxRetries = 3) => {
-  const fetchWithRetry = async (attempt) => {
-    try {
-      const response = await fetch(`https://api.example.com/users/${userId}`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      return { success: true, data };
-    } catch (error) {
-      if (attempt < maxRetries) {
-        console.warn(`Attempt ${attempt} failed. Retrying...`);
-        return fetchWithRetry(attempt + 1);
-      }
-      return { success: false, error: error.message };
+function fetchUserData(userId) {
+    const cacheKey = `user_${userId}`;
+    const cachedData = localStorage.getItem(cacheKey);
+    
+    if (cachedData) {
+        return Promise.resolve(JSON.parse(cachedData));
     }
-  };
-
-  return fetchWithRetry(1);
-};
-
-const processUser = async () => {
-  const result = await fetchUserData(123);
-  if (result.success) {
-    console.log('User data:', result.data);
-    return result.data;
-  } else {
-    console.error('Failed to fetch user:', result.error);
-    return null;
-  }
-};
-
-export { fetchUserData, processUser };function fetchUserData(userId) {
+    
     return fetch(`https://api.example.com/users/${userId}`)
         .then(response => {
             if (!response.ok) {
@@ -39,11 +14,11 @@ export { fetchUserData, processUser };function fetchUserData(userId) {
             return response.json();
         })
         .then(data => {
-            console.log('User data fetched:', data);
+            localStorage.setItem(cacheKey, JSON.stringify(data));
             return data;
         })
         .catch(error => {
-            console.error('Error fetching user data:', error);
+            console.error('Failed to fetch user data:', error);
             throw error;
         });
 }
