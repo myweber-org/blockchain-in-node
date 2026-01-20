@@ -71,4 +71,51 @@ export { validateProfileData, validateEmail, validateUsername, validatePassword,
     isValid: errors.length === 0,
     errors: errors
   };
+}function validateEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
 }
+
+function validateUsername(username) {
+    return username.length >= 3 && username.length <= 20 && /^[a-zA-Z0-9_]+$/.test(username);
+}
+
+function validatePassword(password) {
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumbers = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    return password.length >= 8 && hasUpperCase && hasLowerCase && hasNumbers && hasSpecialChar;
+}
+
+function validateAge(age) {
+    const parsedAge = parseInt(age);
+    return !isNaN(parsedAge) && parsedAge >= 13 && parsedAge <= 120;
+}
+
+function validateProfileInput(userData) {
+    const errors = {};
+
+    if (!validateEmail(userData.email)) {
+        errors.email = 'Invalid email format';
+    }
+
+    if (!validateUsername(userData.username)) {
+        errors.username = 'Username must be 3-20 characters and contain only letters, numbers, and underscores';
+    }
+
+    if (!validatePassword(userData.password)) {
+        errors.password = 'Password must be at least 8 characters with uppercase, lowercase, number, and special character';
+    }
+
+    if (!validateAge(userData.age)) {
+        errors.age = 'Age must be between 13 and 120';
+    }
+
+    return {
+        isValid: Object.keys(errors).length === 0,
+        errors: errors
+    };
+}
+
+export { validateProfileInput, validateEmail, validateUsername, validatePassword, validateAge };
