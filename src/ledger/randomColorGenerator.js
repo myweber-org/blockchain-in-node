@@ -1,4 +1,5 @@
-function generateRandomColor() {
+
+function getRandomColor() {
   const letters = '0123456789ABCDEF';
   let color = '#';
   for (let i = 0; i < 6; i++) {
@@ -7,12 +8,12 @@ function generateRandomColor() {
   return color;
 }
 
-function getRandomColorArray(count) {
+function generateRandomColors(count) {
   const colors = [];
   for (let i = 0; i < count; i++) {
-    colors.push(generateRandomColor());
+    colors.push(getRandomColor());
   }
   return colors;
 }
 
-export { generateRandomColor, getRandomColorArray };
+export { getRandomColor, generateRandomColors };
