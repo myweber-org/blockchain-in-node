@@ -25,4 +25,33 @@ function validateUserInput(username, email) {
     };
 }
 
-export { validateUserInput, validateUsername, validateEmail };
+export { validateUserInput, validateUsername, validateEmail };function validateUserInput(input) {
+    if (typeof input !== 'string') {
+        throw new TypeError('Input must be a string');
+    }
+    
+    const trimmed = input.trim();
+    
+    if (trimmed.length === 0) {
+        throw new Error('Input cannot be empty or whitespace only');
+    }
+    
+    const maxLength = 255;
+    if (trimmed.length > maxLength) {
+        throw new Error(`Input exceeds maximum length of ${maxLength} characters`);
+    }
+    
+    const dangerousPatterns = [
+        /<script\b[^>]*>([\s\S]*?)<\/script>/gi,
+        /javascript:/gi,
+        /on\w+\s*=/gi
+    ];
+    
+    for (const pattern of dangerousPatterns) {
+        if (pattern.test(trimmed)) {
+            throw new Error('Input contains potentially dangerous content');
+        }
+    }
+    
+    return trimmed;
+}
