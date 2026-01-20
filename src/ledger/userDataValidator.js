@@ -121,4 +121,26 @@ module.exports = { validateUserData };function validateUserData(user) {
     isValid: errors.length === 0,
     errors: errors
   };
+}function validateUserData(user) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const errors = [];
+
+    if (!user.name || user.name.trim().length < 2) {
+        errors.push('Name must be at least 2 characters long');
+    }
+
+    if (!emailRegex.test(user.email)) {
+        errors.push('Invalid email format');
+    }
+
+    if (typeof user.age !== 'number' || user.age < 18 || user.age > 120) {
+        errors.push('Age must be a number between 18 and 120');
+    }
+
+    return {
+        isValid: errors.length === 0,
+        errors: errors
+    };
 }
+
+module.exports = validateUserData;
