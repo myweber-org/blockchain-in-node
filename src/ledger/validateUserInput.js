@@ -8,15 +8,15 @@ function validateEmail(email) {
     return emailRegex.test(email);
 }
 
-function validateUserInput(userData) {
+function validateUserInput(username, email) {
     const errors = [];
     
-    if (!validateUsername(userData.username)) {
-        errors.push('Username must be 3-20 characters and contain only letters, numbers, and underscores');
+    if (!validateUsername(username)) {
+        errors.push('Username must be 3-20 characters and contain only letters, numbers, and underscores.');
     }
     
-    if (!validateEmail(userData.email)) {
-        errors.push('Please provide a valid email address');
+    if (!validateEmail(email)) {
+        errors.push('Please enter a valid email address.');
     }
     
     return {
@@ -25,4 +25,4 @@ function validateUserInput(userData) {
     };
 }
 
-module.exports = { validateUserInput, validateUsername, validateEmail };
+export { validateUsername, validateEmail, validateUserInput };
