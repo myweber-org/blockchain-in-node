@@ -236,4 +236,95 @@ if (typeof module !== 'undefined' && module.exports) {
         setPreference,
         subscribe
     };
-})();
+})();const USER_PREFERENCES_KEY = 'app_preferences';
+
+class UserPreferencesManager {
+  constructor() {
+    this.preferences = this.loadPreferences();
+  }
+
+  loadPreferences() {
+    try {
+      const stored = localStorage.getItem(USER_PREFERENCES_KEY);
+      return stored ? JSON.parse(stored) : this.getDefaultPreferences();
+    } catch (error) {
+      console.error('Failed to load preferences:', error);
+      return this.getDefaultPreferences();
+    }
+  }
+
+  getDefaultPreferences() {
+    return {
+      theme: 'light',
+      fontSize: 16,
+      notifications: true,
+      language: 'en',
+      autoSave: true,
+      lastUpdated: new Date().toISOString()
+    };
+  }
+
+  updatePreference(key, value) {
+    if (!this.preferences.hasOwnProperty(key)) {
+      throw new Error(`Invalid preference key: ${key}`);
+    }
+
+    const oldValue = this.preferences[key];
+    this.preferences[key] = value;
+    this.preferences.lastUpdated = new Date().toISOString();
+    
+    this.savePreferences();
+    
+    return {
+      key,
+      oldValue,
+      newValue: value,
+      timestamp: this.preferences.lastUpdated
+    };
+  }
+
+  savePreferences() {
+    try {
+      localStorage.setItem(USER_PREFERENCES_KEY, JSON.stringify(this.preferences));
+      return true;
+    } catch (error) {
+      console.error('Failed to save preferences:', error);
+      return false;
+    }
+  }
+
+  resetToDefaults() {
+    this.preferences = this.getDefaultPreferences();
+    return this.savePreferences();
+  }
+
+  getAllPreferences() {
+    return { ...this.preferences };
+  }
+
+  getPreference(key) {
+    return this.preferences[key];
+  }
+
+  subscribeToChanges(callback) {
+    if (typeof callback !== 'function') {
+      throw new Error('Callback must be a function');
+    }
+
+    const originalSetItem = localStorage.setItem;
+    localStorage.setItem = function(key, value) {
+      originalSetItem.apply(this, arguments);
+      if (key === USER_PREFERENCES_KEY) {
+        callback(JSON.parse(value));
+      }
+    };
+
+    return () => {
+      localStorage.setItem = originalSetItem;
+    };
+  }
+}
+
+const userPreferences = new UserPreferencesManager();
+
+export default userPreferences;
