@@ -13,15 +13,5 @@ function validateForm() {
         return false;
     }
     
-    if (!/[A-Z]/.test(password)) {
-        alert('Password must contain at least one uppercase letter.');
-        return false;
-    }
-    
-    if (!/\d/.test(password)) {
-        alert('Password must contain at least one number.');
-        return false;
-    }
-    
     return true;
 }
