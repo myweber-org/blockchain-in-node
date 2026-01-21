@@ -107,4 +107,54 @@ function mergeWithDefaults(userPrefs) {
   };
 }
 
-export { validatePreferences, mergeWithDefaults, defaultPreferences };
+export { validatePreferences, mergeWithDefaults, defaultPreferences };const userPreferences = {
+  theme: 'light',
+  language: 'en',
+  notifications: true,
+  fontSize: 16
+};
+
+const defaultPreferences = {
+  theme: 'light',
+  language: 'en',
+  notifications: true,
+  fontSize: 14
+};
+
+function validatePreferences(prefs) {
+  const validated = { ...defaultPreferences };
+  
+  if (prefs.theme && ['light', 'dark', 'auto'].includes(prefs.theme)) {
+    validated.theme = prefs.theme;
+  }
+  
+  if (prefs.language && ['en', 'es', 'fr', 'de'].includes(prefs.language)) {
+    validated.language = prefs.language;
+  }
+  
+  if (typeof prefs.notifications === 'boolean') {
+    validated.notifications = prefs.notifications;
+  }
+  
+  if (prefs.fontSize && Number.isInteger(prefs.fontSize) && prefs.fontSize >= 12 && prefs.fontSize <= 24) {
+    validated.fontSize = prefs.fontSize;
+  }
+  
+  return validated;
+}
+
+function savePreferences(prefs) {
+  const validatedPrefs = validatePreferences(prefs);
+  localStorage.setItem('userPreferences', JSON.stringify(validatedPrefs));
+  return validatedPrefs;
+}
+
+function loadPreferences() {
+  const stored = localStorage.getItem('userPreferences');
+  if (stored) {
+    return validatePreferences(JSON.parse(stored));
+  }
+  return { ...defaultPreferences };
+}
+
+export { userPreferences, validatePreferences, savePreferences, loadPreferences };
