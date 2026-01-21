@@ -62,4 +62,47 @@ function displayUserInfo(user) {
     }
 }
 
-// Example usage: fetchUserData(1);
+// Example usage: fetchUserData(1);const fetchUserData = async (userId, maxRetries = 3) => {
+  let lastError;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetch(`https://api.example.com/users/${userId}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      return { success: true, data };
+      
+    } catch (error) {
+      lastError = error;
+      console.warn(`Attempt ${attempt} failed:`, error.message);
+      
+      if (attempt < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+      }
+    }
+  }
+  
+  return { 
+    success: false, 
+    error: lastError,
+    message: `Failed after ${maxRetries} attempts`
+  };
+};
+
+const processUser = async (userId) => {
+  const result = await fetchUserData(userId);
+  
+  if (result.success) {
+    console.log('User data:', result.data);
+    return result.data;
+  } else {
+    console.error('Failed to fetch user:', result.message);
+    throw result.error;
+  }
+};
+
+export { fetchUserData, processUser };
