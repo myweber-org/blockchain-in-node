@@ -17,4 +17,9 @@ module.exports = calculateCircleArea;function calculateCircleArea(radius) {
         throw new Error('Radius must be a positive number');
     }
     return Math.PI * radius * radius;
+}function calculateCircleArea(radius) {
+    if (radius <= 0) {
+        throw new Error('Radius must be a positive number');
+    }
+    return Math.PI * radius * radius;
 }
