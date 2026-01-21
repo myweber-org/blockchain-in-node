@@ -35,4 +35,48 @@ module.exports = {
     getAvailableCurrencies,
     updateExchangeRate,
     exchangeRates
-};
+};const exchangeRates = {};
+
+async function fetchExchangeRate(base, target) {
+    const cacheKey = `${base}_${target}`;
+    const cachedRate = exchangeRates[cacheKey];
+    
+    if (cachedRate && Date.now() - cachedRate.timestamp < 3600000) {
+        return cachedRate.rate;
+    }
+    
+    try {
+        const response = await fetch(`https://api.exchangerate-api.com/v4/latest/${base}`);
+        const data = await response.json();
+        const rate = data.rates[target];
+        
+        exchangeRates[cacheKey] = {
+            rate: rate,
+            timestamp: Date.now()
+        };
+        
+        return rate;
+    } catch (error) {
+        console.error('Failed to fetch exchange rate:', error);
+        throw new Error('Exchange rate service unavailable');
+    }
+}
+
+function convertCurrency(amount, baseCurrency, targetCurrency) {
+    return fetchExchangeRate(baseCurrency, targetCurrency)
+        .then(rate => {
+            if (typeof rate !== 'number') {
+                throw new Error('Invalid exchange rate received');
+            }
+            return amount * rate;
+        });
+}
+
+function formatCurrency(amount, currencyCode) {
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: currencyCode
+    }).format(amount);
+}
+
+export { convertCurrency, formatCurrency };
