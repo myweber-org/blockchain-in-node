@@ -407,4 +407,193 @@ export default fileUploader;function uploadFile(file, url, onProgress, onSuccess
 
     xhr.open('POST', url, true);
     xhr.send(formData);
+}const FileUploader = (function() {
+    const uploadQueue = new Map();
+    let uploadEndpoint = '/api/upload';
+
+    function setEndpoint(url) {
+        if (typeof url === 'string' && url.trim() !== '') {
+            uploadEndpoint = url;
+        }
+    }
+
+    function validateFile(file) {
+        const maxSize = 10 * 1024 * 1024;
+        const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+
+        if (file.size > maxSize) {
+            throw new Error('File size exceeds 10MB limit');
+        }
+
+        if (!allowedTypes.includes(file.type)) {
+            throw new Error('File type not supported');
+        }
+
+        return true;
+    }
+
+    function createProgressTracker(fileId) {
+        const progressElement = document.createElement('div');
+        progressElement.className = 'upload-progress';
+        progressElement.innerHTML = `
+            <div class="progress-bar"></div>
+            <span class="progress-text">0%</span>
+        `;
+
+        return {
+            update: function(percentage) {
+                const bar = progressElement.querySelector('.progress-bar');
+                const text = progressElement.querySelector('.progress-text');
+                bar.style.width = `${percentage}%`;
+                text.textContent = `${Math.round(percentage)}%`;
+            },
+            element: progressElement
+        };
+    }
+
+    async function uploadFile(file, options = {}) {
+        const fileId = Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+        
+        try {
+            validateFile(file);
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            if (options.metadata) {
+                formData.append('metadata', JSON.stringify(options.metadata));
+            }
+
+            const progressTracker = createProgressTracker(fileId);
+            uploadQueue.set(fileId, { file, progressTracker });
+
+            if (options.onProgress) {
+                options.onProgress(0, fileId);
+            }
+
+            const xhr = new XMLHttpRequest();
+            
+            xhr.upload.onprogress = function(event) {
+                if (event.lengthComputable) {
+                    const percentage = (event.loaded / event.total) * 100;
+                    progressTracker.update(percentage);
+                    
+                    if (options.onProgress) {
+                        options.onProgress(percentage, fileId);
+                    }
+                }
+            };
+
+            return new Promise((resolve, reject) => {
+                xhr.onload = function() {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        const response = JSON.parse(xhr.responseText);
+                        uploadQueue.delete(fileId);
+                        
+                        if (options.onSuccess) {
+                            options.onSuccess(response, fileId);
+                        }
+                        resolve(response);
+                    } else {
+                        throw new Error(`Upload failed: ${xhr.statusText}`);
+                    }
+                };
+
+                xhr.onerror = function() {
+                    uploadQueue.delete(fileId);
+                    const error = new Error('Network error during upload');
+                    
+                    if (options.onError) {
+                        options.onError(error, fileId);
+                    }
+                    reject(error);
+                };
+
+                xhr.open('POST', uploadEndpoint, true);
+                
+                if (options.headers) {
+                    Object.entries(options.headers).forEach(([key, value]) => {
+                        xhr.setRequestHeader(key, value);
+                    });
+                }
+                
+                xhr.send(formData);
+            });
+
+        } catch (error) {
+            uploadQueue.delete(fileId);
+            
+            if (options.onError) {
+                options.onError(error, fileId);
+            }
+            throw error;
+        }
+    }
+
+    function cancelUpload(fileId) {
+        const upload = uploadQueue.get(fileId);
+        if (upload) {
+            uploadQueue.delete(fileId);
+            return true;
+        }
+        return false;
+    }
+
+    function getQueueSize() {
+        return uploadQueue.size;
+    }
+
+    function clearQueue() {
+        uploadQueue.clear();
+    }
+
+    function setupDropZone(elementId) {
+        const dropZone = document.getElementById(elementId);
+        
+        if (!dropZone) {
+            throw new Error(`Element with id "${elementId}" not found`);
+        }
+
+        dropZone.addEventListener('dragover', function(event) {
+            event.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+
+        dropZone.addEventListener('dragleave', function(event) {
+            event.preventDefault();
+            dropZone.classList.remove('drag-over');
+        });
+
+        dropZone.addEventListener('drop', function(event) {
+            event.preventDefault();
+            dropZone.classList.remove('drag-over');
+            
+            const files = Array.from(event.dataTransfer.files);
+            files.forEach(file => {
+                uploadFile(file).catch(console.error);
+            });
+        });
+
+        return {
+            destroy: function() {
+                dropZone.removeEventListener('dragover', arguments.callee);
+                dropZone.removeEventListener('dragleave', arguments.callee);
+                dropZone.removeEventListener('drop', arguments.callee);
+            }
+        };
+    }
+
+    return {
+        setEndpoint,
+        uploadFile,
+        cancelUpload,
+        getQueueSize,
+        clearQueue,
+        setupDropZone,
+        validateFile
+    };
+})();
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = FileUploader;
 }
