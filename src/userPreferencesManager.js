@@ -180,4 +180,59 @@ if (typeof module !== 'undefined' && module.exports) {
     reset: resetPreferences,
     subscribe
   };
+})();const userPreferencesManager = (function() {
+    const STORAGE_KEY = 'user_preferences';
+    
+    const defaultPreferences = {
+        theme: 'light',
+        language: 'en',
+        notifications: true,
+        fontSize: 16,
+        autoSave: true
+    };
+
+    function getPreferences() {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        return stored ? JSON.parse(stored) : {...defaultPreferences};
+    }
+
+    function savePreferences(preferences) {
+        const current = getPreferences();
+        const merged = {...current, ...preferences};
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+        return merged;
+    }
+
+    function resetPreferences() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultPreferences));
+        return {...defaultPreferences};
+    }
+
+    function getPreference(key) {
+        const prefs = getPreferences();
+        return prefs[key] !== undefined ? prefs[key] : defaultPreferences[key];
+    }
+
+    function setPreference(key, value) {
+        const prefs = getPreferences();
+        prefs[key] = value;
+        return savePreferences(prefs);
+    }
+
+    function subscribe(callback) {
+        window.addEventListener('storage', function(e) {
+            if (e.key === STORAGE_KEY) {
+                callback(getPreferences());
+            }
+        });
+    }
+
+    return {
+        get: getPreference,
+        set: setPreference,
+        getAll: getPreferences,
+        save: savePreferences,
+        reset: resetPreferences,
+        subscribe: subscribe
+    };
 })();
