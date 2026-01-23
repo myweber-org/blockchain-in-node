@@ -1,73 +1,122 @@
 const UserPreferencesManager = (function() {
-    const PREFIX = 'user_pref_';
-    
-    const getKey = (key) => `${PREFIX}${key}`;
-    
-    return {
-        setPreference: function(key, value) {
-            try {
-                const serialized = JSON.stringify(value);
-                localStorage.setItem(getKey(key), serialized);
-                return true;
-            } catch (error) {
-                console.error('Failed to save preference:', error);
-                return false;
-            }
-        },
+    const STORAGE_KEY = 'user_preferences';
+    const DEFAULT_PREFERENCES = {
+        theme: 'light',
+        language: 'en',
+        notifications: true,
+        fontSize: 16,
+        autoSave: true
+    };
+
+    function validatePreferences(prefs) {
+        const validThemes = ['light', 'dark', 'auto'];
+        const validLanguages = ['en', 'es', 'fr', 'de'];
         
-        getPreference: function(key, defaultValue = null) {
-            try {
-                const item = localStorage.getItem(getKey(key));
-                return item ? JSON.parse(item) : defaultValue;
-            } catch (error) {
-                console.error('Failed to retrieve preference:', error);
-                return defaultValue;
-            }
-        },
-        
-        removePreference: function(key) {
-            try {
-                localStorage.removeItem(getKey(key));
-                return true;
-            } catch (error) {
-                console.error('Failed to remove preference:', error);
-                return false;
-            }
-        },
-        
-        clearAllPreferences: function() {
-            try {
-                const keysToRemove = [];
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key.startsWith(PREFIX)) {
-                        keysToRemove.push(key);
-                    }
-                }
-                
-                keysToRemove.forEach(key => localStorage.removeItem(key));
-                return true;
-            } catch (error) {
-                console.error('Failed to clear preferences:', error);
-                return false;
-            }
-        },
-        
-        getAllPreferences: function() {
-            const preferences = {};
-            try {
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key.startsWith(PREFIX)) {
-                        const prefKey = key.replace(PREFIX, '');
-                        preferences[prefKey] = this.getPreference(prefKey);
-                    }
-                }
-            } catch (error) {
-                console.error('Failed to retrieve all preferences:', error);
-            }
-            return preferences;
+        if (!prefs || typeof prefs !== 'object') {
+            return false;
         }
+
+        if (prefs.theme && !validThemes.includes(prefs.theme)) {
+            return false;
+        }
+
+        if (prefs.language && !validLanguages.includes(prefs.language)) {
+            return false;
+        }
+
+        if (prefs.fontSize && (typeof prefs.fontSize !== 'number' || prefs.fontSize < 12 || prefs.fontSize > 24)) {
+            return false;
+        }
+
+        if (prefs.notifications !== undefined && typeof prefs.notifications !== 'boolean') {
+            return false;
+        }
+
+        if (prefs.autoSave !== undefined && typeof prefs.autoSave !== 'boolean') {
+            return false;
+        }
+
+        return true;
+    }
+
+    function getPreferences() {
+        try {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (!stored) {
+                return { ...DEFAULT_PREFERENCES };
+            }
+
+            const parsed = JSON.parse(stored);
+            if (!validatePreferences(parsed)) {
+                console.warn('Invalid preferences found, using defaults');
+                return { ...DEFAULT_PREFERENCES };
+            }
+
+            return { ...DEFAULT_PREFERENCES, ...parsed };
+        } catch (error) {
+            console.error('Error loading preferences:', error);
+            return { ...DEFAULT_PREFERENCES };
+        }
+    }
+
+    function savePreferences(preferences) {
+        if (!validatePreferences(preferences)) {
+            throw new Error('Invalid preferences provided');
+        }
+
+        const current = getPreferences();
+        const merged = { ...current, ...preferences };
+
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+            return true;
+        } catch (error) {
+            console.error('Error saving preferences:', error);
+            return false;
+        }
+    }
+
+    function resetPreferences() {
+        try {
+            localStorage.removeItem(STORAGE_KEY);
+            return true;
+        } catch (error) {
+            console.error('Error resetting preferences:', error);
+            return false;
+        }
+    }
+
+    function applyPreferences() {
+        const prefs = getPreferences();
+        
+        document.documentElement.setAttribute('data-theme', prefs.theme);
+        document.documentElement.lang = prefs.language;
+        document.documentElement.style.fontSize = `${prefs.fontSize}px`;
+
+        if (prefs.autoSave) {
+            window.addEventListener('beforeunload', handleAutoSave);
+        } else {
+            window.removeEventListener('beforeunload', handleAutoSave);
+        }
+
+        return prefs;
+    }
+
+    function handleAutoSave(event) {
+        const forms = document.querySelectorAll('form[data-autosave]');
+        forms.forEach(form => {
+            const formData = new FormData(form);
+            const formState = Object.fromEntries(formData.entries());
+            localStorage.setItem(`form_${form.id}_autosave`, JSON.stringify(formState));
+        });
+    }
+
+    return {
+        get: getPreferences,
+        save: savePreferences,
+        reset: resetPreferences,
+        apply: applyPreferences,
+        validate: validatePreferences
     };
 })();
 
