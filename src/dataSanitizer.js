@@ -4,65 +4,19 @@ function sanitizeInput(input) {
     return div.innerHTML;
 }
 
-function validateAndSanitize(userInput) {
-    if (typeof userInput !== 'string') {
-        return '';
+function validateAndSanitizeForm() {
+    const userInput = document.getElementById('userInput').value;
+    const sanitizedInput = sanitizeInput(userInput);
+    document.getElementById('output').innerHTML = sanitizedInput;
+    console.log('Sanitized input:', sanitizedInput);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('inputForm');
+    if (form) {
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            validateAndSanitizeForm();
+        });
     }
-    
-    const trimmed = userInput.trim();
-    const sanitized = sanitizeInput(trimmed);
-    
-    const maxLength = 500;
-    if (sanitized.length > maxLength) {
-        return sanitized.substring(0, maxLength);
-    }
-    
-    return sanitized;
-}
-
-export { validateAndSanitize };function sanitizeInput(input) {
-    const div = document.createElement('div');
-    div.textContent = input;
-    return div.innerHTML;
-}
-
-function validateAndSanitize(userInput) {
-    if (typeof userInput !== 'string') {
-        return '';
-    }
-    
-    const trimmed = userInput.trim();
-    const sanitized = sanitizeInput(trimmed);
-    
-    const allowedPattern = /^[a-zA-Z0-9\s.,!?@-]+$/;
-    if (!allowedPattern.test(trimmed)) {
-        return '';
-    }
-    
-    return sanitized;
-}
-
-export { validateAndSanitize };function sanitizeInput(input) {
-  if (typeof input !== 'string') {
-    return '';
-  }
-  
-  const map = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#x27;',
-    '/': '&#x2F;'
-  };
-  
-  const reg = /[&<>"'/]/ig;
-  return input.replace(reg, (match) => map[match]);
-}
-
-function validateEmail(email) {
-  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return re.test(email);
-}
-
-module.exports = { sanitizeInput, validateEmail };
+});
