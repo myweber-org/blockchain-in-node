@@ -1,36 +1,43 @@
-function sanitizeInput(input) {
-  if (typeof input !== 'string') {
-    return '';
-  }
-  
-  const trimmed = input.trim();
-  const escaped = trimmed
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;')
-    .replace(/\//g, '&#x2F;');
-    
-  return escaped;
-}
-
 function validateEmail(email) {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
 }
 
 function validatePassword(password) {
-  if (password.length < 8) {
-    return false;
-  }
-  
-  const hasUpperCase = /[A-Z]/.test(password);
-  const hasLowerCase = /[a-z]/.test(password);
-  const hasNumbers = /\d/.test(password);
-  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-  
-  return hasUpperCase && hasLowerCase && hasNumbers && hasSpecialChar;
+    return password.length >= 8 && 
+           /[A-Z]/.test(password) && 
+           /[a-z]/.test(password) && 
+           /\d/.test(password);
 }
 
-export { sanitizeInput, validateEmail, validatePassword };
+function validateUsername(username) {
+    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+    return usernameRegex.test(username);
+}
+
+function validateRegistrationForm(userData) {
+    const errors = [];
+    
+    if (!validateEmail(userData.email)) {
+        errors.push('Invalid email format');
+    }
+    
+    if (!validatePassword(userData.password)) {
+        errors.push('Password must be at least 8 characters with uppercase, lowercase and number');
+    }
+    
+    if (!validateUsername(userData.username)) {
+        errors.push('Username must be 3-20 characters (letters, numbers, underscores)');
+    }
+    
+    if (userData.password !== userData.confirmPassword) {
+        errors.push('Passwords do not match');
+    }
+    
+    return {
+        isValid: errors.length === 0,
+        errors: errors
+    };
+}
+
+export { validateEmail, validatePassword, validateUsername, validateRegistrationForm };
