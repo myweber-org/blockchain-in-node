@@ -271,4 +271,157 @@ class UserPreferencesManager {
     }
 }
 
-const preferencesManager = new UserPreferencesManager();
+const preferencesManager = new UserPreferencesManager();const UserPreferencesManager = (() => {
+  const PREFIX = 'app_pref_';
+  const DEFAULT_PREFERENCES = {
+    theme: 'light',
+    language: 'en',
+    notifications: true,
+    fontSize: 16,
+    autoSave: false
+  };
+
+  const validateKey = (key) => {
+    if (!key || typeof key !== 'string') {
+      throw new Error('Invalid preference key');
+    }
+    return true;
+  };
+
+  const validateValue = (value) => {
+    if (value === undefined || value === null) {
+      throw new Error('Invalid preference value');
+    }
+    return true;
+  };
+
+  const getStorageKey = (key) => `${PREFIX}${key}`;
+
+  const getAll = () => {
+    const preferences = { ...DEFAULT_PREFERENCES };
+    
+    Object.keys(DEFAULT_PREFERENCES).forEach(key => {
+      const storedValue = localStorage.getItem(getStorageKey(key));
+      if (storedValue !== null) {
+        try {
+          preferences[key] = JSON.parse(storedValue);
+        } catch {
+          preferences[key] = storedValue;
+        }
+      }
+    });
+    
+    return preferences;
+  };
+
+  const get = (key) => {
+    validateKey(key);
+    
+    if (!DEFAULT_PREFERENCES.hasOwnProperty(key)) {
+      throw new Error(`Unknown preference: ${key}`);
+    }
+    
+    const storedValue = localStorage.getItem(getStorageKey(key));
+    if (storedValue === null) {
+      return DEFAULT_PREFERENCES[key];
+    }
+    
+    try {
+      return JSON.parse(storedValue);
+    } catch {
+      return storedValue;
+    }
+  };
+
+  const set = (key, value) => {
+    validateKey(key);
+    validateValue(value);
+    
+    if (!DEFAULT_PREFERENCES.hasOwnProperty(key)) {
+      throw new Error(`Cannot set unknown preference: ${key}`);
+    }
+    
+    const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
+    localStorage.setItem(getStorageKey(key), stringValue);
+    
+    return value;
+  };
+
+  const reset = (key = null) => {
+    if (key) {
+      validateKey(key);
+      if (DEFAULT_PREFERENCES.hasOwnProperty(key)) {
+        localStorage.removeItem(getStorageKey(key));
+        return DEFAULT_PREFERENCES[key];
+      }
+      throw new Error(`Cannot reset unknown preference: ${key}`);
+    } else {
+      Object.keys(DEFAULT_PREFERENCES).forEach(resetKey => {
+        localStorage.removeItem(getStorageKey(resetKey));
+      });
+      return { ...DEFAULT_PREFERENCES };
+    }
+  };
+
+  const subscribe = (key, callback) => {
+    validateKey(key);
+    
+    if (typeof callback !== 'function') {
+      throw new Error('Callback must be a function');
+    }
+    
+    const storageHandler = (event) => {
+      if (event.key === getStorageKey(key)) {
+        try {
+          const newValue = event.newValue ? JSON.parse(event.newValue) : DEFAULT_PREFERENCES[key];
+          const oldValue = event.oldValue ? JSON.parse(event.oldValue) : DEFAULT_PREFERENCES[key];
+          callback(newValue, oldValue);
+        } catch {
+          const newValue = event.newValue || DEFAULT_PREFERENCES[key];
+          const oldValue = event.oldValue || DEFAULT_PREFERENCES[key];
+          callback(newValue, oldValue);
+        }
+      }
+    };
+    
+    window.addEventListener('storage', storageHandler);
+    
+    return () => {
+      window.removeEventListener('storage', storageHandler);
+    };
+  };
+
+  const exportPreferences = () => {
+    const preferences = getAll();
+    return JSON.stringify(preferences, null, 2);
+  };
+
+  const importPreferences = (jsonString) => {
+    try {
+      const imported = JSON.parse(jsonString);
+      Object.keys(imported).forEach(key => {
+        if (DEFAULT_PREFERENCES.hasOwnProperty(key)) {
+          set(key, imported[key]);
+        }
+      });
+      return getAll();
+    } catch (error) {
+      throw new Error('Invalid preferences JSON');
+    }
+  };
+
+  return {
+    getAll,
+    get,
+    set,
+    reset,
+    subscribe,
+    export: exportPreferences,
+    import: importPreferences,
+    defaults: { ...DEFAULT_PREFERENCES }
+  };
+})();
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = UserPreferencesManager;
+}
