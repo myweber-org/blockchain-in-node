@@ -502,4 +502,78 @@ function getStrengthLevel(score) {
     return levels[score] || "Unknown";
 }
 
-export { checkPasswordStrength };
+export { checkPasswordStrength };function calculatePasswordEntropy(password) {
+    const charSets = {
+        lower: /[a-z]/.test(password),
+        upper: /[A-Z]/.test(password),
+        digits: /\d/.test(password),
+        symbols: /[^a-zA-Z0-9]/.test(password)
+    };
+    
+    let poolSize = 0;
+    if (charSets.lower) poolSize += 26;
+    if (charSets.upper) poolSize += 26;
+    if (charSets.digits) poolSize += 10;
+    if (charSets.symbols) poolSize += 32;
+    
+    if (poolSize === 0) return 0;
+    
+    const entropy = Math.log2(Math.pow(poolSize, password.length));
+    return Math.round(entropy * 100) / 100;
+}
+
+function evaluatePasswordStrength(password) {
+    const entropy = calculatePasswordEntropy(password);
+    
+    if (entropy === 0) return { strength: 'empty', score: 0 };
+    if (entropy < 28) return { strength: 'very weak', score: 1 };
+    if (entropy < 36) return { strength: 'weak', score: 2 };
+    if (entropy < 60) return { strength: 'moderate', score: 3 };
+    if (entropy < 128) return { strength: 'strong', score: 4 };
+    return { strength: 'very strong', score: 5 };
+}
+
+function validatePassword(password, minEntropy = 60) {
+    const evaluation = evaluatePasswordStrength(password);
+    const entropy = calculatePasswordEntropy(password);
+    
+    return {
+        valid: entropy >= minEntropy,
+        strength: evaluation.strength,
+        score: evaluation.score,
+        entropy: entropy,
+        suggestions: generateSuggestions(password, entropy, minEntropy)
+    };
+}
+
+function generateSuggestions(password, entropy, minEntropy) {
+    const suggestions = [];
+    
+    if (password.length < 12) {
+        suggestions.push('Increase length to at least 12 characters');
+    }
+    
+    if (!/[A-Z]/.test(password)) {
+        suggestions.push('Add uppercase letters');
+    }
+    
+    if (!/\d/.test(password)) {
+        suggestions.push('Include numbers');
+    }
+    
+    if (!/[^a-zA-Z0-9]/.test(password)) {
+        suggestions.push('Add special characters');
+    }
+    
+    if (entropy < minEntropy) {
+        suggestions.push(`Password entropy (${entropy}) is below minimum (${minEntropy})`);
+    }
+    
+    return suggestions;
+}
+
+module.exports = {
+    calculatePasswordEntropy,
+    evaluatePasswordStrength,
+    validatePassword
+};
