@@ -22,4 +22,13 @@ function parseCurrency(formattedString, locale = 'en-US') {
     return parseFloat(normalized.replace(/[^\d.-]/g, ''));
 }
 
-export { formatCurrency, parseCurrency };
+export { formatCurrency, parseCurrency };function formatCurrency(amount) {
+    if (typeof amount !== 'number' || isNaN(amount)) {
+        throw new Error('Invalid input: amount must be a number');
+    }
+    
+    const formatted = amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return `$${formatted}`;
+}
+
+module.exports = formatCurrency;
