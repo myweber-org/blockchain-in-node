@@ -9,23 +9,26 @@ class CurrencyConverter {
   async convert(amount, fromCurrency, toCurrency) {
     try {
       const response = await axios.get(`${this.baseUrl}/${fromCurrency}`);
-      const rate = response.data.rates[toCurrency];
+      const rates = response.data.rates;
       
-      if (!rate) {
-        throw new Error(`Exchange rate for ${toCurrency} not found`);
+      if (!rates[toCurrency]) {
+        throw new Error(`Invalid target currency: ${toCurrency}`);
       }
+
+      const exchangeRate = rates[toCurrency];
+      const convertedAmount = amount * exchangeRate;
       
-      const convertedAmount = amount * rate;
       return {
         originalAmount: amount,
         fromCurrency: fromCurrency,
+        convertedAmount: parseFloat(convertedAmount.toFixed(2)),
         toCurrency: toCurrency,
-        exchangeRate: rate,
-        convertedAmount: parseFloat(convertedAmount.toFixed(2))
+        exchangeRate: exchangeRate,
+        timestamp: new Date().toISOString()
       };
     } catch (error) {
       console.error('Conversion error:', error.message);
-      throw error;
+      throw new Error(`Failed to convert currency: ${error.message}`);
     }
   }
 
@@ -42,10 +45,16 @@ class CurrencyConverter {
   async getExchangeRate(fromCurrency, toCurrency) {
     try {
       const response = await axios.get(`${this.baseUrl}/${fromCurrency}`);
-      return response.data.rates[toCurrency];
+      const rates = response.data.rates;
+      
+      if (!rates[toCurrency]) {
+        throw new Error(`Invalid target currency: ${toCurrency}`);
+      }
+      
+      return rates[toCurrency];
     } catch (error) {
       console.error('Failed to fetch exchange rate:', error.message);
-      return null;
+      throw error;
     }
   }
 }
