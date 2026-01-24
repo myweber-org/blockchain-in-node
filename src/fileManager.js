@@ -88,4 +88,70 @@ class FileManager {
   }
 }
 
+module.exports = FileManager;const fs = require('fs').promises;
+const path = require('path');
+
+class FileManager {
+  constructor(basePath = process.cwd()) {
+    this.basePath = basePath;
+  }
+
+  async readJSON(filePath) {
+    try {
+      const fullPath = path.resolve(this.basePath, filePath);
+      const data = await fs.readFile(fullPath, 'utf8');
+      return JSON.parse(data);
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        throw new Error(`File not found: ${filePath}`);
+      } else if (error instanceof SyntaxError) {
+        throw new Error(`Invalid JSON in file: ${filePath}`);
+      }
+      throw error;
+    }
+  }
+
+  async writeJSON(filePath, data, options = {}) {
+    const defaultOptions = {
+      spaces: 2,
+      createDir: true,
+      ...options
+    };
+
+    try {
+      const fullPath = path.resolve(this.basePath, filePath);
+      
+      if (defaultOptions.createDir) {
+        const dir = path.dirname(fullPath);
+        await fs.mkdir(dir, { recursive: true });
+      }
+
+      const jsonString = JSON.stringify(data, null, defaultOptions.spaces);
+      await fs.writeFile(fullPath, jsonString, 'utf8');
+      return { success: true, path: fullPath };
+    } catch (error) {
+      throw new Error(`Failed to write JSON file: ${error.message}`);
+    }
+  }
+
+  async mergeJSON(filePath, newData) {
+    try {
+      const existingData = await this.readJSON(filePath).catch(() => ({}));
+      const mergedData = { ...existingData, ...newData };
+      return await this.writeJSON(filePath, mergedData);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  static validateJSON(data) {
+    try {
+      JSON.stringify(data);
+      return { valid: true };
+    } catch (error) {
+      return { valid: false, error: error.message };
+    }
+  }
+}
+
 module.exports = FileManager;
