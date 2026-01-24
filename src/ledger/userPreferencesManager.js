@@ -424,4 +424,98 @@ const preferencesManager = new UserPreferencesManager();const UserPreferencesMan
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = UserPreferencesManager;
-}
+}const UserPreferencesManager = (() => {
+    const PREFERENCES_KEY = 'app_preferences';
+    const defaultPreferences = {
+        theme: 'light',
+        language: 'en',
+        notifications: true,
+        fontSize: 16,
+        autoSave: false
+    };
+
+    const loadPreferences = () => {
+        try {
+            const stored = localStorage.getItem(PREFERENCES_KEY);
+            return stored ? { ...defaultPreferences, ...JSON.parse(stored) } : { ...defaultPreferences };
+        } catch (error) {
+            console.error('Failed to load preferences:', error);
+            return { ...defaultPreferences };
+        }
+    };
+
+    const savePreferences = (preferences) => {
+        try {
+            localStorage.setItem(PREFERENCES_KEY, JSON.stringify(preferences));
+            return true;
+        } catch (error) {
+            console.error('Failed to save preferences:', error);
+            return false;
+        }
+    };
+
+    const validatePreference = (key, value) => {
+        const validators = {
+            theme: (v) => ['light', 'dark', 'auto'].includes(v),
+            language: (v) => ['en', 'es', 'fr', 'de'].includes(v),
+            notifications: (v) => typeof v === 'boolean',
+            fontSize: (v) => Number.isInteger(v) && v >= 12 && v <= 24,
+            autoSave: (v) => typeof v === 'boolean'
+        };
+        return validators[key] ? validators[key](value) : false;
+    };
+
+    return {
+        getPreferences: () => loadPreferences(),
+
+        getPreference: (key) => {
+            const prefs = loadPreferences();
+            return prefs[key] !== undefined ? prefs[key] : null;
+        },
+
+        setPreference: (key, value) => {
+            if (!validatePreference(key, value)) {
+                throw new Error(`Invalid value for preference "${key}"`);
+            }
+            const prefs = loadPreferences();
+            prefs[key] = value;
+            return savePreferences(prefs);
+        },
+
+        setMultiplePreferences: (updates) => {
+            const prefs = loadPreferences();
+            for (const [key, value] of Object.entries(updates)) {
+                if (validatePreference(key, value)) {
+                    prefs[key] = value;
+                }
+            }
+            return savePreferences(prefs);
+        },
+
+        resetToDefault: () => {
+            return savePreferences({ ...defaultPreferences });
+        },
+
+        clearPreferences: () => {
+            try {
+                localStorage.removeItem(PREFERENCES_KEY);
+                return true;
+            } catch (error) {
+                console.error('Failed to clear preferences:', error);
+                return false;
+            }
+        },
+
+        subscribe: (callback) => {
+            const storageHandler = (event) => {
+                if (event.key === PREFERENCES_KEY) {
+                    callback(loadPreferences());
+                }
+            };
+            window.addEventListener('storage', storageHandler);
+            return () => window.removeEventListener('storage', storageHandler);
+        }
+    };
+})();
+
+export default UserPreferencesManager;
