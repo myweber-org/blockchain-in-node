@@ -1,33 +1,50 @@
 const crypto = require('crypto');
 
-class FileEncryption {
-  constructor(key) {
-    this.algorithm = 'aes-256-cbc';
-    this.key = crypto.createHash('sha256').update(String(key)).digest();
-  }
+class FileEncryptionUtility {
+    constructor() {
+        this.algorithm = 'aes-256-cbc';
+        this.keyLength = 32;
+        this.ivLength = 16;
+    }
 
-  encrypt(text) {
-    const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipheriv(this.algorithm, this.key, iv);
-    let encrypted = cipher.update(text, 'utf8', 'hex');
-    encrypted += cipher.final('hex');
-    return {
-      iv: iv.toString('hex'),
-      content: encrypted
-    };
-  }
+    generateKey() {
+        return crypto.randomBytes(this.keyLength);
+    }
 
-  decrypt(encryptedData) {
-    const iv = Buffer.from(encryptedData.iv, 'hex');
-    const decipher = crypto.createDecipheriv(this.algorithm, this.key, iv);
-    let decrypted = decipher.update(encryptedData.content, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
-    return decrypted;
-  }
+    generateIV() {
+        return crypto.randomBytes(this.ivLength);
+    }
 
-  static generateRandomKey(length = 32) {
-    return crypto.randomBytes(length).toString('hex');
-  }
+    encryptFile(data, key, iv) {
+        const cipher = crypto.createCipheriv(this.algorithm, key, iv);
+        let encrypted = cipher.update(data, 'utf8', 'hex');
+        encrypted += cipher.final('hex');
+        return {
+            encryptedData: encrypted,
+            iv: iv.toString('hex')
+        };
+    }
+
+    decryptFile(encryptedData, key, iv) {
+        const decipher = crypto.createDecipheriv(this.algorithm, key, Buffer.from(iv, 'hex'));
+        let decrypted = decipher.update(encryptedData, 'hex', 'utf8');
+        decrypted += decipher.final('utf8');
+        return decrypted;
+    }
+
+    hashFile(data) {
+        return crypto.createHash('sha256').update(data).digest('hex');
+    }
+
+    validateKey(key) {
+        if (!Buffer.isBuffer(key)) {
+            throw new Error('Key must be a Buffer');
+        }
+        if (key.length !== this.keyLength) {
+            throw new Error(`Key must be ${this.keyLength} bytes`);
+        }
+        return true;
+    }
 }
 
-module.exports = FileEncryption;
+module.exports = FileEncryptionUtility;
