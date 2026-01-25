@@ -144,4 +144,52 @@ function loadPreferences() {
   return { ...defaultPreferences };
 }
 
-export { savePreferences, loadPreferences, defaultPreferences };
+export { savePreferences, loadPreferences, defaultPreferences };function validateUserPreferences(prefs) {
+    const defaults = {
+        theme: 'light',
+        language: 'en',
+        notifications: true,
+        timezone: 'UTC'
+    };
+
+    const validated = { ...defaults, ...prefs };
+
+    if (!['light', 'dark', 'auto'].includes(validated.theme)) {
+        validated.theme = defaults.theme;
+    }
+
+    if (!['en', 'es', 'fr', 'de'].includes(validated.language)) {
+        validated.language = defaults.language;
+    }
+
+    if (typeof validated.notifications !== 'boolean') {
+        validated.notifications = defaults.notifications;
+    }
+
+    if (!Intl.supportedValuesOf('timeZone').includes(validated.timezone)) {
+        validated.timezone = defaults.timezone;
+    }
+
+    return validated;
+}
+
+function initializeUserSettings() {
+    const stored = localStorage.getItem('userPreferences');
+    let preferences = {};
+
+    try {
+        preferences = stored ? JSON.parse(stored) : {};
+    } catch (error) {
+        console.error('Failed to parse stored preferences:', error);
+    }
+
+    return validateUserPreferences(preferences);
+}
+
+function saveUserPreferences(preferences) {
+    const validated = validateUserPreferences(preferences);
+    localStorage.setItem('userPreferences', JSON.stringify(validated));
+    return validated;
+}
+
+export { validateUserPreferences, initializeUserSettings, saveUserPreferences };
