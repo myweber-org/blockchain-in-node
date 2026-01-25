@@ -723,4 +723,82 @@ export default UserPreferences.init();const userPreferencesManager = (() => {
     validate: validatePreference,
     defaults: { ...defaultPreferences }
   };
+})();const UserPreferencesManager = (function() {
+    const PREFIX = 'app_pref_';
+    
+    function setPreference(key, value) {
+        try {
+            const serialized = JSON.stringify(value);
+            localStorage.setItem(PREFIX + key, serialized);
+            return true;
+        } catch (error) {
+            console.error('Failed to save preference:', error);
+            return false;
+        }
+    }
+    
+    function getPreference(key, defaultValue = null) {
+        try {
+            const item = localStorage.getItem(PREFIX + key);
+            return item ? JSON.parse(item) : defaultValue;
+        } catch (error) {
+            console.error('Failed to retrieve preference:', error);
+            return defaultValue;
+        }
+    }
+    
+    function removePreference(key) {
+        try {
+            localStorage.removeItem(PREFIX + key);
+            return true;
+        } catch (error) {
+            console.error('Failed to remove preference:', error);
+            return false;
+        }
+    }
+    
+    function clearAllPreferences() {
+        try {
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith(PREFIX)) {
+                    keysToRemove.push(key);
+                }
+            }
+            keysToRemove.forEach(key => localStorage.removeItem(key));
+            return true;
+        } catch (error) {
+            console.error('Failed to clear preferences:', error);
+            return false;
+        }
+    }
+    
+    function getAllPreferences() {
+        const preferences = {};
+        try {
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith(PREFIX)) {
+                    const prefKey = key.replace(PREFIX, '');
+                    preferences[prefKey] = getPreference(prefKey);
+                }
+            }
+        } catch (error) {
+            console.error('Failed to retrieve all preferences:', error);
+        }
+        return preferences;
+    }
+    
+    return {
+        set: setPreference,
+        get: getPreference,
+        remove: removePreference,
+        clear: clearAllPreferences,
+        getAll: getAllPreferences
+    };
 })();
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = UserPreferencesManager;
+}
