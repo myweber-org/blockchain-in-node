@@ -592,4 +592,61 @@ export default UserPreferencesManager;const UserPreferencesManager = (() => {
     };
 })();
 
-export default UserPreferencesManager;
+export default UserPreferencesManager;const UserPreferences = {
+    _prefs: {},
+    _defaults: {
+        theme: 'light',
+        language: 'en',
+        notifications: true,
+        fontSize: 16
+    },
+
+    init() {
+        const stored = localStorage.getItem('userPreferences');
+        this._prefs = stored ? JSON.parse(stored) : { ...this._defaults };
+        this._applyPreferences();
+        return this;
+    },
+
+    get(key) {
+        return this._prefs[key] !== undefined ? this._prefs[key] : this._defaults[key];
+    },
+
+    set(key, value) {
+        if (this._defaults.hasOwnProperty(key)) {
+            this._prefs[key] = value;
+            this._save();
+            this._applyPreferences();
+            return true;
+        }
+        return false;
+    },
+
+    reset() {
+        this._prefs = { ...this._defaults };
+        this._save();
+        this._applyPreferences();
+    },
+
+    getAll() {
+        return { ...this._prefs };
+    },
+
+    _save() {
+        localStorage.setItem('userPreferences', JSON.stringify(this._prefs));
+    },
+
+    _applyPreferences() {
+        document.documentElement.setAttribute('data-theme', this.get('theme'));
+        document.documentElement.style.fontSize = `${this.get('fontSize')}px`;
+        
+        if (!this.get('notifications')) {
+            document.body.classList.add('notifications-disabled');
+        } else {
+            document.body.classList.remove('notifications-disabled');
+        }
+    }
+};
+
+Object.freeze(UserPreferences);
+export default UserPreferences.init();
