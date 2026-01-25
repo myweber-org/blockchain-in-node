@@ -1,39 +1,12 @@
 function calculateCircleArea(radius) {
-    if (typeof radius !== 'number' || radius <= 0) {
-        throw new Error('Radius must be a positive number');
-    }
-    const area = Math.PI * Math.pow(radius, 2);
-    return parseFloat(area.toFixed(2));
-}function calculateCircleArea(radius) {
-    if (typeof radius !== 'number' || radius <= 0) {
-        throw new Error('Radius must be a positive number');
-    }
-    return Math.PI * radius * radius;
-}function calculateCircleArea(radius) {
-    if (typeof radius !== 'number' || radius <= 0) {
-        throw new Error('Radius must be a positive number');
+    if (typeof radius !== 'number' || radius < 0) {
+        throw new Error('Radius must be a non-negative number');
     }
     return Math.PI * radius * radius;
 }
 
-module.exports = calculateCircleArea;function calculateCircleArea(radius) {
-    if (radius <= 0) {
-        throw new Error('Radius must be a positive number');
-    }
-    return Math.PI * Math.pow(radius, 2);
+function formatArea(area) {
+    return area.toFixed(2);
 }
 
-function validateAndCalculate() {
-    const input = document.getElementById('radiusInput').value;
-    const resultElement = document.getElementById('result');
-    
-    try {
-        const radius = parseFloat(input);
-        const area = calculateCircleArea(radius);
-        resultElement.textContent = `Area: ${area.toFixed(2)}`;
-        resultElement.style.color = '#2ecc71';
-    } catch (error) {
-        resultElement.textContent = `Error: ${error.message}`;
-        resultElement.style.color = '#e74c3c';
-    }
-}
+module.exports = { calculateCircleArea, formatArea };
