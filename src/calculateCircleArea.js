@@ -16,4 +16,24 @@ function calculateCircleArea(radius) {
     return Math.PI * radius * radius;
 }
 
-module.exports = calculateCircleArea;
+module.exports = calculateCircleArea;function calculateCircleArea(radius) {
+    if (radius <= 0) {
+        throw new Error('Radius must be a positive number');
+    }
+    return Math.PI * Math.pow(radius, 2);
+}
+
+function validateAndCalculate() {
+    const input = document.getElementById('radiusInput').value;
+    const resultElement = document.getElementById('result');
+    
+    try {
+        const radius = parseFloat(input);
+        const area = calculateCircleArea(radius);
+        resultElement.textContent = `Area: ${area.toFixed(2)}`;
+        resultElement.style.color = '#2ecc71';
+    } catch (error) {
+        resultElement.textContent = `Error: ${error.message}`;
+        resultElement.style.color = '#e74c3c';
+    }
+}
