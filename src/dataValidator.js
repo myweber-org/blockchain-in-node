@@ -1,65 +1,21 @@
 function validateEmail(email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
 }
 
 function validatePassword(password) {
-    return password.length >= 8 && 
-           /[A-Z]/.test(password) && 
-           /[a-z]/.test(password) && 
-           /\d/.test(password);
-}
-
-function validateUsername(username) {
-    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
-    return usernameRegex.test(username);
-}
-
-function validateRegistrationForm(userData) {
-    const errors = [];
-    
-    if (!validateEmail(userData.email)) {
-        errors.push('Invalid email format');
-    }
-    
-    if (!validatePassword(userData.password)) {
-        errors.push('Password must be at least 8 characters with uppercase, lowercase and number');
-    }
-    
-    if (!validateUsername(userData.username)) {
-        errors.push('Username must be 3-20 characters (letters, numbers, underscores)');
-    }
-    
-    if (userData.password !== userData.confirmPassword) {
-        errors.push('Passwords do not match');
-    }
-    
-    return {
-        isValid: errors.length === 0,
-        errors: errors
-    };
-}
-
-export { validateEmail, validatePassword, validateUsername, validateRegistrationForm };function validateEmail(email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-}
-
-function validatePassword(password) {
-    return password.length >= 8 &&
-           /[A-Z]/.test(password) &&
-           /[a-z]/.test(password) &&
-           /\d/.test(password);
+  return password.length >= 8 && 
+         /[A-Z]/.test(password) && 
+         /[a-z]/.test(password) && 
+         /\d/.test(password);
 }
 
 function sanitizeInput(input) {
-    return input.trim()
-                .replace(/[<>]/g, '')
-                .substring(0, 255);
+  return input.replace(/[<>]/g, '');
 }
 
 module.exports = {
-    validateEmail,
-    validatePassword,
-    sanitizeInput
+  validateEmail,
+  validatePassword,
+  sanitizeInput
 };
