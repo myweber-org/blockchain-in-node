@@ -649,4 +649,78 @@ export default UserPreferencesManager;const UserPreferences = {
 };
 
 Object.freeze(UserPreferences);
-export default UserPreferences.init();
+export default UserPreferences.init();const userPreferencesManager = (() => {
+  const PREFERENCES_KEY = 'app_preferences';
+  
+  const defaultPreferences = {
+    theme: 'light',
+    fontSize: 16,
+    notifications: true,
+    language: 'en',
+    autoSave: false
+  };
+
+  const loadPreferences = () => {
+    try {
+      const stored = localStorage.getItem(PREFERENCES_KEY);
+      return stored ? JSON.parse(stored) : { ...defaultPreferences };
+    } catch (error) {
+      console.error('Failed to load preferences:', error);
+      return { ...defaultPreferences };
+    }
+  };
+
+  const savePreferences = (preferences) => {
+    try {
+      const merged = { ...defaultPreferences, ...preferences };
+      localStorage.setItem(PREFERENCES_KEY, JSON.stringify(merged));
+      return true;
+    } catch (error) {
+      console.error('Failed to save preferences:', error);
+      return false;
+    }
+  };
+
+  const resetPreferences = () => {
+    localStorage.removeItem(PREFERENCES_KEY);
+    return { ...defaultPreferences };
+  };
+
+  const getPreference = (key) => {
+    const prefs = loadPreferences();
+    return prefs[key] !== undefined ? prefs[key] : defaultPreferences[key];
+  };
+
+  const setPreference = (key, value) => {
+    const prefs = loadPreferences();
+    prefs[key] = value;
+    return savePreferences(prefs);
+  };
+
+  const getAllPreferences = () => {
+    return loadPreferences();
+  };
+
+  const validatePreference = (key, value) => {
+    const validators = {
+      theme: (val) => ['light', 'dark', 'auto'].includes(val),
+      fontSize: (val) => Number.isInteger(val) && val >= 12 && val <= 24,
+      notifications: (val) => typeof val === 'boolean',
+      language: (val) => ['en', 'es', 'fr', 'de'].includes(val),
+      autoSave: (val) => typeof val === 'boolean'
+    };
+    
+    return validators[key] ? validators[key](value) : false;
+  };
+
+  return {
+    load: loadPreferences,
+    save: savePreferences,
+    reset: resetPreferences,
+    get: getPreference,
+    set: setPreference,
+    getAll: getAllPreferences,
+    validate: validatePreference,
+    defaults: { ...defaultPreferences }
+  };
+})();
