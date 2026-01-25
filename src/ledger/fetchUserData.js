@@ -1,58 +1,34 @@
-async function fetchUserData(userId, maxRetries = 3) {
-    const url = `https://api.example.com/users/${userId}`;
-    let lastError;
+async function fetchUserData(userId) {
+    const cacheKey = `user_${userId}`;
+    const cachedData = localStorage.getItem(cacheKey);
     
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    if (cachedData) {
         try {
-            const response = await fetch(url);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            
-            const data = await response.json();
-            console.log(`Successfully fetched data for user ${userId}`);
-            return data;
-            
-        } catch (error) {
-            lastError = error;
-            console.warn(`Attempt ${attempt} failed: ${error.message}`);
-            
-            if (attempt < maxRetries) {
-                const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
-                console.log(`Retrying in ${delay}ms...`);
-                await new Promise(resolve => setTimeout(resolve, delay));
-            }
+            return JSON.parse(cachedData);
+        } catch (e) {
+            console.warn('Failed to parse cached data', e);
+            localStorage.removeItem(cacheKey);
         }
     }
-    
-    throw new Error(`Failed to fetch user data after ${maxRetries} attempts: ${lastError.message}`);
-}
 
-function validateUserId(userId) {
-    if (!userId || typeof userId !== 'string') {
-        throw new TypeError('User ID must be a non-empty string');
-    }
-    return userId.trim();
-}
-
-async function getUserProfile(userId) {
     try {
-        const validatedId = validateUserId(userId);
-        const userData = await fetchUserData(validatedId);
+        const response = await fetch(`https://api.example.com/users/${userId}`);
         
-        return {
-            id: userData.id,
-            name: userData.name,
-            email: userData.email,
-            lastActive: new Date(userData.lastActive),
-            profileComplete: userData.profileComplete || false
-        };
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         
+        const userData = await response.json();
+        
+        try {
+            localStorage.setItem(cacheKey, JSON.stringify(userData));
+        } catch (e) {
+            console.warn('Failed to cache user data', e);
+        }
+        
+        return userData;
     } catch (error) {
-        console.error('Failed to get user profile:', error);
-        return null;
+        console.error('Failed to fetch user data:', error);
+        throw error;
     }
 }
-
-export { fetchUserData, getUserProfile };
