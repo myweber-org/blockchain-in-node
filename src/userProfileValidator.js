@@ -66,4 +66,26 @@ export { validateUserProfile, validateEmail, validatePassword, validateUsername 
         isValid: errors.length === 0,
         errors: errors
     };
+}function validateUserProfile(name, email, age) {
+    const errors = [];
+    
+    if (!name || name.trim().length === 0) {
+        errors.push("Name is required");
+    }
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
+        errors.push("Valid email is required");
+    }
+    
+    if (!age || age < 18 || age > 120) {
+        errors.push("Age must be between 18 and 120");
+    }
+    
+    return {
+        isValid: errors.length === 0,
+        errors: errors
+    };
 }
+
+module.exports = { validateUserProfile };
