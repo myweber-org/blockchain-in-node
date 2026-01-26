@@ -1,31 +1,29 @@
-function validateUserPreferences(preferences) {
-    const allowedThemes = ['light', 'dark', 'auto'];
-    const allowedLanguages = ['en', 'es', 'fr', 'de'];
-    const maxFontSize = 24;
-    const minFontSize = 10;
+function validateUserPreferences(prefs) {
+    const requiredFields = ['theme', 'notifications', 'language'];
+    const fieldTypes = {
+        theme: 'string',
+        notifications: 'boolean',
+        language: 'string'
+    };
 
-    if (!preferences || typeof preferences !== 'object') {
-        return { valid: false, error: 'Preferences must be an object' };
-    }
-
-    if (preferences.theme && !allowedThemes.includes(preferences.theme)) {
-        return { valid: false, error: `Theme must be one of: ${allowedThemes.join(', ')}` };
-    }
-
-    if (preferences.language && !allowedLanguages.includes(preferences.language)) {
-        return { valid: false, error: `Language must be one of: ${allowedLanguages.join(', ')}` };
-    }
-
-    if (preferences.fontSize !== undefined) {
-        const fontSize = Number(preferences.fontSize);
-        if (isNaN(fontSize) || fontSize < minFontSize || fontSize > maxFontSize) {
-            return { valid: false, error: `Font size must be between ${minFontSize} and ${maxFontSize}` };
+    for (const field of requiredFields) {
+        if (!prefs.hasOwnProperty(field)) {
+            throw new Error(`Missing required field: ${field}`);
+        }
+        if (typeof prefs[field] !== fieldTypes[field]) {
+            throw new Error(`Invalid type for field ${field}. Expected ${fieldTypes[field]}, got ${typeof prefs[field]}`);
         }
     }
 
-    if (preferences.notifications !== undefined && typeof preferences.notifications !== 'boolean') {
-        return { valid: false, error: 'Notifications must be a boolean value' };
+    const validThemes = ['light', 'dark', 'auto'];
+    if (!validThemes.includes(prefs.theme)) {
+        throw new Error(`Invalid theme value. Must be one of: ${validThemes.join(', ')}`);
     }
 
-    return { valid: true, data: preferences };
+    const validLanguages = ['en', 'es', 'fr', 'de'];
+    if (!validLanguages.includes(prefs.language)) {
+        throw new Error(`Invalid language value. Must be one of: ${validLanguages.join(', ')}`);
+    }
+
+    return true;
 }
