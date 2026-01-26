@@ -157,4 +157,37 @@ function loadPreferences() {
   return { ...defaultPreferences };
 }
 
-export { userPreferences, validatePreferences, savePreferences, loadPreferences };
+export { userPreferences, validatePreferences, savePreferences, loadPreferences };const userPreferences = {
+  theme: 'light',
+  notifications: true,
+  language: 'en',
+  timezone: 'UTC'
+};
+
+function validatePreferences(prefs) {
+  const defaults = {
+    theme: 'light',
+    notifications: true,
+    language: 'en',
+    timezone: 'UTC'
+  };
+
+  const validThemes = ['light', 'dark', 'auto'];
+  const validLanguages = ['en', 'es', 'fr', 'de'];
+
+  return {
+    theme: validThemes.includes(prefs.theme) ? prefs.theme : defaults.theme,
+    notifications: typeof prefs.notifications === 'boolean' ? prefs.notifications : defaults.notifications,
+    language: validLanguages.includes(prefs.language) ? prefs.language : defaults.language,
+    timezone: typeof prefs.timezone === 'string' && prefs.timezone.trim() !== '' ? prefs.timezone.trim() : defaults.timezone
+  };
+}
+
+function mergeWithDefaults(prefs) {
+  return {
+    ...userPreferences,
+    ...validatePreferences(prefs)
+  };
+}
+
+export { userPreferences, validatePreferences, mergeWithDefaults };
