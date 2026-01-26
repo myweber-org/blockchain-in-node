@@ -1,40 +1,4 @@
 function celsiusToFahrenheit(celsius) {
-  return (celsius * 9/5) + 32;
-}
-
-function fahrenheitToCelsius(fahrenheit) {
-  return (fahrenheit - 32) * 5/9;
-}
-
-function convertTemperature(value, unit) {
-  if (unit.toLowerCase() === 'c') {
-    return {
-      celsius: value,
-      fahrenheit: celsiusToFahrenheit(value),
-      originalUnit: 'C'
-    };
-  } else if (unit.toLowerCase() === 'f') {
-    return {
-      celsius: fahrenheitToCelsius(value),
-      fahrenheit: value,
-      originalUnit: 'F'
-    };
-  } else {
-    throw new Error('Invalid unit. Use "C" for Celsius or "F" for Fahrenheit.');
-  }
-}
-
-function formatTemperature(temp, unit) {
-  const symbol = unit === 'C' ? '°C' : '°F';
-  return `${temp.toFixed(2)}${symbol}`;
-}
-
-module.exports = {
-  celsiusToFahrenheit,
-  fahrenheitToCelsius,
-  convertTemperature,
-  formatTemperature
-};function celsiusToFahrenheit(celsius) {
     return (celsius * 9/5) + 32;
 }
 
@@ -42,28 +6,20 @@ function fahrenheitToCelsius(fahrenheit) {
     return (fahrenheit - 32) * 5/9;
 }
 
-function convertTemperature(value, unit) {
-    if (unit.toLowerCase() === 'c') {
-        return {
-            value: celsiusToFahrenheit(value),
-            unit: 'F'
-        };
-    } else if (unit.toLowerCase() === 'f') {
-        return {
-            value: fahrenheitToCelsius(value),
-            unit: 'C'
-        };
+function convertTemperature(value, fromUnit, toUnit) {
+    if (fromUnit === 'C' && toUnit === 'F') {
+        return celsiusToFahrenheit(value);
+    } else if (fromUnit === 'F' && toUnit === 'C') {
+        return fahrenheitToCelsius(value);
+    } else if (fromUnit === toUnit) {
+        return value;
+    } else {
+        throw new Error('Unsupported temperature conversion');
     }
-    throw new Error('Invalid unit. Use "C" for Celsius or "F" for Fahrenheit.');
-}
-
-function formatTemperature(value, unit) {
-    return `${value.toFixed(1)}°${unit}`;
 }
 
 module.exports = {
     celsiusToFahrenheit,
     fahrenheitToCelsius,
-    convertTemperature,
-    formatTemperature
+    convertTemperature
 };
