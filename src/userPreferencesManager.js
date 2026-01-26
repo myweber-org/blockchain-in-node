@@ -1,62 +1,69 @@
 const UserPreferencesManager = (() => {
-    const STORAGE_KEY = 'user_preferences';
-    const DEFAULT_PREFERENCES = {
-        theme: 'light',
-        language: 'en',
-        notifications: true,
-        fontSize: 16,
-        autoSave: false
+  const STORAGE_KEY = 'app_preferences';
+  const DEFAULT_PREFS = {
+    theme: 'light',
+    fontSize: 16,
+    notifications: true,
+    language: 'en'
+  };
+
+  const getPreferences = () => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        return { ...DEFAULT_PREFS, ...JSON.parse(stored) };
+      }
+    } catch (error) {
+      console.warn('Failed to parse stored preferences:', error);
+    }
+    return { ...DEFAULT_PREFS };
+  };
+
+  const savePreference = (key, value) => {
+    if (!DEFAULT_PREFS.hasOwnProperty(key)) {
+      throw new Error(`Invalid preference key: ${key}`);
+    }
+
+    const current = getPreferences();
+    const updated = { ...current, [key]: value };
+
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      return true;
+    } catch (error) {
+      console.error('Failed to save preference:', error);
+      return false;
+    }
+  };
+
+  const resetPreferences = () => {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      return true;
+    } catch (error) {
+      console.error('Failed to reset preferences:', error);
+      return false;
+    }
+  };
+
+  const subscribe = (callback) => {
+    const handler = (event) => {
+      if (event.key === STORAGE_KEY) {
+        callback(getPreferences());
+      }
     };
+    window.addEventListener('storage', handler);
+    return () => window.removeEventListener('storage', handler);
+  };
 
-    let preferences = { ...DEFAULT_PREFERENCES };
-
-    const loadPreferences = () => {
-        try {
-            const stored = localStorage.getItem(STORAGE_KEY);
-            if (stored) {
-                preferences = { ...DEFAULT_PREFERENCES, ...JSON.parse(stored) };
-            }
-        } catch (error) {
-            console.warn('Failed to load preferences:', error);
-        }
-    };
-
-    const savePreferences = () => {
-        try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
-        } catch (error) {
-            console.warn('Failed to save preferences:', error);
-        }
-    };
-
-    const getPreference = (key) => {
-        return preferences[key];
-    };
-
-    const setPreference = (key, value) => {
-        if (key in preferences) {
-            preferences[key] = value;
-            savePreferences();
-            return true;
-        }
-        return false;
-    };
-
-    const resetPreferences = () => {
-        preferences = { ...DEFAULT_PREFERENCES };
-        localStorage.removeItem(STORAGE_KEY);
-    };
-
-    const getAllPreferences = () => {
-        return { ...preferences };
-    };
-
-    loadPreferences();
-
-    return {
-        get: getPreference,
-        set: setPreference,
-        reset: resetPreferences,
-        getAll: getAllPreferences
-    };
+  return {
+    getPreferences,
+    savePreference,
+    resetPreferences,
+    subscribe
+  };
 })();
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = UserPreferencesManager;
+}
