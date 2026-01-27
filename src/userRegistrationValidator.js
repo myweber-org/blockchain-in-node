@@ -103,4 +103,49 @@ export { validateRegistrationForm, validateEmail, validatePassword };function va
         isValid: Object.keys(errors).length === 0,
         errors: errors
     };
+}function validateEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
 }
+
+function validatePassword(password) {
+    if (password.length < 8) return false;
+    if (!/[A-Z]/.test(password)) return false;
+    if (!/[a-z]/.test(password)) return false;
+    if (!/\d/.test(password)) return false;
+    if (!/[!@#$%^&*]/.test(password)) return false;
+    return true;
+}
+
+function validateUsername(username) {
+    if (username.length < 3 || username.length > 20) return false;
+    const usernameRegex = /^[a-zA-Z0-9_]+$/;
+    return usernameRegex.test(username);
+}
+
+function validateRegistration(userData) {
+    const errors = {};
+    
+    if (!validateEmail(userData.email)) {
+        errors.email = 'Invalid email format';
+    }
+    
+    if (!validatePassword(userData.password)) {
+        errors.password = 'Password must be at least 8 characters with uppercase, lowercase, number, and special character';
+    }
+    
+    if (!validateUsername(userData.username)) {
+        errors.username = 'Username must be 3-20 characters with only letters, numbers, and underscores';
+    }
+    
+    if (userData.password !== userData.confirmPassword) {
+        errors.confirmPassword = 'Passwords do not match';
+    }
+    
+    return {
+        isValid: Object.keys(errors).length === 0,
+        errors: errors
+    };
+}
+
+module.exports = { validateRegistration, validateEmail, validatePassword, validateUsername };
