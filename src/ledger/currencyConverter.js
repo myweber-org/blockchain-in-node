@@ -1,40 +1,49 @@
-const exchangeRates = {};
-
-async function fetchExchangeRate(base, target) {
-    const cacheKey = `${base}_${target}`;
-    const cachedRate = exchangeRates[cacheKey];
-    
-    if (cachedRate && Date.now() - cachedRate.timestamp < 3600000) {
-        return cachedRate.rate;
-    }
-    
+const fetchExchangeRate = async (fromCurrency, toCurrency) => {
     try {
-        const response = await fetch(`https://api.exchangerate-api.com/v4/latest/${base}`);
+        const response = await fetch(`https://api.exchangerate-api.com/v4/latest/${fromCurrency}`);
         const data = await response.json();
-        const rate = data.rates[target];
-        
-        exchangeRates[cacheKey] = {
-            rate: rate,
-            timestamp: Date.now()
-        };
-        
-        return rate;
+        return data.rates[toCurrency];
     } catch (error) {
         console.error('Failed to fetch exchange rate:', error);
-        return cachedRate ? cachedRate.rate : null;
+        return null;
     }
-}
+};
 
-function convertCurrency(amount, rate) {
-    if (typeof amount !== 'number' || amount <= 0) {
-        throw new Error('Amount must be a positive number');
+const convertCurrency = async (amount, fromCurrency, toCurrency) => {
+    const rate = await fetchExchangeRate(fromCurrency, toCurrency);
+    if (rate === null) {
+        return null;
     }
-    
-    if (typeof rate !== 'number' || rate <= 0) {
-        throw new Error('Rate must be a positive number');
-    }
-    
-    return amount * rate;
-}
+    const convertedAmount = amount * rate;
+    return {
+        originalAmount: amount,
+        fromCurrency: fromCurrency,
+        toCurrency: toCurrency,
+        exchangeRate: rate,
+        convertedAmount: convertedAmount
+    };
+};
 
-export { fetchExchangeRate, convertCurrency };
+const formatCurrency = (amount, currencyCode) => {
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: currencyCode
+    }).format(amount);
+};
+
+const displayConversion = async () => {
+    const amount = 100;
+    const fromCurrency = 'USD';
+    const toCurrency = 'EUR';
+    
+    const result = await convertCurrency(amount, fromCurrency, toCurrency);
+    
+    if (result) {
+        console.log(`${formatCurrency(result.originalAmount, result.fromCurrency)} equals ${formatCurrency(result.convertedAmount, result.toCurrency)}`);
+        console.log(`Exchange rate: 1 ${result.fromCurrency} = ${result.exchangeRate} ${result.toCurrency}`);
+    } else {
+        console.log('Currency conversion failed');
+    }
+};
+
+export { fetchExchangeRate, convertCurrency, formatCurrency, displayConversion };
