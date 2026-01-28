@@ -227,4 +227,63 @@ if (typeof module !== 'undefined' && module.exports) {
     getAll: getAllPreferences,
     subscribe
   };
-})();
+})();class UserPreferencesManager {
+  constructor() {
+    this.preferences = this.loadPreferences();
+  }
+
+  loadPreferences() {
+    const stored = localStorage.getItem('userPreferences');
+    return stored ? JSON.parse(stored) : {
+      theme: 'light',
+      language: 'en',
+      notifications: true,
+      fontSize: 16,
+      autoSave: false
+    };
+  }
+
+  savePreferences() {
+    localStorage.setItem('userPreferences', JSON.stringify(this.preferences));
+  }
+
+  updatePreference(key, value) {
+    if (this.preferences.hasOwnProperty(key)) {
+      this.preferences[key] = value;
+      this.savePreferences();
+      return true;
+    }
+    return false;
+  }
+
+  getPreference(key) {
+    return this.preferences[key];
+  }
+
+  resetToDefaults() {
+    this.preferences = {
+      theme: 'light',
+      language: 'en',
+      notifications: true,
+      fontSize: 16,
+      autoSave: false
+    };
+    this.savePreferences();
+  }
+
+  exportPreferences() {
+    return JSON.stringify(this.preferences, null, 2);
+  }
+
+  importPreferences(jsonString) {
+    try {
+      const imported = JSON.parse(jsonString);
+      this.preferences = { ...this.preferences, ...imported };
+      this.savePreferences();
+      return true;
+    } catch (error) {
+      console.error('Invalid preferences format:', error);
+      return false;
+    }
+  }
+}
