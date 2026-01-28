@@ -82,4 +82,48 @@ function validateRegistrationForm(email, password, confirmPassword) {
     };
 }
 
+export { validateRegistrationForm, validateEmail, validatePassword };function validateEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+function validatePassword(password) {
+    const minLength = 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumbers = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    
+    return password.length >= minLength && 
+           hasUpperCase && 
+           hasLowerCase && 
+           hasNumbers && 
+           hasSpecialChar;
+}
+
+function validateRegistrationForm(userData) {
+    const errors = {};
+    
+    if (!userData.email || !validateEmail(userData.email)) {
+        errors.email = 'Please enter a valid email address';
+    }
+    
+    if (!userData.password || !validatePassword(userData.password)) {
+        errors.password = 'Password must be at least 8 characters long and contain uppercase, lowercase, numbers, and special characters';
+    }
+    
+    if (userData.password !== userData.confirmPassword) {
+        errors.confirmPassword = 'Passwords do not match';
+    }
+    
+    if (!userData.username || userData.username.trim().length < 3) {
+        errors.username = 'Username must be at least 3 characters long';
+    }
+    
+    return {
+        isValid: Object.keys(errors).length === 0,
+        errors: errors
+    };
+}
+
 export { validateRegistrationForm, validateEmail, validatePassword };
