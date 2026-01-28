@@ -68,4 +68,36 @@ fetchUserData(123);function fetchUserData(userId) {
             console.error('Failed to fetch user data:', error);
             throw error;
         });
+}async function fetchUserData(userId, timeout = 5000) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+    try {
+        const response = await fetch(`https://api.example.com/users/${userId}`, {
+            signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return {
+            success: true,
+            data: data
+        };
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            return {
+                success: false,
+                error: 'Request timed out'
+            };
+        }
+        return {
+            success: false,
+            error: error.message
+        };
+    }
 }
