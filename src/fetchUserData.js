@@ -1,4 +1,4 @@
-async function fetchUserData(userId, maxRetries = 3) {
+const fetchUserData = async (userId, maxRetries = 3) => {
     const baseUrl = 'https://api.example.com/users';
     let attempt = 0;
 
@@ -12,11 +12,11 @@ async function fetchUserData(userId, maxRetries = 3) {
             return data;
         } catch (error) {
             attempt++;
-            console.warn(`Attempt ${attempt} failed for user ${userId}:`, error.message);
+            console.error(`Attempt ${attempt} failed: ${error.message}`);
             if (attempt >= maxRetries) {
-                throw new Error(`Failed to fetch user ${userId} after ${maxRetries} attempts`);
+                throw new Error(`Failed to fetch user data after ${maxRetries} attempts`);
             }
             await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
         }
     }
-}
+};
