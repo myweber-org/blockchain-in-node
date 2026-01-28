@@ -19,4 +19,26 @@ const fetchUserData = async (userId, maxRetries = 3) => {
             await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
         }
     }
-};
+};async function fetchUserData(userId) {
+    try {
+        const response = await fetch(`https://api.example.com/users/${userId}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const userData = await response.json();
+        return processUserData(userData);
+    } catch (error) {
+        console.error('Failed to fetch user data:', error);
+        return null;
+    }
+}
+
+function processUserData(data) {
+    const { id, name, email, age } = data;
+    return {
+        userId: id,
+        fullName: name.toUpperCase(),
+        contact: email,
+        isAdult: age >= 18
+    };
+}
