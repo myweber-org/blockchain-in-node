@@ -58,4 +58,36 @@ function parseCurrency(formattedValue, locale = 'en-US') {
   return parseFloat(numericString) || 0;
 }
 
+export { formatCurrency, parseCurrency };function formatCurrency(value, locale = 'en-US', options = {}) {
+  const defaultOptions = {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+    ...options
+  };
+
+  try {
+    const formatter = new Intl.NumberFormat(locale, defaultOptions);
+    return formatter.format(value);
+  } catch (error) {
+    console.error('Currency formatting error:', error);
+    return value.toString();
+  }
+}
+
+function parseCurrency(formattedValue, locale = 'en-US') {
+  const example = formatCurrency(1234.56, locale);
+  const groupSeparator = example.replace(/[\d.,]/g, '').charAt(0);
+  const decimalSeparator = example.replace(/[\d.,]/g, '').charAt(1) || '.';
+  
+  const cleanValue = formattedValue
+    .replace(new RegExp(`[${groupSeparator}${decimalSeparator}]`, 'g'), match => 
+      match === decimalSeparator ? '.' : ''
+    )
+    .replace(/[^\d.-]/g, '');
+  
+  return parseFloat(cleanValue);
+}
+
 export { formatCurrency, parseCurrency };
