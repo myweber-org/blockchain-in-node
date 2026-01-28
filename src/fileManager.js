@@ -202,4 +202,86 @@ class FileManager {
   }
 }
 
-module.exports = FileManager;
+module.exports = FileManager;class FileManager {
+    constructor() {
+        this.files = new Map();
+        this.nextId = 1;
+    }
+
+    createFile(name, content = '') {
+        if (!name || typeof name !== 'string') {
+            throw new Error('Invalid file name');
+        }
+
+        const id = this.nextId++;
+        const file = {
+            id,
+            name,
+            content: String(content),
+            createdAt: new Date(),
+            updatedAt: new Date()
+        };
+
+        this.files.set(id, file);
+        return { success: true, file: { ...file } };
+    }
+
+    readFile(id) {
+        const file = this.files.get(Number(id));
+        if (!file) {
+            return { success: false, error: 'File not found' };
+        }
+        return { success: true, file: { ...file } };
+    }
+
+    updateFile(id, content) {
+        const file = this.files.get(Number(id));
+        if (!file) {
+            return { success: false, error: 'File not found' };
+        }
+
+        file.content = String(content);
+        file.updatedAt = new Date();
+        this.files.set(file.id, file);
+        return { success: true, file: { ...file } };
+    }
+
+    deleteFile(id) {
+        const file = this.files.get(Number(id));
+        if (!file) {
+            return { success: false, error: 'File not found' };
+        }
+
+        this.files.delete(file.id);
+        return { success: true, message: 'File deleted successfully' };
+    }
+
+    listFiles() {
+        return Array.from(this.files.values()).map(file => ({
+            id: file.id,
+            name: file.name,
+            size: file.content.length,
+            updatedAt: file.updatedAt
+        }));
+    }
+
+    searchFiles(query) {
+        if (!query || typeof query !== 'string') {
+            return [];
+        }
+
+        const lowerQuery = query.toLowerCase();
+        return Array.from(this.files.values())
+            .filter(file => 
+                file.name.toLowerCase().includes(lowerQuery) || 
+                file.content.toLowerCase().includes(lowerQuery)
+            )
+            .map(file => ({
+                id: file.id,
+                name: file.name,
+                preview: file.content.substring(0, 50) + (file.content.length > 50 ? '...' : '')
+            }));
+    }
+}
+
+export default FileManager;
