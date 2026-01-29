@@ -1,163 +1,25 @@
-function formatCurrency(amount, locale = 'en-US', currency = 'USD') {
-  return new Intl.NumberFormat(locale, {
-    style: 'currency',
-    currency: currency
-  }).format(amount);
-}
-
-function parseCurrency(formattedString, locale = 'en-US') {
-  const parts = new Intl.NumberFormat(locale).formatToParts(1234.56);
-  const groupSeparator = parts.find(part => part.type === 'group').value;
-  const decimalSeparator = parts.find(part => part.type === 'decimal').value;
+const currencyFormatter = (amount, locale = 'en-US', currency = 'USD') => {
+  if (typeof amount !== 'number' || isNaN(amount)) {
+    throw new Error('Invalid amount provided');
+  }
   
-  const pattern = new RegExp(`[^0-9${decimalSeparator}]`, 'g');
-  const cleaned = formattedString.replace(pattern, '').replace(decimalSeparator, '.');
-  
-  return parseFloat(cleaned);
-}
-
-export { formatCurrency, parseCurrency };function formatCurrency(amount, locale = 'en-US', currency = 'USD') {
-    if (typeof amount !== 'number' || isNaN(amount)) {
-        throw new Error('Invalid amount provided');
-    }
-    
-    const formatter = new Intl.NumberFormat(locale, {
-        style: 'currency',
-        currency: currency,
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    });
-    
-    return formatter.format(amount);
-}
-
-function parseCurrency(formattedString, locale = 'en-US') {
-    const parts = new Intl.NumberFormat(locale).formatToParts(1234.56);
-    const decimalSeparator = parts.find(part => part.type === 'decimal')?.value || '.';
-    const groupSeparator = parts.find(part => part.type === 'group')?.value || ',';
-    
-    const cleanString = formattedString
-        .replace(new RegExp(`[${groupSeparator}]`, 'g'), '')
-        .replace(new RegExp(`[${decimalSeparator}]`, 'g'), '.')
-        .replace(/[^\d.-]/g, '');
-    
-    const parsedValue = parseFloat(cleanString);
-    return isNaN(parsedValue) ? null : parsedValue;
-}
-
-export { formatCurrency, parseCurrency };function formatCurrency(value, locale = 'en-US', options = {}) {
-  const defaultOptions = {
+  const formatter = new Intl.NumberFormat(locale, {
     style: 'currency',
-    currency: 'USD',
+    currency: currency,
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-    ...options
-  };
+    maximumFractionDigits: 2
+  });
   
-  try {
-    const formatter = new Intl.NumberFormat(locale, defaultOptions);
-    return formatter.format(value);
-  } catch (error) {
-    console.error('Currency formatting error:', error);
-    return `$${value.toFixed(2)}`;
-  }
-}
+  return formatter.format(amount);
+};
 
-function parseCurrency(formattedValue, locale = 'en-US') {
-  const parts = new Intl.NumberFormat(locale).formatToParts(12345.6);
-  const groupSeparator = parts.find(part => part.type === 'group')?.value || ',';
-  const decimalSeparator = parts.find(part => part.type === 'decimal')?.value || '.';
+const formatCurrencyWithSymbol = (amount, currencySymbol = '$', decimalSeparator = '.') => {
+  const fixedAmount = amount.toFixed(2);
+  const parts = fixedAmount.split('.');
+  const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  const decimalPart = parts[1] || '00';
   
-  const cleanValue = formattedValue
-    .replace(new RegExp(`[${groupSeparator}]`, 'g'), '')
-    .replace(new RegExp(`[${decimalSeparator}]`, 'g'), '.')
-    .replace(/[^\d.-]/g, '');
-  
-  return parseFloat(cleanValue);
-}
+  return `${currencySymbol}${integerPart}${decimalSeparator}${decimalPart}`;
+};
 
-export { formatCurrency, parseCurrency };function formatCurrency(value, locale = 'en-US', options = {}) {
-  const defaultOptions = {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-    ...options
-  };
-
-  if (typeof value !== 'number' || isNaN(value)) {
-    throw new TypeError('Value must be a valid number');
-  }
-
-  try {
-    return new Intl.NumberFormat(locale, defaultOptions).format(value);
-  } catch (error) {
-    console.error('Currency formatting failed:', error);
-    return value.toString();
-  }
-}
-
-function parseCurrency(formattedValue, locale = 'en-US') {
-  const parts = new Intl.NumberFormat(locale).formatToParts(12345.67);
-  const decimalSeparator = parts.find(part => part.type === 'decimal')?.value || '.';
-  const groupSeparator = parts.find(part => part.type === 'group')?.value || ',';
-  
-  const cleanedValue = formattedValue
-    .replace(new RegExp(`\\${groupSeparator}`, 'g'), '')
-    .replace(new RegExp(`\\${decimalSeparator}`), '.')
-    .replace(/[^\d.-]/g, '');
-  
-  const parsed = parseFloat(cleanedValue);
-  return isNaN(parsed) ? null : parsed;
-}
-
-export { formatCurrency, parseCurrency };function formatCurrency(amount, locale = 'en-US', currency = 'USD') {
-    return new Intl.NumberFormat(locale, {
-        style: 'currency',
-        currency: currency
-    }).format(amount);
-}
-
-function parseCurrency(formattedString, locale = 'en-US') {
-    const parts = new Intl.NumberFormat(locale).formatToParts(1234.56);
-    const decimalSeparator = parts.find(part => part.type === 'decimal').value;
-    const groupSeparator = parts.find(part => part.type === 'group').value;
-    
-    const regex = new RegExp(`[${groupSeparator}${decimalSeparator}]`, 'g');
-    const normalized = formattedString.replace(regex, match => 
-        match === decimalSeparator ? '.' : ''
-    );
-    
-    return parseFloat(normalized.replace(/[^\d.-]/g, ''));
-}
-
-export { formatCurrency, parseCurrency };function formatCurrency(amount, locale = 'en-US', currency = 'USD') {
-    if (typeof amount !== 'number' || isNaN(amount)) {
-        throw new Error('Invalid amount provided');
-    }
-    
-    const formatter = new Intl.NumberFormat(locale, {
-        style: 'currency',
-        currency: currency,
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    });
-    
-    return formatter.format(amount);
-}
-
-function parseCurrency(formattedString, locale = 'en-US') {
-    const parts = new Intl.NumberFormat(locale).formatToParts(1234.56);
-    const decimalSeparator = parts.find(part => part.type === 'decimal')?.value || '.';
-    const groupSeparator = parts.find(part => part.type === 'group')?.value || ',';
-    
-    const cleanString = formattedString
-        .replace(new RegExp(`[${groupSeparator}]`, 'g'), '')
-        .replace(new RegExp(`[${decimalSeparator}]`, 'g'), '.')
-        .replace(/[^\d.-]/g, '');
-    
-    const parsed = parseFloat(cleanString);
-    return isNaN(parsed) ? null : parsed;
-}
-
-export { formatCurrency, parseCurrency };
+export { currencyFormatter, formatCurrencyWithSymbol };
