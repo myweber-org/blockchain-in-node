@@ -1,22 +1,35 @@
 function sanitizeInput(input) {
-    const div = document.createElement('div');
-    div.textContent = input;
-    return div.innerHTML;
+    if (typeof input !== 'string') return '';
+    
+    const element = document.createElement('div');
+    element.textContent = input;
+    
+    return element.innerHTML
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;')
+        .replace(/\//g, '&#x2F;');
 }
 
-function validateAndSanitizeForm() {
-    const userInput = document.getElementById('userInput').value;
-    const sanitizedInput = sanitizeInput(userInput);
-    document.getElementById('output').innerHTML = sanitizedInput;
-    console.log('Sanitized input:', sanitizedInput);
+function validateEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email) ? sanitizeInput(email) : '';
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('inputForm');
-    if (form) {
-        form.addEventListener('submit', function(event) {
-            event.preventDefault();
-            validateAndSanitizeForm();
-        });
+function sanitizeObject(obj) {
+    if (!obj || typeof obj !== 'object') return {};
+    
+    const sanitized = {};
+    for (const key in obj) {
+        if (typeof obj[key] === 'string') {
+            sanitized[key] = sanitizeInput(obj[key]);
+        } else {
+            sanitized[key] = obj[key];
+        }
     }
-});
+    return sanitized;
+}
+
+export { sanitizeInput, validateEmail, sanitizeObject };
