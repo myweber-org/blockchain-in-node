@@ -1,66 +1,63 @@
-const defaultPreferences = {
+const userPreferences = {
   theme: 'light',
-  notifications: true,
   language: 'en',
-  resultsPerPage: 25,
+  notifications: true,
+  fontSize: 16,
   autoSave: false
 };
 
-const validThemes = ['light', 'dark', 'system'];
-const validLanguages = ['en', 'es', 'fr', 'de'];
-const maxResultsPerPage = 100;
+const defaultPreferences = {
+  theme: 'dark',
+  language: 'en',
+  notifications: false,
+  fontSize: 14,
+  autoSave: true
+};
 
-function validatePreferences(userPrefs) {
-  const validated = { ...defaultPreferences };
+function validatePreferences(prefs) {
+  const validKeys = Object.keys(defaultPreferences);
+  const validated = {};
   
-  if (userPrefs && typeof userPrefs === 'object') {
-    if (validThemes.includes(userPrefs.theme)) {
-      validated.theme = userPrefs.theme;
+  validKeys.forEach(key => {
+    if (prefs.hasOwnProperty(key)) {
+      if (key === 'fontSize' && typeof prefs[key] === 'number') {
+        validated[key] = Math.max(8, Math.min(prefs[key], 72));
+      } else if (key === 'notifications' || key === 'autoSave') {
+        validated[key] = Boolean(prefs[key]);
+      } else {
+        validated[key] = prefs[key];
+      }
+    } else {
+      validated[key] = defaultPreferences[key];
     }
-    
-    if (typeof userPrefs.notifications === 'boolean') {
-      validated.notifications = userPrefs.notifications;
-    }
-    
-    if (validLanguages.includes(userPrefs.language)) {
-      validated.language = userPrefs.language;
-    }
-    
-    if (Number.isInteger(userPrefs.resultsPerPage) && 
-        userPrefs.resultsPerPage > 0 && 
-        userPrefs.resultsPerPage <= maxResultsPerPage) {
-      validated.resultsPerPage = userPrefs.resultsPerPage;
-    }
-    
-    if (typeof userPrefs.autoSave === 'boolean') {
-      validated.autoSave = userPrefs.autoSave;
-    }
-  }
+  });
   
   return validated;
 }
 
+function mergePreferences(userPrefs) {
+  return {
+    ...defaultPreferences,
+    ...validatePreferences(userPrefs)
+  };
+}
+
 function savePreferences(prefs) {
-  const validatedPrefs = validatePreferences(prefs);
-  localStorage.setItem('userPreferences', JSON.stringify(validatedPrefs));
-  return validatedPrefs;
+  const validPrefs = mergePreferences(prefs);
+  localStorage.setItem('userPreferences', JSON.stringify(validPrefs));
+  return validPrefs;
 }
 
 function loadPreferences() {
   const stored = localStorage.getItem('userPreferences');
   if (stored) {
     try {
-      return validatePreferences(JSON.parse(stored));
-    } catch (error) {
-      console.error('Failed to parse stored preferences:', error);
+      return mergePreferences(JSON.parse(stored));
+    } catch (e) {
+      console.error('Failed to parse stored preferences:', e);
     }
   }
   return { ...defaultPreferences };
 }
 
-function resetPreferences() {
-  localStorage.removeItem('userPreferences');
-  return { ...defaultPreferences };
-}
-
-export { validatePreferences, savePreferences, loadPreferences, resetPreferences, defaultPreferences };
+export { savePreferences, loadPreferences, validatePreferences };
