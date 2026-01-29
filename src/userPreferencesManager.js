@@ -70,4 +70,63 @@ const userPreferencesManager = (() => {
         migratePreferences,
         DEFAULT_PREFERENCES
     };
-})();
+})();const userPreferences = {
+  theme: 'light',
+  language: 'en',
+  notifications: true,
+  fontSize: 16
+};
+
+class PreferencesManager {
+  constructor() {
+    this.storageKey = 'app_preferences';
+    this.loadPreferences();
+  }
+
+  loadPreferences() {
+    const stored = localStorage.getItem(this.storageKey);
+    if (stored) {
+      try {
+        Object.assign(userPreferences, JSON.parse(stored));
+      } catch (error) {
+        console.error('Failed to parse stored preferences:', error);
+      }
+    }
+  }
+
+  savePreferences() {
+    localStorage.setItem(this.storageKey, JSON.stringify(userPreferences));
+  }
+
+  updatePreference(key, value) {
+    if (key in userPreferences) {
+      userPreferences[key] = value;
+      this.savePreferences();
+      return true;
+    }
+    return false;
+  }
+
+  getPreference(key) {
+    return userPreferences[key];
+  }
+
+  resetToDefaults() {
+    const defaults = {
+      theme: 'light',
+      language: 'en',
+      notifications: true,
+      fontSize: 16
+    };
+    Object.assign(userPreferences, defaults);
+    this.savePreferences();
+  }
+
+  getAllPreferences() {
+    return { ...userPreferences };
+  }
+}
+
+const preferencesManager = new PreferencesManager();
+
+export { preferencesManager, userPreferences };
