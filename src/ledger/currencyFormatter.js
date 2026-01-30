@@ -18,13 +18,12 @@ function parseCurrency(formattedString, locale = 'en-US') {
     const decimalSeparator = parts.find(part => part.type === 'decimal')?.value || '.';
     const groupSeparator = parts.find(part => part.type === 'group')?.value || ',';
     
-    const cleanString = formattedString
+    const cleaned = formattedString
         .replace(new RegExp(`[${groupSeparator}]`, 'g'), '')
         .replace(new RegExp(`[${decimalSeparator}]`, 'g'), '.')
         .replace(/[^\d.-]/g, '');
     
-    const parsedValue = parseFloat(cleanString);
-    return isNaN(parsedValue) ? null : parsedValue;
+    return parseFloat(cleaned);
 }
 
 export { formatCurrency, parseCurrency };
