@@ -55,4 +55,27 @@ function parseCurrency(formattedString, locale = 'en-US') {
     return isNaN(parsedValue) ? null : parsedValue;
 }
 
-export { formatCurrency, parseCurrency };
+export { formatCurrency, parseCurrency };function formatCurrency(value, currencySymbol = '$', decimalPlaces = 2) {
+    if (typeof value !== 'number' || isNaN(value)) {
+        throw new Error('Invalid input: value must be a valid number');
+    }
+    
+    const fixedValue = value.toFixed(decimalPlaces);
+    const parts = fixedValue.split('.');
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    
+    return currencySymbol + parts.join('.');
+}
+
+function parseFormattedCurrency(formattedString, currencySymbol = '$') {
+    const cleaned = formattedString.replace(new RegExp('[' + currencySymbol + ',]', 'g'), '');
+    const parsed = parseFloat(cleaned);
+    
+    if (isNaN(parsed)) {
+        throw new Error('Invalid input: string cannot be parsed to number');
+    }
+    
+    return parsed;
+}
+
+export { formatCurrency, parseFormattedCurrency };
