@@ -82,4 +82,43 @@ document.addEventListener('DOMContentLoaded', () => {
     if (fileInput) {
         fileInput.addEventListener('change', handleFileSelect);
     }
-});
+});function uploadFile(file, uploadUrl, onProgress, onSuccess, onError) {
+    if (!file || !uploadUrl) {
+        onError('Invalid file or upload URL');
+        return;
+    }
+
+    const xhr = new XMLHttpRequest();
+    const formData = new FormData();
+    formData.append('file', file);
+
+    xhr.upload.addEventListener('progress', (event) => {
+        if (event.lengthComputable) {
+            const percentComplete = (event.loaded / event.total) * 100;
+            if (onProgress && typeof onProgress === 'function') {
+                onProgress(percentComplete);
+            }
+        }
+    });
+
+    xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+            if (onSuccess && typeof onSuccess === 'function') {
+                onSuccess(xhr.responseText);
+            }
+        } else {
+            if (onError && typeof onError === 'function') {
+                onError(`Upload failed with status: ${xhr.status}`);
+            }
+        }
+    });
+
+    xhr.addEventListener('error', () => {
+        if (onError && typeof onError === 'function') {
+            onError('Network error occurred during upload');
+        }
+    });
+
+    xhr.open('POST', uploadUrl, true);
+    xhr.send(formData);
+}
