@@ -88,4 +88,40 @@ function clearUserCache(userId) {
     }
 }
 
+export { fetchUserData, clearUserCache };const USER_DATA_CACHE = new Map();
+
+async function fetchUserData(userId) {
+    if (USER_DATA_CACHE.has(userId)) {
+        console.log(`Returning cached data for user ${userId}`);
+        return USER_DATA_CACHE.get(userId);
+    }
+
+    try {
+        const response = await fetch(`https://api.example.com/users/${userId}`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const userData = await response.json();
+        USER_DATA_CACHE.set(userId, userData);
+        
+        console.log(`Fetched and cached data for user ${userId}`);
+        return userData;
+    } catch (error) {
+        console.error(`Failed to fetch data for user ${userId}:`, error);
+        throw error;
+    }
+}
+
+function clearUserCache(userId = null) {
+    if (userId) {
+        USER_DATA_CACHE.delete(userId);
+        console.log(`Cleared cache for user ${userId}`);
+    } else {
+        USER_DATA_CACHE.clear();
+        console.log('Cleared all user cache');
+    }
+}
+
 export { fetchUserData, clearUserCache };
