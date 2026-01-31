@@ -41,4 +41,34 @@ function validateProfileForm(formData) {
     };
 }
 
-export { validateProfileForm, validateEmail, validateUsername, validatePassword };
+export { validateProfileForm, validateEmail, validateUsername, validatePassword };function validateEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+function validateAge(age) {
+    return Number.isInteger(age) && age >= 0 && age <= 120;
+}
+
+function validateProfile(profileData) {
+    const errors = [];
+
+    if (!validateEmail(profileData.email)) {
+        errors.push('Invalid email format');
+    }
+
+    if (!validateAge(profileData.age)) {
+        errors.push('Age must be between 0 and 120');
+    }
+
+    if (!profileData.username || profileData.username.trim().length < 3) {
+        errors.push('Username must be at least 3 characters long');
+    }
+
+    return {
+        isValid: errors.length === 0,
+        errors: errors
+    };
+}
+
+export { validateProfile, validateEmail, validateAge };
