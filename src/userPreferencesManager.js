@@ -218,4 +218,94 @@ export default UserPreferencesManager;const UserPreferencesManager = (() => {
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = UserPreferencesManager;
+}const userPreferencesManager = (() => {
+  const STORAGE_KEY = 'app_preferences';
+  const DEFAULT_PREFERENCES = {
+    theme: 'light',
+    language: 'en',
+    notifications: true,
+    fontSize: 16,
+    autoSave: false
+  };
+
+  function loadPreferences() {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        return { ...DEFAULT_PREFERENCES, ...JSON.parse(stored) };
+      }
+    } catch (error) {
+      console.error('Failed to load preferences:', error);
+    }
+    return { ...DEFAULT_PREFERENCES };
+  }
+
+  function savePreferences(preferences) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
+      return true;
+    } catch (error) {
+      console.error('Failed to save preferences:', error);
+      return false;
+    }
+  }
+
+  function updatePreference(key, value) {
+    if (!DEFAULT_PREFERENCES.hasOwnProperty(key)) {
+      throw new Error(`Invalid preference key: ${key}`);
+    }
+
+    const current = loadPreferences();
+    const updated = { ...current, [key]: value };
+    
+    if (savePreferences(updated)) {
+      dispatchPreferenceChange(key, value);
+      return true;
+    }
+    return false;
+  }
+
+  function resetPreferences() {
+    if (savePreferences(DEFAULT_PREFERENCES)) {
+      Object.keys(DEFAULT_PREFERENCES).forEach(key => {
+        dispatchPreferenceChange(key, DEFAULT_PREFERENCES[key]);
+      });
+      return true;
+    }
+    return false;
+  }
+
+  function dispatchPreferenceChange(key, value) {
+    window.dispatchEvent(new CustomEvent('preferenceChange', {
+      detail: { key, value }
+    }));
+  }
+
+  function getPreference(key) {
+    const preferences = loadPreferences();
+    return preferences[key];
+  }
+
+  function getAllPreferences() {
+    return loadPreferences();
+  }
+
+  function subscribe(callback) {
+    window.addEventListener('preferenceChange', (event) => {
+      callback(event.detail);
+    });
+  }
+
+  return {
+    get: getPreference,
+    getAll: getAllPreferences,
+    set: updatePreference,
+    reset: resetPreferences,
+    subscribe: subscribe,
+    defaults: { ...DEFAULT_PREFERENCES }
+  };
+})();
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = userPreferencesManager;
 }
