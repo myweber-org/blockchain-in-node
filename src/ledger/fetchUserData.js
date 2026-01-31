@@ -47,4 +47,32 @@ function fetchUserData(userId) {
     }
     
     throw new Error(`Failed to fetch user data after ${maxRetries} attempts: ${lastError.message}`);
+}function fetchUserData(userId, maxRetries = 3) {
+    const apiUrl = `https://api.example.com/users/${userId}`;
+    let retryCount = 0;
+
+    async function attemptFetch() {
+        try {
+            const response = await fetch(apiUrl);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            console.log('User data fetched successfully:', data);
+            return data;
+        } catch (error) {
+            retryCount++;
+            if (retryCount <= maxRetries) {
+                console.warn(`Attempt ${retryCount} failed. Retrying...`);
+                const delay = Math.min(1000 * Math.pow(2, retryCount), 10000);
+                await new Promise(resolve => setTimeout(resolve, delay));
+                return attemptFetch();
+            } else {
+                console.error('Max retries reached. Operation failed:', error);
+                throw error;
+            }
+        }
+    }
+
+    return attemptFetch();
 }
