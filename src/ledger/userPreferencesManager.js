@@ -124,4 +124,118 @@ const UserPreferencesManager = (() => {
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = UserPreferencesManager;
+}const UserPreferencesManager = (() => {
+  const STORAGE_KEY = 'app_user_preferences';
+  
+  const defaultPreferences = {
+    theme: 'light',
+    language: 'en',
+    notifications: true,
+    fontSize: 16,
+    autoSave: true,
+    lastUpdated: null
+  };
+
+  const getPreferences = () => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        return { ...defaultPreferences, ...parsed };
+      }
+    } catch (error) {
+      console.warn('Failed to load preferences:', error);
+    }
+    return { ...defaultPreferences };
+  };
+
+  const savePreferences = (updates) => {
+    try {
+      const current = getPreferences();
+      const updated = {
+        ...current,
+        ...updates,
+        lastUpdated: new Date().toISOString()
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      return updated;
+    } catch (error) {
+      console.error('Failed to save preferences:', error);
+      return null;
+    }
+  };
+
+  const resetPreferences = () => {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      return { ...defaultPreferences };
+    } catch (error) {
+      console.error('Failed to reset preferences:', error);
+      return null;
+    }
+  };
+
+  const migratePreferences = (oldKey, newKey, transformer = (val) => val) => {
+    try {
+      const oldData = localStorage.getItem(oldKey);
+      if (oldData) {
+        const parsed = JSON.parse(oldData);
+        const current = getPreferences();
+        const updated = {
+          ...current,
+          [newKey]: transformer(parsed)
+        };
+        savePreferences(updated);
+        localStorage.removeItem(oldKey);
+        return true;
+      }
+    } catch (error) {
+      console.warn('Migration failed:', error);
+    }
+    return false;
+  };
+
+  const exportPreferences = () => {
+    const prefs = getPreferences();
+    const blob = new Blob([JSON.stringify(prefs, null, 2)], { 
+      type: 'application/json' 
+    });
+    return URL.createObjectURL(blob);
+  };
+
+  const importPreferences = (jsonString) => {
+    try {
+      const imported = JSON.parse(jsonString);
+      if (typeof imported === 'object' && imported !== null) {
+        return savePreferences(imported);
+      }
+    } catch (error) {
+      console.error('Invalid preferences format:', error);
+    }
+    return null;
+  };
+
+  const subscribe = (callback) => {
+    const handler = (event) => {
+      if (event.key === STORAGE_KEY) {
+        callback(getPreferences());
+      }
+    };
+    window.addEventListener('storage', handler);
+    return () => window.removeEventListener('storage', handler);
+  };
+
+  return {
+    getPreferences,
+    savePreferences,
+    resetPreferences,
+    migratePreferences,
+    exportPreferences,
+    importPreferences,
+    subscribe
+  };
+})();
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = UserPreferencesManager;
 }
