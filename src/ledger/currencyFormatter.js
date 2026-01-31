@@ -1,6 +1,6 @@
 function formatCurrency(amount, locale = 'en-US', currency = 'USD') {
     if (typeof amount !== 'number' || isNaN(amount)) {
-        throw new Error('Amount must be a valid number');
+        throw new TypeError('Amount must be a valid number');
     }
     
     const formatter = new Intl.NumberFormat(locale, {
@@ -15,15 +15,16 @@ function formatCurrency(amount, locale = 'en-US', currency = 'USD') {
 
 function parseCurrency(formattedString, locale = 'en-US') {
     const parts = new Intl.NumberFormat(locale).formatToParts(1234.56);
-    const groupSeparator = parts.find(part => part.type === 'group')?.value || ',';
     const decimalSeparator = parts.find(part => part.type === 'decimal')?.value || '.';
+    const groupSeparator = parts.find(part => part.type === 'group')?.value || ',';
     
-    const regex = new RegExp(`[^0-9${decimalSeparator}]`, 'g');
-    const numericString = formattedString
-        .replace(regex, '')
-        .replace(decimalSeparator, '.');
+    const cleanString = formattedString
+        .replace(new RegExp(`[${groupSeparator}]`, 'g'), '')
+        .replace(new RegExp(`[${decimalSeparator}]`, 'g'), '.')
+        .replace(/[^\d.-]/g, '');
     
-    return parseFloat(numericString);
+    const parsed = parseFloat(cleanString);
+    return isNaN(parsed) ? null : parsed;
 }
 
 export { formatCurrency, parseCurrency };
