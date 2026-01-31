@@ -41,4 +41,28 @@ document.addEventListener('DOMContentLoaded', function() {
     if (button) {
         button.addEventListener('click', displayFibonacci);
     }
-});
+});function calculateFibonacci(n) {
+    if (n <= 0) return [];
+    if (n === 1) return [0];
+    
+    const sequence = [0, 1];
+    while (sequence[sequence.length - 1] + sequence[sequence.length - 2] <= n) {
+        sequence.push(sequence[sequence.length - 1] + sequence[sequence.length - 2]);
+    }
+    return sequence;
+}
+
+function isFibonacciNumber(num) {
+    if (num < 0) return false;
+    if (num === 0 || num === 1) return true;
+    
+    let a = 0, b = 1;
+    while (b < num) {
+        const temp = b;
+        b = a + b;
+        a = temp;
+    }
+    return b === num;
+}
+
+module.exports = { calculateFibonacci, isFibonacciNumber };
