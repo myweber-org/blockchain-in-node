@@ -507,4 +507,122 @@ export default UserPreferencesManager;const userPreferencesManager = (() => {
     import: importPreferences,
     validate: validatePreference
   };
+})();const UserPreferencesManager = (() => {
+  const PREFIX = 'app_pref_';
+  
+  const validateKey = (key) => {
+    if (typeof key !== 'string' || key.trim() === '') {
+      throw new Error('Key must be a non-empty string');
+    }
+    return key.trim();
+  };
+
+  const validateValue = (value) => {
+    if (value === undefined) {
+      throw new Error('Value cannot be undefined');
+    }
+    return value;
+  };
+
+  const getStorageKey = (key) => `${PREFIX}${key}`;
+
+  return {
+    setPreference(key, value) {
+      try {
+        const validKey = validateKey(key);
+        const validValue = validateValue(value);
+        const storageKey = getStorageKey(validKey);
+        const data = {
+          value: validValue,
+          timestamp: Date.now(),
+          version: '1.0'
+        };
+        localStorage.setItem(storageKey, JSON.stringify(data));
+        return true;
+      } catch (error) {
+        console.error('Failed to set preference:', error.message);
+        return false;
+      }
+    },
+
+    getPreference(key, defaultValue = null) {
+      try {
+        const validKey = validateKey(key);
+        const storageKey = getStorageKey(validKey);
+        const stored = localStorage.getItem(storageKey);
+        
+        if (!stored) return defaultValue;
+        
+        const data = JSON.parse(stored);
+        return data.value !== undefined ? data.value : defaultValue;
+      } catch (error) {
+        console.error('Failed to get preference:', error.message);
+        return defaultValue;
+      }
+    },
+
+    removePreference(key) {
+      try {
+        const validKey = validateKey(key);
+        const storageKey = getStorageKey(validKey);
+        localStorage.removeItem(storageKey);
+        return true;
+      } catch (error) {
+        console.error('Failed to remove preference:', error.message);
+        return false;
+      }
+    },
+
+    clearAllPreferences() {
+      try {
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key.startsWith(PREFIX)) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+        return true;
+      } catch (error) {
+        console.error('Failed to clear preferences:', error.message);
+        return false;
+      }
+    },
+
+    getAllPreferences() {
+      const preferences = {};
+      try {
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key.startsWith(PREFIX)) {
+            const prefKey = key.replace(PREFIX, '');
+            const stored = localStorage.getItem(key);
+            if (stored) {
+              const data = JSON.parse(stored);
+              preferences[prefKey] = data.value;
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Failed to get all preferences:', error.message);
+      }
+      return preferences;
+    },
+
+    hasPreference(key) {
+      try {
+        const validKey = validateKey(key);
+        const storageKey = getStorageKey(validKey);
+        return localStorage.getItem(storageKey) !== null;
+      } catch (error) {
+        console.error('Failed to check preference:', error.message);
+        return false;
+      }
+    }
+  };
 })();
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = UserPreferencesManager;
+}
