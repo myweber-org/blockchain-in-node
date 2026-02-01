@@ -121,4 +121,69 @@ document.addEventListener('DOMContentLoaded', () => {
 
     xhr.open('POST', uploadUrl, true);
     xhr.send(formData);
+}function handleFileUpload(file, options = {}) {
+  const defaultOptions = {
+    maxSize: 10 * 1024 * 1024,
+    allowedTypes: ['image/jpeg', 'image/png', 'application/pdf'],
+    onProgress: () => {},
+    onComplete: () => {},
+    onError: () => {}
+  };
+
+  const config = { ...defaultOptions, ...options };
+
+  return new Promise((resolve, reject) => {
+    if (!file) {
+      const error = new Error('No file provided');
+      config.onError(error);
+      return reject(error);
+    }
+
+    if (file.size > config.maxSize) {
+      const error = new Error(`File size exceeds ${config.maxSize} bytes limit`);
+      config.onError(error);
+      return reject(error);
+    }
+
+    if (!config.allowedTypes.includes(file.type)) {
+      const error = new Error(`File type ${file.type} not allowed`);
+      config.onError(error);
+      return reject(error);
+    }
+
+    const reader = new FileReader();
+    let progress = 0;
+
+    const progressInterval = setInterval(() => {
+      if (progress < 100) {
+        progress += 10;
+        config.onProgress(progress);
+      }
+    }, 100);
+
+    reader.onload = (event) => {
+      clearInterval(progressInterval);
+      config.onProgress(100);
+      
+      const result = {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        lastModified: file.lastModified,
+        content: event.target.result,
+        uploadedAt: new Date().toISOString()
+      };
+
+      config.onComplete(result);
+      resolve(result);
+    };
+
+    reader.onerror = (error) => {
+      clearInterval(progressInterval);
+      config.onError(error);
+      reject(error);
+    };
+
+    reader.readAsDataURL(file);
+  });
 }
