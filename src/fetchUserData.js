@@ -81,4 +81,28 @@ function displayErrorMessage(message) {
     console.error('Failed to fetch user data:', error);
     return null;
   }
+}function fetchUserData(userId) {
+  const apiUrl = `https://jsonplaceholder.typicode.com/users/${userId}`;
+  
+  return fetch(apiUrl)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(userData => {
+      const processedData = {
+        id: userData.id,
+        name: userData.name,
+        email: userData.email,
+        city: userData.address.city,
+        company: userData.company.name
+      };
+      return processedData;
+    })
+    .catch(error => {
+      console.error('Error fetching user data:', error);
+      throw error;
+    });
 }
