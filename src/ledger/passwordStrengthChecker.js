@@ -43,4 +43,57 @@ function validatePassword(password, confirmPassword) {
     };
 }
 
-module.exports = { calculatePasswordEntropy, evaluatePasswordStrength, validatePassword };
+module.exports = { calculatePasswordEntropy, evaluatePasswordStrength, validatePassword };function calculatePasswordEntropy(password) {
+    const charSets = {
+        lowercase: /[a-z]/.test(password),
+        uppercase: /[A-Z]/.test(password),
+        numbers: /\d/.test(password),
+        symbols: /[^a-zA-Z0-9]/.test(password)
+    };
+    
+    let poolSize = 0;
+    if (charSets.lowercase) poolSize += 26;
+    if (charSets.uppercase) poolSize += 26;
+    if (charSets.numbers) poolSize += 10;
+    if (charSets.symbols) poolSize += 32;
+    
+    if (poolSize === 0) return 0;
+    
+    const entropy = Math.log2(Math.pow(poolSize, password.length));
+    return Math.round(entropy * 100) / 100;
+}
+
+function checkPasswordStrength(password) {
+    const entropy = calculatePasswordEntropy(password);
+    
+    if (entropy < 40) {
+        return { strength: 'Weak', entropy, color: '#ff4444' };
+    } else if (entropy < 70) {
+        return { strength: 'Moderate', entropy, color: '#ffaa00' };
+    } else if (entropy < 100) {
+        return { strength: 'Strong', entropy, color: '#00cc66' };
+    } else {
+        return { strength: 'Very Strong', entropy, color: '#0066ff' };
+    }
+}
+
+function validatePasswordRequirements(password) {
+    const requirements = {
+        minLength: password.length >= 8,
+        hasLowercase: /[a-z]/.test(password),
+        hasUppercase: /[A-Z]/.test(password),
+        hasNumber: /\d/.test(password),
+        hasSymbol: /[^a-zA-Z0-9]/.test(password)
+    };
+    
+    const passed = Object.values(requirements).filter(Boolean).length;
+    const total = Object.keys(requirements).length;
+    
+    return {
+        requirements,
+        score: Math.round((passed / total) * 100),
+        passed: passed === total
+    };
+}
+
+export { checkPasswordStrength, validatePasswordRequirements, calculatePasswordEntropy };
