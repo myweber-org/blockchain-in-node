@@ -625,4 +625,61 @@ export default UserPreferencesManager;const userPreferencesManager = (() => {
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = UserPreferencesManager;
-}
+}const UserPreferences = {
+  storageKey: 'app_preferences',
+
+  defaults: {
+    theme: 'light',
+    fontSize: 16,
+    notifications: true,
+    language: 'en'
+  },
+
+  init() {
+    if (!this.getPreferences()) {
+      this.savePreferences(this.defaults);
+    }
+  },
+
+  getPreferences() {
+    try {
+      const stored = localStorage.getItem(this.storageKey);
+      return stored ? JSON.parse(stored) : null;
+    } catch (error) {
+      console.error('Failed to retrieve preferences:', error);
+      return null;
+    }
+  },
+
+  savePreferences(prefs) {
+    try {
+      const merged = { ...this.defaults, ...prefs };
+      localStorage.setItem(this.storageKey, JSON.stringify(merged));
+      return true;
+    } catch (error) {
+      console.error('Failed to save preferences:', error);
+      return false;
+    }
+  },
+
+  updatePreference(key, value) {
+    const current = this.getPreferences() || this.defaults;
+    return this.savePreferences({ ...current, [key]: value });
+  },
+
+  resetToDefaults() {
+    return this.savePreferences(this.defaults);
+  },
+
+  clearPreferences() {
+    try {
+      localStorage.removeItem(this.storageKey);
+      return true;
+    } catch (error) {
+      console.error('Failed to clear preferences:', error);
+      return false;
+    }
+  }
+};
+
+UserPreferences.init();
