@@ -194,4 +194,101 @@ const userPreferencesManager = (function() {
     getPreference,
     setPreference
   };
+})();const UserPreferencesManager = (function() {
+    const PREFERENCES_KEY = 'app_preferences';
+    const DEFAULT_PREFERENCES = {
+        theme: 'light',
+        language: 'en',
+        notifications: true,
+        fontSize: 16,
+        autoSave: false
+    };
+
+    function getPreferences() {
+        try {
+            const stored = localStorage.getItem(PREFERENCES_KEY);
+            return stored ? JSON.parse(stored) : { ...DEFAULT_PREFERENCES };
+        } catch (error) {
+            console.error('Failed to load preferences:', error);
+            return { ...DEFAULT_PREFERENCES };
+        }
+    }
+
+    function savePreferences(preferences) {
+        try {
+            const current = getPreferences();
+            const updated = { ...current, ...preferences };
+            localStorage.setItem(PREFERENCES_KEY, JSON.stringify(updated));
+            return updated;
+        } catch (error) {
+            console.error('Failed to save preferences:', error);
+            return null;
+        }
+    }
+
+    function resetPreferences() {
+        try {
+            localStorage.setItem(PREFERENCES_KEY, JSON.stringify(DEFAULT_PREFERENCES));
+            return { ...DEFAULT_PREFERENCES };
+        } catch (error) {
+            console.error('Failed to reset preferences:', error);
+            return null;
+        }
+    }
+
+    function getPreference(key) {
+        const preferences = getPreferences();
+        return preferences[key] !== undefined ? preferences[key] : DEFAULT_PREFERENCES[key];
+    }
+
+    function setPreference(key, value) {
+        return savePreferences({ [key]: value });
+    }
+
+    function hasCustomPreferences() {
+        const stored = localStorage.getItem(PREFERENCES_KEY);
+        return stored !== null;
+    }
+
+    function exportPreferences() {
+        const preferences = getPreferences();
+        const dataStr = JSON.stringify(preferences, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+        return dataUri;
+    }
+
+    function importPreferences(jsonString) {
+        try {
+            const imported = JSON.parse(jsonString);
+            const validKeys = Object.keys(DEFAULT_PREFERENCES);
+            const filtered = {};
+            
+            validKeys.forEach(key => {
+                if (imported[key] !== undefined) {
+                    filtered[key] = imported[key];
+                }
+            });
+            
+            return savePreferences(filtered);
+        } catch (error) {
+            console.error('Failed to import preferences:', error);
+            return null;
+        }
+    }
+
+    return {
+        get: getPreference,
+        set: setPreference,
+        getAll: getPreferences,
+        save: savePreferences,
+        reset: resetPreferences,
+        hasCustom: hasCustomPreferences,
+        export: exportPreferences,
+        import: importPreferences,
+        defaults: DEFAULT_PREFERENCES
+    };
 })();
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = UserPreferencesManager;
+}
