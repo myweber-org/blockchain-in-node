@@ -55,4 +55,27 @@ function validateEmail(email) {
 module.exports = {
     sanitizeInput,
     validateEmail
-};
+};function sanitizeInput(input) {
+    const div = document.createElement('div');
+    div.textContent = input;
+    return div.innerHTML;
+}
+
+function validateAndSanitize(userInput) {
+    if (typeof userInput !== 'string') {
+        return '';
+    }
+    
+    const trimmedInput = userInput.trim();
+    const sanitized = sanitizeInput(trimmedInput);
+    
+    const regex = /^[a-zA-Z0-9\s.,!?-]*$/;
+    if (!regex.test(trimmedInput)) {
+        console.warn('Input contains potentially dangerous characters');
+        return '';
+    }
+    
+    return sanitized;
+}
+
+export { validateAndSanitize };
