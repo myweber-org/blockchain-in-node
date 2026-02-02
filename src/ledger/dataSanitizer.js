@@ -24,4 +24,26 @@ module.exports = {
     sanitizeInput,
     validateEmail,
     escapeHtml
-};
+};function sanitizeInput(input) {
+    const div = document.createElement('div');
+    div.textContent = input;
+    return div.innerHTML;
+}
+
+function validateAndSanitizeUserInput(userInput) {
+    if (typeof userInput !== 'string') {
+        return '';
+    }
+    
+    const trimmedInput = userInput.trim();
+    if (trimmedInput.length === 0) {
+        return '';
+    }
+    
+    const sanitized = sanitizeInput(trimmedInput);
+    const maxLength = 500;
+    
+    return sanitized.length > maxLength ? sanitized.substring(0, maxLength) : sanitized;
+}
+
+export { validateAndSanitizeUserInput };
