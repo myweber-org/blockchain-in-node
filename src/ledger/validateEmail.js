@@ -33,4 +33,9 @@ module.exports = validateEmail;function validateEmail(email) {
     return regex.test(email);
 }
 
+module.exports = validateEmail;function validateEmail(email) {
+    const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return pattern.test(email);
+}
+
 module.exports = validateEmail;
