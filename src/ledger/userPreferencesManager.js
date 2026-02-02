@@ -567,4 +567,72 @@ export default UserPreferencesManager;const UserPreferencesManager = (() => {
     };
 })();
 
-export default UserPreferencesManager;
+export default UserPreferencesManager;const UserPreferencesManager = (function() {
+    const STORAGE_KEY = 'user_preferences';
+    
+    const defaultPreferences = {
+        theme: 'light',
+        language: 'en',
+        notifications: true,
+        fontSize: 16,
+        autoSave: true
+    };
+
+    function getPreferences() {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        return stored ? JSON.parse(stored) : {...defaultPreferences};
+    }
+
+    function savePreferences(preferences) {
+        const current = getPreferences();
+        const updated = {...current, ...preferences};
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        dispatchChangeEvent(updated);
+        return updated;
+    }
+
+    function resetPreferences() {
+        localStorage.removeItem(STORAGE_KEY);
+        dispatchChangeEvent(defaultPreferences);
+        return {...defaultPreferences};
+    }
+
+    function getPreference(key) {
+        const prefs = getPreferences();
+        return prefs[key] !== undefined ? prefs[key] : defaultPreferences[key];
+    }
+
+    function dispatchChangeEvent(preferences) {
+        if (typeof window !== 'undefined' && window.dispatchEvent) {
+            window.dispatchEvent(new CustomEvent('preferencesChanged', {
+                detail: { preferences }
+            }));
+        }
+    }
+
+    function subscribe(callback) {
+        if (typeof window !== 'undefined') {
+            window.addEventListener('preferencesChanged', (event) => {
+                callback(event.detail.preferences);
+            });
+        }
+        return () => {
+            if (typeof window !== 'undefined') {
+                window.removeEventListener('preferencesChanged', callback);
+            }
+        };
+    }
+
+    return {
+        get: getPreferences,
+        save: savePreferences,
+        reset: resetPreferences,
+        getPreference,
+        subscribe,
+        defaultPreferences
+    };
+})();
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = UserPreferencesManager;
+}
