@@ -421,4 +421,74 @@ export default UserPreferences;const UserPreferencesManager = {
   }
 };
 
+export default UserPreferencesManager;class UserPreferencesManager {
+  constructor(defaults = {}) {
+    this.defaults = {
+      theme: 'light',
+      language: 'en',
+      notifications: true,
+      fontSize: 16,
+      ...defaults
+    };
+    this.storageKey = 'user_preferences';
+    this.preferences = this.loadPreferences();
+  }
+
+  loadPreferences() {
+    try {
+      const stored = localStorage.getItem(this.storageKey);
+      return stored ? { ...this.defaults, ...JSON.parse(stored) } : { ...this.defaults };
+    } catch (error) {
+      console.error('Failed to load preferences:', error);
+      return { ...this.defaults };
+    }
+  }
+
+  savePreferences() {
+    try {
+      localStorage.setItem(this.storageKey, JSON.stringify(this.preferences));
+      return true;
+    } catch (error) {
+      console.error('Failed to save preferences:', error);
+      return false;
+    }
+  }
+
+  get(key) {
+    return this.preferences[key] !== undefined ? this.preferences[key] : this.defaults[key];
+  }
+
+  set(key, value) {
+    if (key in this.defaults) {
+      this.preferences[key] = value;
+      this.savePreferences();
+      return true;
+    }
+    return false;
+  }
+
+  reset() {
+    this.preferences = { ...this.defaults };
+    this.savePreferences();
+  }
+
+  getAll() {
+    return { ...this.preferences };
+  }
+
+  updateMultiple(updates) {
+    let changed = false;
+    for (const [key, value] of Object.entries(updates)) {
+      if (key in this.defaults && this.preferences[key] !== value) {
+        this.preferences[key] = value;
+        changed = true;
+      }
+    }
+    if (changed) {
+      this.savePreferences();
+    }
+    return changed;
+  }
+}
+
 export default UserPreferencesManager;
