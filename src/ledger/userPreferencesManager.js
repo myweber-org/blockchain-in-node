@@ -764,4 +764,79 @@ if (typeof module !== 'undefined' && module.exports) {
         reset: resetPreferences,
         subscribe
     };
-})();
+})();class UserPreferencesManager {
+    constructor() {
+        this.prefs = this.loadPreferences();
+    }
+
+    loadPreferences() {
+        try {
+            const stored = localStorage.getItem('userPreferences');
+            return stored ? JSON.parse(stored) : this.getDefaultPreferences();
+        } catch (error) {
+            console.error('Failed to load preferences:', error);
+            return this.getDefaultPreferences();
+        }
+    }
+
+    getDefaultPreferences() {
+        return {
+            theme: 'light',
+            notifications: true,
+            language: 'en',
+            fontSize: 14,
+            autoSave: true,
+            showTutorial: false
+        };
+    }
+
+    updatePreference(key, value) {
+        if (this.prefs.hasOwnProperty(key)) {
+            this.prefs[key] = value;
+            this.savePreferences();
+            return true;
+        }
+        return false;
+    }
+
+    savePreferences() {
+        try {
+            localStorage.setItem('userPreferences', JSON.stringify(this.prefs));
+            return true;
+        } catch (error) {
+            console.error('Failed to save preferences:', error);
+            return false;
+        }
+    }
+
+    getPreference(key) {
+        return this.prefs[key];
+    }
+
+    getAllPreferences() {
+        return { ...this.prefs };
+    }
+
+    resetToDefaults() {
+        this.prefs = this.getDefaultPreferences();
+        this.savePreferences();
+    }
+
+    exportPreferences() {
+        return JSON.stringify(this.prefs, null, 2);
+    }
+
+    importPreferences(jsonString) {
+        try {
+            const imported = JSON.parse(jsonString);
+            this.prefs = { ...this.getDefaultPreferences(), ...imported };
+            this.savePreferences();
+            return true;
+        } catch (error) {
+            console.error('Failed to import preferences:', error);
+            return false;
+        }
+    }
+}
+
+const userPrefs = new UserPreferencesManager();
