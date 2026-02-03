@@ -635,4 +635,67 @@ export default UserPreferencesManager;const UserPreferencesManager = (function()
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = UserPreferencesManager;
-}
+}const userPreferencesManager = (() => {
+    const PREFERENCE_KEY = 'app_preferences';
+    
+    const defaultPreferences = {
+        theme: 'light',
+        language: 'en',
+        notifications: true,
+        fontSize: 16,
+        autoSave: true
+    };
+
+    const getPreferences = () => {
+        const stored = localStorage.getItem(PREFERENCE_KEY);
+        if (stored) {
+            try {
+                return { ...defaultPreferences, ...JSON.parse(stored) };
+            } catch (error) {
+                console.error('Failed to parse preferences:', error);
+                return defaultPreferences;
+            }
+        }
+        return defaultPreferences;
+    };
+
+    const savePreferences = (preferences) => {
+        try {
+            const current = getPreferences();
+            const updated = { ...current, ...preferences };
+            localStorage.setItem(PREFERENCE_KEY, JSON.stringify(updated));
+            return true;
+        } catch (error) {
+            console.error('Failed to save preferences:', error);
+            return false;
+        }
+    };
+
+    const resetPreferences = () => {
+        localStorage.removeItem(PREFERENCE_KEY);
+        return defaultPreferences;
+    };
+
+    const exportPreferences = () => {
+        const prefs = getPreferences();
+        return JSON.stringify(prefs, null, 2);
+    };
+
+    const importPreferences = (jsonString) => {
+        try {
+            const imported = JSON.parse(jsonString);
+            return savePreferences(imported);
+        } catch (error) {
+            console.error('Failed to import preferences:', error);
+            return false;
+        }
+    };
+
+    return {
+        get: getPreferences,
+        save: savePreferences,
+        reset: resetPreferences,
+        export: exportPreferences,
+        import: importPreferences
+    };
+})();
