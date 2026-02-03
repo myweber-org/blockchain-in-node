@@ -195,4 +195,20 @@ function validateUserInput(email, password) {
     };
 }
 
-module.exports = validateUserInput;
+module.exports = validateUserInput;function sanitizeInput(input) {
+    if (typeof input !== 'string') {
+        throw new TypeError('Input must be a string');
+    }
+    
+    return input
+        .trim()
+        .replace(/[<>]/g, '')
+        .substring(0, 255);
+}
+
+function validateEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+module.exports = { sanitizeInput, validateEmail };
