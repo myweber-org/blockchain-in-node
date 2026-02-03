@@ -54,4 +54,27 @@ function validateAndSanitize(userInput) {
   return sanitized;
 }
 
-export { validateAndSanitize };
+export { validateAndSanitize };function sanitizeInput(input) {
+    if (typeof input !== 'string') {
+        return '';
+    }
+    
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#x27;',
+        '/': '&#x2F;'
+    };
+    
+    const reg = /[&<>"'/]/ig;
+    return input.replace(reg, (match) => map[match]);
+}
+
+function validateEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+module.exports = { sanitizeInput, validateEmail };
