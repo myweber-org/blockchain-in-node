@@ -182,4 +182,36 @@ function displayErrorMessage(message) {
 document.addEventListener('DOMContentLoaded', () => {
     const userId = 1;
     fetchUserData(userId);
-});
+});async function fetchUserData(userId, maxRetries = 3) {
+    const baseUrl = 'https://api.example.com/users';
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            const response = await fetch(`${baseUrl}/${userId}`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const userData = await response.json();
+            console.log(`Successfully fetched data for user ${userId}`);
+            return userData;
+            
+        } catch (error) {
+            console.error(`Attempt ${attempt} failed: ${error.message}`);
+            
+            if (attempt === maxRetries) {
+                throw new Error(`Failed to fetch user data after ${maxRetries} attempts`);
+            }
+            
+            // Exponential backoff delay
+            const delay = Math.pow(2, attempt) * 100;
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
+    }
+}
+
+// Example usage
+fetchUserData(123)
+    .then(data => console.log('User data:', data))
+    .catch(error => console.error('Final error:', error));
