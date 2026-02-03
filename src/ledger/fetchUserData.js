@@ -138,4 +138,48 @@ document.addEventListener('DOMContentLoaded', function() {
             fetchUserData(userId);
         });
     }
+});function fetchUserData(userId) {
+    const apiUrl = `https://jsonplaceholder.typicode.com/users/${userId}`;
+    
+    fetch(apiUrl)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('User Data:', data);
+            displayUserInfo(data);
+        })
+        .catch(error => {
+            console.error('Error fetching user data:', error);
+            displayErrorMessage('Failed to load user information.');
+        });
+}
+
+function displayUserInfo(user) {
+    const container = document.getElementById('user-info');
+    if (!container) return;
+    
+    container.innerHTML = `
+        <h2>${user.name}</h2>
+        <p><strong>Email:</strong> ${user.email}</p>
+        <p><strong>Phone:</strong> ${user.phone}</p>
+        <p><strong>Website:</strong> ${user.website}</p>
+        <p><strong>Company:</strong> ${user.company.name}</p>
+    `;
+}
+
+function displayErrorMessage(message) {
+    const container = document.getElementById('user-info');
+    if (!container) return;
+    
+    container.innerHTML = `<p class="error">${message}</p>`;
+}
+
+// Example usage
+document.addEventListener('DOMContentLoaded', () => {
+    const userId = 1;
+    fetchUserData(userId);
 });
