@@ -67,4 +67,29 @@ class CurrencyConverter {
     }
 }
 
-module.exports = CurrencyConverter;
+module.exports = CurrencyConverter;const fetchExchangeRate = async (fromCurrency, toCurrency) => {
+  try {
+    const response = await fetch(`https://api.exchangerate-api.com/v4/latest/${fromCurrency}`);
+    if (!response.ok) throw new Error('Failed to fetch exchange rates');
+    const data = await response.json();
+    return data.rates[toCurrency];
+  } catch (error) {
+    console.error('Error fetching exchange rate:', error);
+    return null;
+  }
+};
+
+const convertCurrency = async (amount, fromCurrency, toCurrency) => {
+  const rate = await fetchExchangeRate(fromCurrency, toCurrency);
+  if (rate === null) return null;
+  return amount * rate;
+};
+
+const formatCurrency = (amount, currencyCode) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: currencyCode
+  }).format(amount);
+};
+
+export { convertCurrency, formatCurrency };
