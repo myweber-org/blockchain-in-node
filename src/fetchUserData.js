@@ -155,4 +155,78 @@ fetchUserData(1);function fetchUserData(userId) {
 // Example usage
 fetchUserData(123)
     .then(data => console.log('User data:', data))
-    .catch(error => console.error('Final error:', error));
+    .catch(error => console.error('Final error:', error));async function fetchUserData(userId, maxRetries = 3) {
+    const apiUrl = `https://api.example.com/users/${userId}`;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            const response = await fetch(apiUrl);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log(`Successfully fetched data for user ${userId}`);
+            return data;
+            
+        } catch (error) {
+            console.error(`Attempt ${attempt} failed: ${error.message}`);
+            
+            if (attempt === maxRetries) {
+                throw new Error(`Failed to fetch user data after ${maxRetries} attempts`);
+            }
+            
+            const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
+            console.log(`Retrying in ${delay}ms...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
+    }
+}
+
+function validateUserId(userId) {
+    if (!userId || typeof userId !== 'string') {
+        throw new Error('Invalid user ID provided');
+    }
+    
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(userId)) {
+        throw new Error('User ID must be a valid UUID format');
+    }
+    
+    return true;
+}
+
+async function getUserData(userId) {
+    try {
+        validateUserId(userId);
+        const userData = await fetchUserData(userId);
+        
+        if (!userData || typeof userData !== 'object') {
+            throw new Error('Invalid data received from API');
+        }
+        
+        const requiredFields = ['id', 'name', 'email'];
+        for (const field of requiredFields) {
+            if (!userData[field]) {
+                throw new Error(`Missing required field: ${field}`);
+            }
+        }
+        
+        return {
+            success: true,
+            data: userData,
+            timestamp: new Date().toISOString()
+        };
+        
+    } catch (error) {
+        console.error('Error in getUserData:', error.message);
+        return {
+            success: false,
+            error: error.message,
+            timestamp: new Date().toISOString()
+        };
+    }
+}
+
+export { getUserData, fetchUserData, validateUserId };
