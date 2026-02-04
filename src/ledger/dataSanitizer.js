@@ -46,4 +46,39 @@ function validateAndSanitizeUserInput(userInput) {
     return sanitized.length > maxLength ? sanitized.substring(0, maxLength) : sanitized;
 }
 
-export { validateAndSanitizeUserInput };
+export { validateAndSanitizeUserInput };function sanitizeInput(input) {
+    if (typeof input !== 'string') {
+        return '';
+    }
+    
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#x27;',
+        '/': '&#x2F;'
+    };
+    
+    const reg = /[&<>"'/]/ig;
+    return input.replace(reg, (match) => map[match]);
+}
+
+function validateAndSanitizeUserData(userInput) {
+    const sanitized = sanitizeInput(userInput);
+    
+    if (sanitized.length === 0) {
+        throw new Error('Invalid input provided');
+    }
+    
+    if (sanitized.length > 1000) {
+        throw new Error('Input exceeds maximum length');
+    }
+    
+    return sanitized;
+}
+
+module.exports = {
+    sanitizeInput,
+    validateAndSanitizeUserData
+};
