@@ -192,4 +192,72 @@ function saveUserPreferences(preferences) {
     return validated;
 }
 
-export { validateUserPreferences, initializeUserSettings, saveUserPreferences };
+export { validateUserPreferences, initializeUserSettings, saveUserPreferences };const defaultPreferences = {
+  theme: 'light',
+  language: 'en',
+  notifications: true,
+  fontSize: 16,
+  autoSave: true
+};
+
+const validThemes = ['light', 'dark', 'system'];
+const validLanguages = ['en', 'es', 'fr', 'de'];
+const minFontSize = 8;
+const maxFontSize = 32;
+
+function validatePreferences(userPrefs) {
+  const validated = { ...defaultPreferences };
+  
+  if (userPrefs.theme && validThemes.includes(userPrefs.theme)) {
+    validated.theme = userPrefs.theme;
+  }
+  
+  if (userPrefs.language && validLanguages.includes(userPrefs.language)) {
+    validated.language = userPrefs.language;
+  }
+  
+  if (typeof userPrefs.notifications === 'boolean') {
+    validated.notifications = userPrefs.notifications;
+  }
+  
+  if (typeof userPrefs.fontSize === 'number') {
+    validated.fontSize = Math.max(minFontSize, Math.min(maxFontSize, userPrefs.fontSize));
+  }
+  
+  if (typeof userPrefs.autoSave === 'boolean') {
+    validated.autoSave = userPrefs.autoSave;
+  }
+  
+  return validated;
+}
+
+function mergePreferences(existingPrefs, newPrefs) {
+  const validatedNew = validatePreferences(newPrefs);
+  return { ...existingPrefs, ...validatedNew };
+}
+
+function getPreference(key) {
+  const stored = localStorage.getItem('userPreferences');
+  const preferences = stored ? JSON.parse(stored) : defaultPreferences;
+  return preferences[key] || defaultPreferences[key];
+}
+
+function savePreferences(preferences) {
+  const validated = validatePreferences(preferences);
+  localStorage.setItem('userPreferences', JSON.stringify(validated));
+  return validated;
+}
+
+function resetToDefaults() {
+  localStorage.setItem('userPreferences', JSON.stringify(defaultPreferences));
+  return defaultPreferences;
+}
+
+export {
+  validatePreferences,
+  mergePreferences,
+  getPreference,
+  savePreferences,
+  resetToDefaults,
+  defaultPreferences
+};
