@@ -596,4 +596,82 @@ export default fileUploader;function uploadFile(file, url, onProgress, onSuccess
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = FileUploader;
+}function uploadFile(file, uploadUrl) {
+    return new Promise((resolve, reject) => {
+        if (!file || !(file instanceof File)) {
+            reject(new Error('Invalid file object'));
+            return;
+        }
+
+        const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+        const maxSize = 10 * 1024 * 1024; // 10MB
+
+        if (!allowedTypes.includes(file.type)) {
+            reject(new Error('File type not allowed'));
+            return;
+        }
+
+        if (file.size > maxSize) {
+            reject(new Error('File size exceeds limit'));
+            return;
+        }
+
+        const xhr = new XMLHttpRequest();
+        const formData = new FormData();
+        formData.append('file', file);
+
+        xhr.upload.addEventListener('progress', (event) => {
+            if (event.lengthComputable) {
+                const percentComplete = (event.loaded / event.total) * 100;
+                console.log(`Upload progress: ${percentComplete.toFixed(2)}%`);
+            }
+        });
+
+        xhr.addEventListener('load', () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    resolve(response);
+                } catch (error) {
+                    resolve(xhr.responseText);
+                }
+            } else {
+                reject(new Error(`Upload failed with status: ${xhr.status}`));
+            }
+        });
+
+        xhr.addEventListener('error', () => {
+            reject(new Error('Network error during upload'));
+        });
+
+        xhr.addEventListener('abort', () => {
+            reject(new Error('Upload cancelled'));
+        });
+
+        xhr.open('POST', uploadUrl, true);
+        xhr.send(formData);
+    });
+}
+
+function validateFile(file) {
+    const errors = [];
+    
+    if (!file) {
+        errors.push('No file selected');
+        return errors;
+    }
+
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.pdf'];
+    const fileName = file.name.toLowerCase();
+    const hasValidExtension = allowedExtensions.some(ext => fileName.endsWith(ext));
+
+    if (!hasValidExtension) {
+        errors.push('Invalid file extension');
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+        errors.push('File size must be less than 10MB');
+    }
+
+    return errors;
 }
