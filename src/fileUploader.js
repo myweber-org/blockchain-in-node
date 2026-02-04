@@ -674,4 +674,156 @@ function validateFile(file) {
     }
 
     return errors;
+}function validateFile(file) {
+    const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    
+    if (!allowedTypes.includes(file.type)) {
+        throw new Error('Invalid file type. Only JPEG, PNG and PDF files are allowed.');
+    }
+    
+    if (file.size > maxSize) {
+        throw new Error('File size exceeds 5MB limit.');
+    }
+    
+    return true;
 }
+
+function uploadFile(file, onProgress, onComplete, onError) {
+    return new Promise((resolve, reject) => {
+        try {
+            validateFile(file);
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            const xhr = new XMLHttpRequest();
+            
+            xhr.upload.addEventListener('progress', (event) => {
+                if (event.lengthComputable) {
+                    const percentComplete = (event.loaded / event.total) * 100;
+                    if (typeof onProgress === 'function') {
+                        onProgress(percentComplete);
+                    }
+                }
+            });
+            
+            xhr.addEventListener('load', () => {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    const response = JSON.parse(xhr.responseText);
+                    if (typeof onComplete === 'function') {
+                        onComplete(response);
+                    }
+                    resolve(response);
+                } else {
+                    const error = new Error(`Upload failed with status: ${xhr.status}`);
+                    if (typeof onError === 'function') {
+                        onError(error);
+                    }
+                    reject(error);
+                }
+            });
+            
+            xhr.addEventListener('error', () => {
+                const error = new Error('Network error occurred during upload');
+                if (typeof onError === 'function') {
+                    onError(error);
+                }
+                reject(error);
+            });
+            
+            xhr.open('POST', '/api/upload');
+            xhr.send(formData);
+            
+        } catch (error) {
+            if (typeof onError === 'function') {
+                onError(error);
+            }
+            reject(error);
+        }
+    });
+}
+
+function createFileUploader(elementId, options = {}) {
+    const defaultOptions = {
+        multiple: false,
+        accept: '.jpg,.jpeg,.png,.pdf',
+        maxFiles: 1
+    };
+    
+    const config = { ...defaultOptions, ...options };
+    const container = document.getElementById(elementId);
+    
+    if (!container) {
+        throw new Error(`Element with id "${elementId}" not found`);
+    }
+    
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = config.accept;
+    input.multiple = config.multiple;
+    input.style.display = 'none';
+    
+    const progressBar = document.createElement('div');
+    progressBar.className = 'upload-progress';
+    progressBar.style.width = '0%';
+    progressBar.style.height = '4px';
+    progressBar.style.backgroundColor = '#007bff';
+    progressBar.style.transition = 'width 0.3s ease';
+    
+    const statusText = document.createElement('div');
+    statusText.className = 'upload-status';
+    
+    container.appendChild(input);
+    container.appendChild(progressBar);
+    container.appendChild(statusText);
+    
+    input.addEventListener('change', async (event) => {
+        const files = Array.from(event.target.files);
+        
+        if (files.length > config.maxFiles) {
+            statusText.textContent = `Maximum ${config.maxFiles} file(s) allowed`;
+            return;
+        }
+        
+        for (const file of files) {
+            try {
+                statusText.textContent = `Uploading ${file.name}...`;
+                
+                await uploadFile(
+                    file,
+                    (progress) => {
+                        progressBar.style.width = `${progress}%`;
+                    },
+                    (response) => {
+                        statusText.textContent = `Upload complete: ${response.fileUrl}`;
+                        progressBar.style.width = '100%';
+                        
+                        setTimeout(() => {
+                            progressBar.style.width = '0%';
+                        }, 1000);
+                    },
+                    (error) => {
+                        statusText.textContent = `Error: ${error.message}`;
+                        progressBar.style.backgroundColor = '#dc3545';
+                    }
+                );
+                
+            } catch (error) {
+                console.error('Upload failed:', error);
+            }
+        }
+    });
+    
+    return {
+        triggerUpload: () => input.click(),
+        reset: () => {
+            input.value = '';
+            progressBar.style.width = '0%';
+            progressBar.style.backgroundColor = '#007bff';
+            statusText.textContent = '';
+        }
+    };
+}
+
+export { validateFile, uploadFile, createFileUploader };
