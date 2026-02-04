@@ -1189,4 +1189,101 @@ export { preferencesManager, userPreferences };const UserPreferencesManager = ((
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = UserPreferencesManager;
+}const userPreferencesManager = (() => {
+  const PREFIX = 'app_pref_';
+  const DEFAULT_PREFERENCES = {
+    theme: 'light',
+    fontSize: 16,
+    notifications: true,
+    language: 'en'
+  };
+
+  const validateKey = (key) => {
+    if (!key || typeof key !== 'string') {
+      throw new Error('Invalid preference key');
+    }
+    return true;
+  };
+
+  const validateValue = (value) => {
+    if (value === undefined || value === null) {
+      throw new Error('Invalid preference value');
+    }
+    return true;
+  };
+
+  const getStoredPreferences = () => {
+    try {
+      const stored = localStorage.getItem(PREFIX + 'all');
+      return stored ? JSON.parse(stored) : {};
+    } catch (error) {
+      console.warn('Failed to parse stored preferences:', error);
+      return {};
+    }
+  };
+
+  const savePreferences = (preferences) => {
+    try {
+      localStorage.setItem(PREFIX + 'all', JSON.stringify(preferences));
+      return true;
+    } catch (error) {
+      console.error('Failed to save preferences:', error);
+      return false;
+    }
+  };
+
+  return {
+    get: (key) => {
+      validateKey(key);
+      const preferences = getStoredPreferences();
+      return preferences.hasOwnProperty(key) ? preferences[key] : DEFAULT_PREFERENCES[key];
+    },
+
+    set: (key, value) => {
+      validateKey(key);
+      validateValue(value);
+      const preferences = getStoredPreferences();
+      preferences[key] = value;
+      return savePreferences(preferences);
+    },
+
+    getAll: () => {
+      const stored = getStoredPreferences();
+      return { ...DEFAULT_PREFERENCES, ...stored };
+    },
+
+    reset: () => {
+      try {
+        localStorage.removeItem(PREFIX + 'all');
+        return true;
+      } catch (error) {
+        console.error('Failed to reset preferences:', error);
+        return false;
+      }
+    },
+
+    resetToDefaults: () => {
+      return savePreferences(DEFAULT_PREFERENCES);
+    },
+
+    has: (key) => {
+      validateKey(key);
+      const preferences = getStoredPreferences();
+      return preferences.hasOwnProperty(key);
+    },
+
+    remove: (key) => {
+      validateKey(key);
+      const preferences = getStoredPreferences();
+      if (preferences.hasOwnProperty(key)) {
+        delete preferences[key];
+        return savePreferences(preferences);
+      }
+      return false;
+    }
+  };
+})();
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = userPreferencesManager;
 }
