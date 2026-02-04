@@ -275,4 +275,64 @@ module.exports = {
     getSupportedCurrencies,
     updateExchangeRate,
     exchangeRates
+};const exchangeRates = {
+    USD: 1.0,
+    EUR: 0.85,
+    GBP: 0.73,
+    JPY: 110.0,
+    CAD: 1.25
 };
+
+const rateCache = new Map();
+
+function validateCurrency(currencyCode) {
+    return typeof currencyCode === 'string' && 
+           currencyCode.length === 3 && 
+           exchangeRates.hasOwnProperty(currencyCode.toUpperCase());
+}
+
+function getExchangeRate(fromCurrency, toCurrency) {
+    const cacheKey = `${fromCurrency}:${toCurrency}`;
+    
+    if (rateCache.has(cacheKey)) {
+        console.log(`Using cached rate for ${cacheKey}`);
+        return rateCache.get(cacheKey);
+    }
+    
+    if (!validateCurrency(fromCurrency) || !validateCurrency(toCurrency)) {
+        throw new Error('Invalid currency code provided');
+    }
+    
+    const fromRate = exchangeRates[fromCurrency.toUpperCase()];
+    const toRate = exchangeRates[toCurrency.toUpperCase()];
+    const rate = toRate / fromRate;
+    
+    rateCache.set(cacheKey, rate);
+    console.log(`Cached new rate for ${cacheKey}: ${rate}`);
+    
+    return rate;
+}
+
+function convertCurrency(amount, fromCurrency, toCurrency) {
+    if (typeof amount !== 'number' || amount <= 0) {
+        throw new Error('Amount must be a positive number');
+    }
+    
+    const rate = getExchangeRate(fromCurrency, toCurrency);
+    const convertedAmount = amount * rate;
+    
+    return {
+        originalAmount: amount,
+        fromCurrency: fromCurrency.toUpperCase(),
+        toCurrency: toCurrency.toUpperCase(),
+        exchangeRate: rate,
+        convertedAmount: parseFloat(convertedAmount.toFixed(2))
+    };
+}
+
+function clearRateCache() {
+    rateCache.clear();
+    console.log('Exchange rate cache cleared');
+}
+
+export { convertCurrency, getExchangeRate, clearRateCache, validateCurrency };
