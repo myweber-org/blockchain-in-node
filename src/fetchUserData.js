@@ -255,4 +255,39 @@ function displayUserData(user) {
             <p>Location: ${user.location}</p>
         `;
     }
+}async function fetchUserData(userId, maxRetries = 3) {
+    const url = `https://api.example.com/users/${userId}`;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            const response = await fetch(url);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            return { success: true, data };
+            
+        } catch (error) {
+            console.error(`Attempt ${attempt} failed:`, error.message);
+            
+            if (attempt === maxRetries) {
+                return { 
+                    success: false, 
+                    error: `Failed after ${maxRetries} attempts: ${error.message}` 
+                };
+            }
+            
+            await new Promise(resolve => 
+                setTimeout(resolve, Math.pow(2, attempt) * 1000)
+            );
+        }
+    }
 }
+
+function validateUserId(userId) {
+    return typeof userId === 'string' && userId.length > 0;
+}
+
+export { fetchUserData, validateUserId };
