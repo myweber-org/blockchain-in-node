@@ -1,297 +1,8 @@
-async function fetchUserData(userId, maxRetries = 3) {
-    const url = `https://api.example.com/users/${userId}`;
-    
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-            const response = await fetch(url);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            console.log(`Successfully fetched data for user ${userId}`);
-            return data;
-            
-        } catch (error) {
-            console.error(`Attempt ${attempt} failed: ${error.message}`);
-            
-            if (attempt === maxRetries) {
-                throw new Error(`Failed to fetch user data after ${maxRetries} attempts`);
-            }
-            
-            // Exponential backoff
-            const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
-            console.log(`Retrying in ${delay}ms...`);
-            await new Promise(resolve => setTimeout(resolve, delay));
-        }
-    }
-}
 
-// Example usage
-fetchUserData(123)
-    .then(data => console.log('User data:', data))
-    .catch(error => console.error('Final error:', error));async function fetchUserData(userId, maxRetries = 3) {
-    const url = `https://api.example.com/users/${userId}`;
-    let lastError;
-
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-            const response = await fetch(url);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-
-            const data = await response.json();
-            console.log(`User data fetched successfully on attempt ${attempt}`);
-            return data;
-        } catch (error) {
-            console.warn(`Attempt ${attempt} failed:`, error.message);
-            lastError = error;
-            
-            if (attempt < maxRetries) {
-                const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
-                await new Promise(resolve => setTimeout(resolve, delay));
-            }
-        }
-    }
-
-    throw new Error(`Failed to fetch user data after ${maxRetries} attempts: ${lastError.message}`);
-}
-
-function validateUserId(userId) {
-    if (!userId || typeof userId !== 'string') {
-        throw new Error('Invalid user ID provided');
-    }
-    
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(userId)) {
-        throw new Error('User ID must be a valid UUID format');
-    }
-    
-    return true;
-}
-
-async function getUserProfile(userId) {
-    try {
-        validateUserId(userId);
-        const userData = await fetchUserData(userId);
-        
-        return {
-            id: userData.id,
-            name: userData.name,
-            email: userData.email,
-            lastLogin: userData.lastLogin ? new Date(userData.lastLogin) : null,
-            isActive: userData.status === 'active'
-        };
-    } catch (error) {
-        console.error('Failed to get user profile:', error);
-        throw error;
-    }
-}
-
-export { fetchUserData, getUserProfile };function fetchUserData(userId) {
+function fetchUserData(userId) {
     const apiUrl = `https://jsonplaceholder.typicode.com/users/${userId}`;
-    
-    fetch(apiUrl)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('User Data:', data);
-            displayUserInfo(data);
-        })
-        .catch(error => {
-            console.error('Error fetching user data:', error);
-            displayErrorMessage(error.message);
-        });
-}
 
-function displayUserInfo(user) {
-    const outputDiv = document.getElementById('userOutput');
-    if (outputDiv) {
-        outputDiv.innerHTML = `
-            <h3>${user.name}</h3>
-            <p>Email: ${user.email}</p>
-            <p>Phone: ${user.phone}</p>
-            <p>Company: ${user.company.name}</p>
-        `;
-    }
-}
-
-function displayErrorMessage(message) {
-    const outputDiv = document.getElementById('userOutput');
-    if (outputDiv) {
-        outputDiv.innerHTML = `<p class="error">Error: ${message}</p>`;
-    }
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    const fetchButton = document.getElementById('fetchUserBtn');
-    if (fetchButton) {
-        fetchButton.addEventListener('click', function() {
-            const userId = document.getElementById('userIdInput').value || 1;
-            fetchUserData(userId);
-        });
-    }
-});function fetchUserData(userId) {
-    const apiUrl = `https://jsonplaceholder.typicode.com/users/${userId}`;
-    
-    fetch(apiUrl)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('User Data:', data);
-            displayUserInfo(data);
-        })
-        .catch(error => {
-            console.error('Error fetching user data:', error);
-            displayErrorMessage('Failed to load user information.');
-        });
-}
-
-function displayUserInfo(user) {
-    const container = document.getElementById('user-info');
-    if (!container) return;
-    
-    container.innerHTML = `
-        <h2>${user.name}</h2>
-        <p><strong>Email:</strong> ${user.email}</p>
-        <p><strong>Phone:</strong> ${user.phone}</p>
-        <p><strong>Website:</strong> ${user.website}</p>
-        <p><strong>Company:</strong> ${user.company.name}</p>
-    `;
-}
-
-function displayErrorMessage(message) {
-    const container = document.getElementById('user-info');
-    if (!container) return;
-    
-    container.innerHTML = `<p class="error">${message}</p>`;
-}
-
-// Example usage
-document.addEventListener('DOMContentLoaded', () => {
-    const userId = 1;
-    fetchUserData(userId);
-});async function fetchUserData(userId, maxRetries = 3) {
-    const baseUrl = 'https://api.example.com/users';
-    
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-            const response = await fetch(`${baseUrl}/${userId}`);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const userData = await response.json();
-            console.log(`Successfully fetched data for user ${userId}`);
-            return userData;
-            
-        } catch (error) {
-            console.error(`Attempt ${attempt} failed: ${error.message}`);
-            
-            if (attempt === maxRetries) {
-                throw new Error(`Failed to fetch user data after ${maxRetries} attempts`);
-            }
-            
-            // Exponential backoff delay
-            const delay = Math.pow(2, attempt) * 100;
-            await new Promise(resolve => setTimeout(resolve, delay));
-        }
-    }
-}
-
-// Example usage
-fetchUserData(123)
-    .then(data => console.log('User data:', data))
-    .catch(error => console.error('Final error:', error));async function fetchUserData(userId, maxRetries = 3) {
-  const baseUrl = 'https://api.example.com/users';
-  
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      const response = await fetch(`${baseUrl}/${userId}`);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      return {
-        success: true,
-        data: data,
-        attempts: attempt
-      };
-      
-    } catch (error) {
-      console.warn(`Attempt ${attempt} failed: ${error.message}`);
-      
-      if (attempt === maxRetries) {
-        return {
-          success: false,
-          error: error.message,
-          attempts: attempt
-        };
-      }
-      
-      await new Promise(resolve => 
-        setTimeout(resolve, Math.pow(2, attempt) * 100)
-      );
-    }
-  }
-}
-
-function validateUserId(userId) {
-  return typeof userId === 'string' && 
-         userId.length > 0 && 
-         /^[a-zA-Z0-9_-]+$/.test(userId);
-}
-
-export { fetchUserData, validateUserId };async function fetchUserData(userId) {
-    const cacheKey = `user_${userId}`;
-    const cacheExpiry = 5 * 60 * 1000; // 5 minutes
-    
-    try {
-        // Check cache first
-        const cached = localStorage.getItem(cacheKey);
-        if (cached) {
-            const { data, timestamp } = JSON.parse(cached);
-            if (Date.now() - timestamp < cacheExpiry) {
-                return data;
-            }
-        }
-        
-        // Fetch from API
-        const response = await fetch(`https://api.example.com/users/${userId}`);
-        if (!response.ok) {
-            throw new Error(`HTTP error: ${response.status}`);
-        }
-        
-        const userData = await response.json();
-        
-        // Cache the result
-        const cacheData = {
-            data: userData,
-            timestamp: Date.now()
-        };
-        localStorage.setItem(cacheKey, JSON.stringify(cacheData));
-        
-        return userData;
-    } catch (error) {
-        console.error('Failed to fetch user data:', error);
-        throw error;
-    }
-}function fetchUserData(userId) {
-    return fetch(`https://api.example.com/users/${userId}`)
+    return fetch(apiUrl)
         .then(response => {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
@@ -299,52 +10,36 @@ export { fetchUserData, validateUserId };async function fetchUserData(userId) {
             return response.json();
         })
         .then(data => {
-            return {
-                id: data.id,
-                name: data.name,
-                email: data.email,
-                isActive: data.status === 'active'
-            };
-        })
-        .catch(error => {
-            console.error('Error fetching user data:', error);
-            return null;
-        });
-}function fetchUserData(userId) {
-    const apiUrl = `https://jsonplaceholder.typicode.com/users/${userId}`;
-    
-    fetch(apiUrl)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
             console.log('User Data:', data);
-            displayUserInfo(data);
+            return data;
         })
         .catch(error => {
             console.error('Error fetching user data:', error);
-            displayErrorMessage(error.message);
+            throw error;
         });
 }
 
-function displayUserInfo(user) {
+function displayUserData(user) {
     const outputDiv = document.getElementById('userOutput');
     if (outputDiv) {
         outputDiv.innerHTML = `
-            <h3>${user.name}</h3>
-            <p>Email: ${user.email}</p>
-            <p>Phone: ${user.phone}</p>
-            <p>Company: ${user.company.name}</p>
+            <h3>User Details</h3>
+            <p><strong>Name:</strong> ${user.name}</p>
+            <p><strong>Email:</strong> ${user.email}</p>
+            <p><strong>Phone:</strong> ${user.phone}</p>
+            <p><strong>Website:</strong> ${user.website}</p>
         `;
     }
 }
 
-function displayErrorMessage(message) {
-    const outputDiv = document.getElementById('userOutput');
-    if (outputDiv) {
-        outputDiv.innerHTML = `<p class="error">Error: ${message}</p>`;
+document.addEventListener('DOMContentLoaded', function() {
+    const button = document.getElementById('fetchUserButton');
+    if (button) {
+        button.addEventListener('click', function() {
+            const userId = document.getElementById('userIdInput').value || 1;
+            fetchUserData(userId)
+                .then(user => displayUserData(user))
+                .catch(error => console.error('Failed to load user:', error));
+        });
     }
-}
+});
