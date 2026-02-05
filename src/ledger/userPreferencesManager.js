@@ -225,4 +225,50 @@ export default UserPreferencesManager;class UserPreferencesManager {
   }
 }
 
-export default UserPreferencesManager;
+export default UserPreferencesManager;const UserPreferences = {
+  preferences: {},
+  
+  init() {
+    try {
+      const stored = localStorage.getItem('userPreferences');
+      this.preferences = stored ? JSON.parse(stored) : {};
+    } catch (error) {
+      console.warn('Failed to load preferences from localStorage:', error);
+      this.preferences = {};
+    }
+  },
+  
+  set(key, value) {
+    this.preferences[key] = value;
+    this.save();
+  },
+  
+  get(key, defaultValue = null) {
+    return this.preferences.hasOwnProperty(key) ? this.preferences[key] : defaultValue;
+  },
+  
+  remove(key) {
+    delete this.preferences[key];
+    this.save();
+  },
+  
+  clear() {
+    this.preferences = {};
+    this.save();
+  },
+  
+  save() {
+    try {
+      localStorage.setItem('userPreferences', JSON.stringify(this.preferences));
+    } catch (error) {
+      console.error('Failed to save preferences to localStorage:', error);
+    }
+  },
+  
+  getAll() {
+    return { ...this.preferences };
+  }
+};
+
+UserPreferences.init();
+export default UserPreferences;
