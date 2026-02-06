@@ -339,4 +339,24 @@ export { fetchUserData, validateUserId };async function fetchUserData(userId) {
       }
       throw error;
     });
-}
+}const fetchUserData = async (userId, maxRetries = 3) => {
+  const fetchData = async (attempt) => {
+    try {
+      const response = await fetch(`https://api.example.com/users/${userId}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      if (attempt < maxRetries) {
+        console.warn(`Attempt ${attempt + 1} failed. Retrying...`);
+        return fetchData(attempt + 1);
+      } else {
+        throw new Error(`Failed to fetch user data after ${maxRetries} attempts: ${error.message}`);
+      }
+    }
+  };
+
+  return fetchData(0);
+};
