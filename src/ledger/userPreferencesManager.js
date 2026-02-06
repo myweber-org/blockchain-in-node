@@ -82,4 +82,44 @@ const userPreferencesManager = (() => {
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = userPreferencesManager;
-}
+}const userPreferences = {
+  theme: 'light',
+  language: 'en',
+  notifications: true,
+  fontSize: 16
+};
+
+const PreferencesManager = {
+  storageKey: 'user_preferences',
+
+  loadPreferences() {
+    const stored = localStorage.getItem(this.storageKey);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+    return this.getDefaultPreferences();
+  },
+
+  savePreferences(prefs) {
+    const merged = { ...this.getDefaultPreferences(), ...prefs };
+    localStorage.setItem(this.storageKey, JSON.stringify(merged));
+    return merged;
+  },
+
+  getDefaultPreferences() {
+    return { ...userPreferences };
+  },
+
+  resetPreferences() {
+    localStorage.removeItem(this.storageKey);
+    return this.getDefaultPreferences();
+  },
+
+  updatePreference(key, value) {
+    const current = this.loadPreferences();
+    const updated = { ...current, [key]: value };
+    return this.savePreferences(updated);
+  }
+};
+
+export default PreferencesManager;
