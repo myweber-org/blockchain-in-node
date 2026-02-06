@@ -128,4 +128,70 @@ function convertCurrency(amount, rate) {
     return parseFloat((amount * rate).toFixed(2));
 }
 
-export { fetchExchangeRate, convertCurrency };
+export { fetchExchangeRate, convertCurrency };const axios = require('axios');
+
+class CurrencyConverter {
+    constructor(apiKey) {
+        this.apiKey = apiKey;
+        this.baseUrl = 'https://api.exchangerate-api.com/v4/latest';
+        this.cache = new Map();
+        this.cacheDuration = 300000; // 5 minutes
+    }
+
+    async convert(amount, fromCurrency, toCurrency) {
+        if (typeof amount !== 'number' || amount <= 0) {
+            throw new Error('Amount must be a positive number');
+        }
+
+        if (fromCurrency === toCurrency) {
+            return amount;
+        }
+
+        const rate = await this.getExchangeRate(fromCurrency, toCurrency);
+        return amount * rate;
+    }
+
+    async getExchangeRate(fromCurrency, toCurrency) {
+        const cacheKey = `${fromCurrency}_${toCurrency}`;
+        const cached = this.cache.get(cacheKey);
+
+        if (cached && Date.now() - cached.timestamp < this.cacheDuration) {
+            return cached.rate;
+        }
+
+        try {
+            const response = await axios.get(`${this.baseUrl}/${fromCurrency}`);
+            const rates = response.data.rates;
+            
+            if (!rates[toCurrency]) {
+                throw new Error(`Unsupported currency: ${toCurrency}`);
+            }
+
+            const rate = rates[toCurrency];
+            this.cache.set(cacheKey, {
+                rate: rate,
+                timestamp: Date.now()
+            });
+
+            return rate;
+        } catch (error) {
+            if (error.response && error.response.status === 429) {
+                console.warn('Rate limit exceeded, using cached data if available');
+                if (cached) {
+                    return cached.rate;
+                }
+            }
+            throw new Error(`Failed to fetch exchange rate: ${error.message}`);
+        }
+    }
+
+    clearCache() {
+        this.cache.clear();
+    }
+
+    getCacheSize() {
+        return this.cache.size;
+    }
+}
+
+module.exports = CurrencyConverter;
