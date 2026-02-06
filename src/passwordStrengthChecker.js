@@ -157,4 +157,66 @@ function getStrengthLevel(score) {
     return "very-weak";
 }
 
-module.exports = { checkPasswordStrength };
+module.exports = { checkPasswordStrength };function calculatePasswordEntropy(password) {
+    if (!password || password.length === 0) return 0;
+    
+    const charSets = {
+        lowercase: /[a-z]/.test(password),
+        uppercase: /[A-Z]/.test(password),
+        digits: /\d/.test(password),
+        special: /[^a-zA-Z0-9]/.test(password)
+    };
+    
+    let charsetSize = 0;
+    if (charSets.lowercase) charsetSize += 26;
+    if (charSets.uppercase) charsetSize += 26;
+    if (charSets.digits) charsetSize += 10;
+    if (charSets.special) charsetSize += 32;
+    
+    if (charsetSize === 0) return 0;
+    
+    const entropy = Math.log2(Math.pow(charsetSize, password.length));
+    return Math.round(entropy * 100) / 100;
+}
+
+function evaluatePasswordStrength(password) {
+    const entropy = calculatePasswordEntropy(password);
+    
+    if (entropy < 40) return 'Weak';
+    if (entropy < 70) return 'Moderate';
+    if (entropy < 100) return 'Strong';
+    return 'Very Strong';
+}
+
+function validatePassword(password, minLength = 8) {
+    const errors = [];
+    
+    if (password.length < minLength) {
+        errors.push(`Password must be at least ${minLength} characters long`);
+    }
+    
+    if (!/[a-z]/.test(password)) {
+        errors.push('Password must contain at least one lowercase letter');
+    }
+    
+    if (!/[A-Z]/.test(password)) {
+        errors.push('Password must contain at least one uppercase letter');
+    }
+    
+    if (!/\d/.test(password)) {
+        errors.push('Password must contain at least one digit');
+    }
+    
+    if (!/[^a-zA-Z0-9]/.test(password)) {
+        errors.push('Password must contain at least one special character');
+    }
+    
+    return {
+        isValid: errors.length === 0,
+        errors: errors,
+        strength: evaluatePasswordStrength(password),
+        entropy: calculatePasswordEntropy(password)
+    };
+}
+
+export { validatePassword, calculatePasswordEntropy, evaluatePasswordStrength };
