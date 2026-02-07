@@ -67,4 +67,45 @@ const UserPreferencesManager = (function() {
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = UserPreferencesManager;
-}
+}const userPreferencesManager = (function() {
+    const STORAGE_KEY = 'app_preferences';
+    
+    const defaultPreferences = {
+        theme: 'light',
+        language: 'en',
+        notifications: true,
+        fontSize: 16,
+        autoSave: false
+    };
+
+    function getPreferences() {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        return stored ? { ...defaultPreferences, ...JSON.parse(stored) } : { ...defaultPreferences };
+    }
+
+    function updatePreferences(newPreferences) {
+        const current = getPreferences();
+        const updated = { ...current, ...newPreferences };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        dispatchEvent(new CustomEvent('preferencesChanged', { detail: updated }));
+        return updated;
+    }
+
+    function resetPreferences() {
+        localStorage.removeItem(STORAGE_KEY);
+        dispatchEvent(new CustomEvent('preferencesChanged', { detail: defaultPreferences }));
+        return { ...defaultPreferences };
+    }
+
+    function subscribe(callback) {
+        addEventListener('preferencesChanged', (event) => callback(event.detail));
+        return () => removeEventListener('preferencesChanged', callback);
+    }
+
+    return {
+        get: getPreferences,
+        update: updatePreferences,
+        reset: resetPreferences,
+        subscribe: subscribe
+    };
+})();
