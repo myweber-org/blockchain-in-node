@@ -286,4 +286,36 @@ document.addEventListener('DOMContentLoaded', function() {
             handleFileUpload(event);
         });
     }
-});
+});function validateFileUpload(fileInput, maxSizeMB) {
+    const maxSizeBytes = maxSizeMB * 1024 * 1024;
+    const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+    
+    if (!fileInput.files || fileInput.files.length === 0) {
+        return { valid: false, error: 'No file selected' };
+    }
+    
+    const file = fileInput.files[0];
+    
+    if (!allowedTypes.includes(file.type)) {
+        return { valid: false, error: 'Invalid file type. Allowed: JPEG, PNG, PDF' };
+    }
+    
+    if (file.size > maxSizeBytes) {
+        return { valid: false, error: `File size exceeds ${maxSizeMB}MB limit` };
+    }
+    
+    return { valid: true, file: file };
+}
+
+function handleFileUpload(event) {
+    const result = validateFileUpload(event.target, 5);
+    
+    if (!result.valid) {
+        alert(result.error);
+        event.target.value = '';
+        return;
+    }
+    
+    console.log('File validated:', result.file.name);
+    // Proceed with upload logic
+}
