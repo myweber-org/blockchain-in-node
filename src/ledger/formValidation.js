@@ -25,3 +25,47 @@ function validateForm() {
 
     return isValid;
 }
+function validateEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+function validatePassword(password) {
+    return password.length >= 8;
+}
+
+function setupFormValidation(formId) {
+    const form = document.getElementById(formId);
+    if (!form) return;
+
+    const emailInput = form.querySelector('input[type="email"]');
+    const passwordInput = form.querySelector('input[type="password"]');
+    const submitButton = form.querySelector('button[type="submit"]');
+
+    function validateForm() {
+        const isEmailValid = validateEmail(emailInput.value);
+        const isPasswordValid = validatePassword(passwordInput.value);
+        
+        emailInput.classList.toggle('invalid', !isEmailValid);
+        passwordInput.classList.toggle('invalid', !isPasswordValid);
+        
+        submitButton.disabled = !(isEmailValid && isPasswordValid);
+        
+        return isEmailValid && isPasswordValid;
+    }
+
+    emailInput.addEventListener('input', validateForm);
+    passwordInput.addEventListener('input', validateForm);
+
+    form.addEventListener('submit', function(event) {
+        if (!validateForm()) {
+            event.preventDefault();
+        }
+    });
+
+    validateForm();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    setupFormValidation('loginForm');
+});
