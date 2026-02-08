@@ -385,4 +385,29 @@ function validateEmail(email) {
     return emailRegex.test(email);
 }
 
-module.exports = { sanitizeInput, validateEmail };
+module.exports = { sanitizeInput, validateEmail };function validateUsername(username) {
+    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+    return usernameRegex.test(username);
+}
+
+function validatePassword(password) {
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,}$/;
+    return passwordRegex.test(password);
+}
+
+function validateUserInput(username, password) {
+    const isUsernameValid = validateUsername(username);
+    const isPasswordValid = validatePassword(password);
+    
+    if (!isUsernameValid && !isPasswordValid) {
+        return 'Invalid username and password';
+    } else if (!isUsernameValid) {
+        return 'Invalid username';
+    } else if (!isPasswordValid) {
+        return 'Invalid password';
+    } else {
+        return 'Valid input';
+    }
+}
+
+export { validateUserInput, validateUsername, validatePassword };
