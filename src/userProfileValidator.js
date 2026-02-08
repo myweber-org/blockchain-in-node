@@ -71,4 +71,47 @@ function validateProfile(profileData) {
     };
 }
 
-export { validateProfile, validateEmail, validateAge };
+export { validateProfile, validateEmail, validateAge };function validateEmail(email) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+function validatePhone(phone) {
+  const phoneRegex = /^\+?[\d\s\-\(\)]{10,}$/;
+  return phoneRegex.test(phone);
+}
+
+function validateUsername(username) {
+  if (username.length < 3 || username.length > 20) {
+    return false;
+  }
+  const usernameRegex = /^[a-zA-Z0-9_]+$/;
+  return usernameRegex.test(username);
+}
+
+function validateProfileData(userData) {
+  const errors = [];
+
+  if (!validateEmail(userData.email)) {
+    errors.push('Invalid email format');
+  }
+
+  if (!validatePhone(userData.phone)) {
+    errors.push('Phone number must be at least 10 digits');
+  }
+
+  if (!validateUsername(userData.username)) {
+    errors.push('Username must be 3-20 characters and contain only letters, numbers, and underscores');
+  }
+
+  if (userData.age && (userData.age < 13 || userData.age > 120)) {
+    errors.push('Age must be between 13 and 120');
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors: errors
+  };
+}
+
+export { validateProfileData, validateEmail, validatePhone, validateUsername };
