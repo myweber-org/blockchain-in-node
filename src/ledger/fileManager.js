@@ -198,4 +198,53 @@ class FileManager {
   }
 }
 
+module.exports = FileManager;const fs = require('fs');
+const path = require('path');
+
+class FileManager {
+    static readJSON(filePath) {
+        try {
+            const absolutePath = path.resolve(filePath);
+            const data = fs.readFileSync(absolutePath, 'utf8');
+            return JSON.parse(data);
+        } catch (error) {
+            if (error.code === 'ENOENT') {
+                console.error(`File not found: ${filePath}`);
+            } else if (error instanceof SyntaxError) {
+                console.error(`Invalid JSON in file: ${filePath}`);
+            } else {
+                console.error(`Error reading file ${filePath}:`, error.message);
+            }
+            return null;
+        }
+    }
+
+    static writeJSON(filePath, data) {
+        try {
+            const absolutePath = path.resolve(filePath);
+            const dir = path.dirname(absolutePath);
+            
+            if (!fs.existsSync(dir)) {
+                fs.mkdirSync(dir, { recursive: true });
+            }
+            
+            const jsonString = JSON.stringify(data, null, 2);
+            fs.writeFileSync(absolutePath, jsonString, 'utf8');
+            return true;
+        } catch (error) {
+            console.error(`Error writing to file ${filePath}:`, error.message);
+            return false;
+        }
+    }
+
+    static fileExists(filePath) {
+        try {
+            return fs.existsSync(path.resolve(filePath));
+        } catch (error) {
+            console.error(`Error checking file existence:`, error.message);
+            return false;
+        }
+    }
+}
+
 module.exports = FileManager;
