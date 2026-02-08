@@ -9,4 +9,13 @@ function saveJSONToFile(data, filename) {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+}function saveTextAsFile(content, filename) {
+    const blob = new Blob([content], { type: 'text/plain' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
 }
