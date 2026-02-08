@@ -368,4 +368,21 @@ export { validateUsername, validateEmail, validateUserInput };function validateU
         isValid: true,
         message: "Input validation successful."
     };
+}function sanitizeInput(input) {
+    if (typeof input !== 'string') {
+        throw new TypeError('Input must be a string');
+    }
+    
+    return input
+        .trim()
+        .replace(/[<>]/g, '')
+        .replace(/javascript:/gi, '')
+        .substring(0, 255);
 }
+
+function validateEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+module.exports = { sanitizeInput, validateEmail };
