@@ -260,4 +260,98 @@ UserPreferences.init();const UserPreferencesManager = (() => {
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = UserPreferencesManager;
-}
+}const UserPreferences = {
+  preferences: {},
+
+  init() {
+    this.loadPreferences();
+    this.setupListeners();
+  },
+
+  loadPreferences() {
+    const stored = localStorage.getItem('userPreferences');
+    if (stored) {
+      try {
+        this.preferences = JSON.parse(stored);
+      } catch (e) {
+        console.warn('Failed to parse stored preferences:', e);
+        this.preferences = this.getDefaultPreferences();
+      }
+    } else {
+      this.preferences = this.getDefaultPreferences();
+    }
+  },
+
+  getDefaultPreferences() {
+    return {
+      theme: 'light',
+      fontSize: 'medium',
+      notifications: true,
+      language: 'en',
+      autoSave: true,
+      sidebarCollapsed: false
+    };
+  },
+
+  savePreferences() {
+    try {
+      localStorage.setItem('userPreferences', JSON.stringify(this.preferences));
+      this.dispatchEvent('preferencesUpdated', this.preferences);
+      return true;
+    } catch (e) {
+      console.error('Failed to save preferences:', e);
+      return false;
+    }
+  },
+
+  getPreference(key) {
+    return this.preferences[key] !== undefined ? this.preferences[key] : null;
+  },
+
+  setPreference(key, value) {
+    if (key in this.preferences) {
+      this.preferences[key] = value;
+      return this.savePreferences();
+    }
+    return false;
+  },
+
+  setMultiplePreferences(updates) {
+    let changed = false;
+    for (const [key, value] of Object.entries(updates)) {
+      if (key in this.preferences && this.preferences[key] !== value) {
+        this.preferences[key] = value;
+        changed = true;
+      }
+    }
+    if (changed) {
+      return this.savePreferences();
+    }
+    return true;
+  },
+
+  resetToDefaults() {
+    this.preferences = this.getDefaultPreferences();
+    return this.savePreferences();
+  },
+
+  getAllPreferences() {
+    return { ...this.preferences };
+  },
+
+  setupListeners() {
+    window.addEventListener('storage', (event) => {
+      if (event.key === 'userPreferences') {
+        this.loadPreferences();
+        this.dispatchEvent('preferencesChangedExternally', this.preferences);
+      }
+    });
+  },
+
+  dispatchEvent(eventName, detail) {
+    const event = new CustomEvent(eventName, { detail });
+    window.dispatchEvent(event);
+  }
+};
+
+UserPreferences.init();
