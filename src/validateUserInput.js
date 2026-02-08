@@ -321,4 +321,29 @@ function validateUserInput(username, email) {
     };
 }
 
-export { validateUsername, validateEmail, validateUserInput };
+export { validateUsername, validateEmail, validateUserInput };function validateUserInput(username, password) {
+    const errors = [];
+
+    if (typeof username !== 'string' || username.trim().length === 0) {
+        errors.push('Username must be a non-empty string');
+    }
+
+    if (typeof password !== 'string' || password.length < 8) {
+        errors.push('Password must be at least 8 characters long');
+    }
+
+    const usernameRegex = /^[a-zA-Z0-9_]+$/;
+    if (username && !usernameRegex.test(username)) {
+        errors.push('Username can only contain letters, numbers, and underscores');
+    }
+
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/;
+    if (password && !passwordRegex.test(password)) {
+        errors.push('Password must contain at least one uppercase letter, one lowercase letter, and one number');
+    }
+
+    return {
+        isValid: errors.length === 0,
+        errors: errors
+    };
+}
