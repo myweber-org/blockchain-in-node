@@ -284,4 +284,67 @@ module.exports = FileManager;class FileManager {
     }
 }
 
-export default FileManager;
+export default FileManager;const fs = require('fs');
+const path = require('path');
+
+class FileManager {
+    constructor(basePath = process.cwd()) {
+        this.basePath = basePath;
+    }
+
+    readJSON(filePath) {
+        try {
+            const fullPath = path.join(this.basePath, filePath);
+            const data = fs.readFileSync(fullPath, 'utf8');
+            return JSON.parse(data);
+        } catch (error) {
+            if (error.code === 'ENOENT') {
+                console.error(`File not found: ${filePath}`);
+            } else if (error instanceof SyntaxError) {
+                console.error(`Invalid JSON in file: ${filePath}`);
+            } else {
+                console.error(`Error reading file ${filePath}:`, error.message);
+            }
+            return null;
+        }
+    }
+
+    writeJSON(filePath, data) {
+        try {
+            const fullPath = path.join(this.basePath, filePath);
+            const dir = path.dirname(fullPath);
+            
+            if (!fs.existsSync(dir)) {
+                fs.mkdirSync(dir, { recursive: true });
+            }
+
+            const jsonString = JSON.stringify(data, null, 2);
+            fs.writeFileSync(fullPath, jsonString, 'utf8');
+            return true;
+        } catch (error) {
+            console.error(`Error writing file ${filePath}:`, error.message);
+            return false;
+        }
+    }
+
+    fileExists(filePath) {
+        const fullPath = path.join(this.basePath, filePath);
+        return fs.existsSync(fullPath);
+    }
+
+    deleteFile(filePath) {
+        try {
+            const fullPath = path.join(this.basePath, filePath);
+            if (fs.existsSync(fullPath)) {
+                fs.unlinkSync(fullPath);
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error(`Error deleting file ${filePath}:`, error.message);
+            return false;
+        }
+    }
+}
+
+module.exports = FileManager;
