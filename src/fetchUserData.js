@@ -118,4 +118,11 @@ function displayUserData(user) {
 }
 
 // Example usage
-fetchUserData(1);
+fetchUserData(1);async function fetchUserData(userId) {
+  const response = await fetch(`https://api.example.com/users/${userId}`);
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  const data = await response.json();
+  return data;
+}
