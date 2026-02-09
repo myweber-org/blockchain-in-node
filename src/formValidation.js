@@ -115,4 +115,29 @@ export { validateEmail, validatePassword, validateForm };function validateForm()
     }
     
     return true;
+}function validateForm() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const passwordPattern = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+    
+    let isValid = true;
+    let errorMessage = '';
+    
+    if (!emailPattern.test(email)) {
+        errorMessage += 'Please enter a valid email address.\n';
+        isValid = false;
+    }
+    
+    if (!passwordPattern.test(password)) {
+        errorMessage += 'Password must be at least 8 characters long and contain both letters and numbers.\n';
+        isValid = false;
+    }
+    
+    if (!isValid) {
+        alert(errorMessage);
+        return false;
+    }
+    
+    return true;
 }
