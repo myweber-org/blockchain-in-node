@@ -190,4 +190,108 @@ export default UserPreferencesManager;const UserPreferencesManager = (() => {
     clear: clearAllPreferences,
     getAll: getAllPreferences
   };
+})();const userPreferencesManager = (() => {
+  const STORAGE_KEY = 'app_user_preferences';
+  
+  const defaultPreferences = {
+    theme: 'light',
+    language: 'en',
+    notifications: true,
+    fontSize: 16,
+    autoSave: false,
+    lastUpdated: null
+  };
+
+  const validatePreference = (key, value) => {
+    const validators = {
+      theme: (val) => ['light', 'dark', 'auto'].includes(val),
+      language: (val) => /^[a-z]{2}$/.test(val),
+      notifications: (val) => typeof val === 'boolean',
+      fontSize: (val) => Number.isInteger(val) && val >= 12 && val <= 24,
+      autoSave: (val) => typeof val === 'boolean',
+      lastUpdated: (val) => val === null || val instanceof Date
+    };
+
+    return validators[key] ? validators[key](value) : false;
+  };
+
+  const loadPreferences = () => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (!stored) return { ...defaultPreferences };
+
+      const parsed = JSON.parse(stored);
+      const preferences = { ...defaultPreferences };
+
+      Object.keys(parsed).forEach(key => {
+        if (validatePreference(key, parsed[key])) {
+          preferences[key] = parsed[key];
+        }
+      });
+
+      return preferences;
+    } catch (error) {
+      console.error('Failed to load preferences:', error);
+      return { ...defaultPreferences };
+    }
+  };
+
+  const savePreferences = (preferences) => {
+    try {
+      const validPreferences = {};
+      
+      Object.keys(preferences).forEach(key => {
+        if (validatePreference(key, preferences[key])) {
+          validPreferences[key] = preferences[key];
+        }
+      });
+
+      validPreferences.lastUpdated = new Date().toISOString();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(validPreferences));
+      return true;
+    } catch (error) {
+      console.error('Failed to save preferences:', error);
+      return false;
+    }
+  };
+
+  const updatePreference = (key, value) => {
+    if (!validatePreference(key, value)) {
+      throw new Error(`Invalid preference: ${key}=${value}`);
+    }
+
+    const current = loadPreferences();
+    current[key] = value;
+    return savePreferences(current);
+  };
+
+  const resetToDefaults = () => {
+    return savePreferences(defaultPreferences);
+  };
+
+  const exportPreferences = () => {
+    const prefs = loadPreferences();
+    return JSON.stringify(prefs, null, 2);
+  };
+
+  const importPreferences = (jsonString) => {
+    try {
+      const imported = JSON.parse(jsonString);
+      return savePreferences(imported);
+    } catch (error) {
+      console.error('Failed to import preferences:', error);
+      return false;
+    }
+  };
+
+  return {
+    get: loadPreferences,
+    set: savePreferences,
+    update: updatePreference,
+    reset: resetToDefaults,
+    export: exportPreferences,
+    import: importPreferences,
+    validate: validatePreference,
+    defaults: { ...defaultPreferences }
+  };
 })();
