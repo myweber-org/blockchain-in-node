@@ -826,4 +826,61 @@ function createFileUploader(elementId, options = {}) {
     };
 }
 
-export { validateFile, uploadFile, createFileUploader };
+export { validateFile, uploadFile, createFileUploader };const fileUploader = {
+  maxSize: 10 * 1024 * 1024,
+  allowedTypes: ['image/jpeg', 'image/png', 'application/pdf'],
+  
+  validateFile(file) {
+    if (file.size > this.maxSize) {
+      throw new Error('File size exceeds maximum limit');
+    }
+    
+    if (!this.allowedTypes.includes(file.type)) {
+      throw new Error('File type not allowed');
+    }
+    
+    return true;
+  },
+  
+  uploadFile(file, url) {
+    return new Promise((resolve, reject) => {
+      try {
+        this.validateFile(file);
+        
+        const xhr = new XMLHttpRequest();
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        xhr.upload.addEventListener('progress', (event) => {
+          if (event.lengthComputable) {
+            const percentComplete = (event.loaded / event.total) * 100;
+            this.onProgress(percentComplete);
+          }
+        });
+        
+        xhr.addEventListener('load', () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve(JSON.parse(xhr.responseText));
+          } else {
+            reject(new Error(`Upload failed: ${xhr.statusText}`));
+          }
+        });
+        
+        xhr.addEventListener('error', () => {
+          reject(new Error('Network error occurred'));
+        });
+        
+        xhr.open('POST', url);
+        xhr.send(formData);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
+  
+  onProgress(percent) {
+    console.log(`Upload progress: ${percent.toFixed(2)}%`);
+  }
+};
+
+export default fileUploader;
