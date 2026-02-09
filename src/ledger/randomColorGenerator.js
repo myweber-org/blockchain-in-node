@@ -131,4 +131,31 @@ function generateRandomHSLColor() {
     return `hsl(${h}, ${s}%, ${l}%)`;
 }
 
-export { generateRandomColor, generateRandomRGBColor, generateRandomHSLColor };
+export { generateRandomColor, generateRandomRGBColor, generateRandomHSLColor };function generateRandomColor(format = 'hex') {
+    const randomValue = () => Math.floor(Math.random() * 256);
+    
+    if (format.toLowerCase() === 'rgb') {
+        return `rgb(${randomValue()}, ${randomValue()}, ${randomValue()})`;
+    }
+    
+    const componentToHex = (c) => {
+        const hex = c.toString(16);
+        return hex.length === 1 ? '0' + hex : hex;
+    };
+    
+    const r = randomValue();
+    const g = randomValue();
+    const b = randomValue();
+    
+    return `#${componentToHex(r)}${componentToHex(g)}${componentToHex(b)}`;
+}
+
+function generateRandomColors(count, format = 'hex') {
+    const colors = [];
+    for (let i = 0; i < count; i++) {
+        colors.push(generateRandomColor(format));
+    }
+    return colors;
+}
+
+export { generateRandomColor, generateRandomColors };
