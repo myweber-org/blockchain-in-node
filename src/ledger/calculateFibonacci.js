@@ -2,37 +2,26 @@ function calculateFibonacci(n) {
     if (n <= 0) return [];
     if (n === 1) return [0];
     
-    let fibSequence = [0, 1];
-    
-    while (fibSequence[fibSequence.length - 1] + fibSequence[fibSequence.length - 2] <= n) {
-        fibSequence.push(fibSequence[fibSequence.length - 1] + fibSequence[fibSequence.length - 2]);
-    }
-    
-    return fibSequence;
-}function calculateFibonacci(n) {
-    if (n <= 0) return [];
-    if (n === 1) return [0];
-    
-    const fib = [0, 1];
-    for (let i = 2; i < n; i++) {
-        fib.push(fib[i - 1] + fib[i - 2]);
-    }
-    return fib;
-}function calculateFibonacci(n) {
-    if (n <= 0) return [];
-    if (n === 1) return [0];
-    if (n === 2) return [0, 1];
-
     const sequence = [0, 1];
     for (let i = 2; i < n; i++) {
-        sequence.push(sequence[i - 1] + sequence[i - 2]);
+        const next = sequence[i - 1] + sequence[i - 2];
+        sequence.push(next);
     }
     return sequence;
 }
 
-function printFibonacci(n) {
+function displayFibonacci() {
+    const input = document.getElementById('fibInput');
+    const result = document.getElementById('fibResult');
+    
+    if (!input || !result) return;
+    
+    const n = parseInt(input.value);
+    if (isNaN(n) || n < 1) {
+        result.textContent = 'Please enter a positive integer';
+        return;
+    }
+    
     const fibSequence = calculateFibonacci(n);
-    console.log(`Fibonacci sequence up to ${n} terms:`, fibSequence);
+    result.textContent = fibSequence.join(', ');
 }
-
-printFibonacci(10);
