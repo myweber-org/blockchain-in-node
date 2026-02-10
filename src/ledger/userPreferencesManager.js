@@ -63,4 +63,77 @@ const UserPreferencesManager = (() => {
     };
 })();
 
-export default UserPreferencesManager;
+export default UserPreferencesManager;const userPreferences = {
+  theme: 'light',
+  language: 'en',
+  notifications: true,
+  fontSize: 16
+};
+
+class PreferencesManager {
+  constructor() {
+    this.storageKey = 'app_preferences';
+    this.loadPreferences();
+  }
+
+  loadPreferences() {
+    const stored = localStorage.getItem(this.storageKey);
+    if (stored) {
+      try {
+        Object.assign(userPreferences, JSON.parse(stored));
+      } catch (error) {
+        console.error('Failed to load preferences:', error);
+      }
+    }
+  }
+
+  savePreferences() {
+    try {
+      localStorage.setItem(this.storageKey, JSON.stringify(userPreferences));
+    } catch (error) {
+      console.error('Failed to save preferences:', error);
+    }
+  }
+
+  updatePreference(key, value) {
+    if (key in userPreferences) {
+      userPreferences[key] = value;
+      this.savePreferences();
+      return true;
+    }
+    return false;
+  }
+
+  getPreference(key) {
+    return userPreferences[key];
+  }
+
+  resetPreferences() {
+    const defaults = {
+      theme: 'light',
+      language: 'en',
+      notifications: true,
+      fontSize: 16
+    };
+    Object.assign(userPreferences, defaults);
+    this.savePreferences();
+  }
+
+  exportPreferences() {
+    return JSON.stringify(userPreferences, null, 2);
+  }
+
+  importPreferences(jsonString) {
+    try {
+      const imported = JSON.parse(jsonString);
+      Object.assign(userPreferences, imported);
+      this.savePreferences();
+      return true;
+    } catch (error) {
+      console.error('Invalid preferences format:', error);
+      return false;
+    }
+  }
+}
+
+const preferencesManager = new PreferencesManager();
