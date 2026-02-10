@@ -81,3 +81,25 @@ function parseCurrency(formattedString, locale = 'en-US') {
 }
 
 export { formatCurrency, parseCurrency };
+function formatCurrency(value, locale = 'en-US', currency = 'USD') {
+  if (typeof value !== 'number' || isNaN(value)) {
+    throw new TypeError('Value must be a valid number');
+  }
+  
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency: currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(value);
+}
+
+function parseCurrency(formattedString, locale = 'en-US') {
+  const example = formatCurrency(0, locale);
+  const decimalSeparator = example.replace(/0/g, '').replace(/[^\p{Sc}\s]/gu, '');
+  const cleanString = formattedString.replace(new RegExp(`[^\\d${decimalSeparator}]`, 'g'), '');
+  
+  return parseFloat(cleanString.replace(decimalSeparator, '.'));
+}
+
+export { formatCurrency, parseCurrency };
