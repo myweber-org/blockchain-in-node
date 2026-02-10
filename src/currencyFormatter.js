@@ -1,30 +1,23 @@
-const currencyFormatter = (value, currency = 'USD', locale = 'en-US') => {
-  if (typeof value !== 'number' || isNaN(value)) {
-    throw new Error('Invalid input: value must be a valid number');
+const currencyFormatter = (amount, locale = 'en-US', currency = 'USD') => {
+  if (typeof amount !== 'number' || isNaN(amount)) {
+    throw new Error('Invalid amount provided');
   }
-
+  
   const formatter = new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: currency,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   });
-
-  return formatter.format(value);
+  
+  return formatter.format(amount);
 };
 
-const formatCurrencyWithSymbol = (value, currencyCode) => {
-  const symbols = {
-    'USD': '$',
-    'EUR': '€',
-    'GBP': '£',
-    'JPY': '¥'
-  };
-
-  const symbol = symbols[currencyCode] || currencyCode;
-  const formattedValue = Math.abs(value).toFixed(2);
-  
-  return value < 0 ? `-${symbol}${formattedValue}` : `${symbol}${formattedValue}`;
+const formatCurrencyWithSymbol = (amount, currencySymbol = '$', decimalPlaces = 2) => {
+  const fixedAmount = amount.toFixed(decimalPlaces);
+  const parts = fixedAmount.split('.');
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return `${currencySymbol}${parts.join('.')}`;
 };
 
 export { currencyFormatter, formatCurrencyWithSymbol };
