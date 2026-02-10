@@ -219,4 +219,96 @@ function validatePassword(password, minLength = 8) {
     };
 }
 
-export { validatePassword, calculatePasswordEntropy, evaluatePasswordStrength };
+export { validatePassword, calculatePasswordEntropy, evaluatePasswordStrength };function checkPasswordStrength(password, options = {}) {
+    const defaults = {
+        minLength: 8,
+        requireUppercase: true,
+        requireLowercase: true,
+        requireNumbers: true,
+        requireSpecialChars: true,
+        specialChars: "!@#$%^&*()_+-=[]{}|;:,.<>?"
+    };
+    
+    const config = { ...defaults, ...options };
+    const errors = [];
+    const suggestions = [];
+    
+    if (password.length < config.minLength) {
+        errors.push(`Password must be at least ${config.minLength} characters long`);
+    }
+    
+    if (config.requireUppercase && !/[A-Z]/.test(password)) {
+        errors.push("Password must contain at least one uppercase letter");
+    }
+    
+    if (config.requireLowercase && !/[a-z]/.test(password)) {
+        errors.push("Password must contain at least one lowercase letter");
+    }
+    
+    if (config.requireNumbers && !/\d/.test(password)) {
+        errors.push("Password must contain at least one number");
+    }
+    
+    if (config.requireSpecialChars) {
+        const specialCharRegex = new RegExp(`[${config.specialChars.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}]`);
+        if (!specialCharRegex.test(password)) {
+            errors.push(`Password must contain at least one special character (${config.specialChars})`);
+        }
+    }
+    
+    if (errors.length === 0) {
+        const strengthScore = calculateStrengthScore(password);
+        const strengthLevel = getStrengthLevel(strengthScore);
+        
+        if (strengthScore < 70) {
+            suggestions.push("Consider adding more character variety");
+            suggestions.push("Avoid common words or patterns");
+        }
+        
+        return {
+            valid: true,
+            strength: strengthLevel,
+            score: strengthScore,
+            suggestions: suggestions
+        };
+    }
+    
+    return {
+        valid: false,
+        errors: errors,
+        suggestions: ["Try mixing different character types", "Increase password length"]
+    };
+}
+
+function calculateStrengthScore(password) {
+    let score = 0;
+    const length = password.length;
+    
+    score += Math.min(length * 4, 40);
+    
+    const charTypes = [
+        /[a-z]/.test(password),
+        /[A-Z]/.test(password),
+        /\d/.test(password),
+        /[^a-zA-Z0-9]/.test(password)
+    ].filter(Boolean).length;
+    
+    score += (charTypes - 1) * 15;
+    
+    const uniqueChars = new Set(password).size;
+    score += (uniqueChars / length) * 20;
+    
+    const commonPatterns = [/123/, /abc/, /qwerty/, /password/, /admin/];
+    if (commonPatterns.some(pattern => pattern.test(password.toLowerCase()))) {
+        score -= 30;
+    }
+    
+    return Math.min(Math.max(score, 0), 100);
+}
+
+function getStrengthLevel(score) {
+    if (score >= 80) return "strong";
+    if (score >= 60) return "good";
+    if (score >= 40) return "fair";
+    return "weak";
+}
