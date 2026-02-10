@@ -103,4 +103,45 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     return { valid: true, message: "Registration data is valid" };
+}function validateRegistrationForm(email, password) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/;
+    
+    if (!emailRegex.test(email)) {
+        return { isValid: false, message: "Invalid email format" };
+    }
+    
+    if (!passwordRegex.test(password)) {
+        return { 
+            isValid: false, 
+            message: "Password must be at least 8 characters with letters and numbers" 
+        };
+    }
+    
+    return { isValid: true, message: "Registration data is valid" };
 }
+
+function handleRegistrationSubmit(event) {
+    event.preventDefault();
+    
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    
+    const validationResult = validateRegistrationForm(email, password);
+    
+    if (validationResult.isValid) {
+        console.log("Registration successful for:", email);
+        // Proceed with registration logic
+    } else {
+        console.error("Registration failed:", validationResult.message);
+        // Display error to user
+    }
+}
+
+// Example usage when form is submitted
+document.addEventListener('DOMContentLoaded', function() {
+    const registrationForm = document.getElementById('registrationForm');
+    if (registrationForm) {
+        registrationForm.addEventListener('submit', handleRegistrationSubmit);
+    }
+});
