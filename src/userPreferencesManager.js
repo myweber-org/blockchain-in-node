@@ -663,4 +663,66 @@ export default userPreferencesManager;const UserPreferencesManager = (function()
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = UserPreferencesManager;
+}const userPreferences = {
+  theme: 'light',
+  language: 'en',
+  notifications: true,
+  fontSize: 16
+};
+
+class PreferencesManager {
+  constructor() {
+    this.storageKey = 'user_preferences';
+    this.loadPreferences();
+  }
+
+  loadPreferences() {
+    const stored = localStorage.getItem(this.storageKey);
+    if (stored) {
+      try {
+        Object.assign(userPreferences, JSON.parse(stored));
+      } catch (error) {
+        console.error('Failed to load preferences:', error);
+      }
+    }
+  }
+
+  savePreferences() {
+    try {
+      localStorage.setItem(this.storageKey, JSON.stringify(userPreferences));
+      return true;
+    } catch (error) {
+      console.error('Failed to save preferences:', error);
+      return false;
+    }
+  }
+
+  updatePreference(key, value) {
+    if (userPreferences.hasOwnProperty(key)) {
+      userPreferences[key] = value;
+      return this.savePreferences();
+    }
+    return false;
+  }
+
+  getPreference(key) {
+    return userPreferences[key];
+  }
+
+  resetToDefaults() {
+    const defaults = {
+      theme: 'light',
+      language: 'en',
+      notifications: true,
+      fontSize: 16
+    };
+    Object.assign(userPreferences, defaults);
+    return this.savePreferences();
+  }
+
+  getAllPreferences() {
+    return { ...userPreferences };
+  }
 }
+
+export default PreferencesManager;
