@@ -1,321 +1,48 @@
-function validateFile(file, maxSize) {
-  const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
-  const fileSize = file.size / 1024 / 1024;
-
-  if (!allowedTypes.includes(file.type)) {
-    throw new Error('Invalid file type. Only JPEG, PNG, and PDF are allowed.');
-  }
-
-  if (fileSize > maxSize) {
-    throw new Error(`File size exceeds ${maxSize}MB limit.`);
-  }
-
-  return {
-    name: file.name,
-    type: file.type,
-    size: fileSize.toFixed(2) + 'MB',
-    lastModified: new Date(file.lastModified).toISOString()
-  };
-}
-
-function handleFileUpload(event, maxSizeMB = 5) {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  try {
-    const fileInfo = validateFile(file, maxSizeMB);
-    console.log('File validated successfully:', fileInfo);
-    return fileInfo;
-  } catch (error) {
-    console.error('Upload failed:', error.message);
-    event.target.value = '';
-    alert(error.message);
-    return null;
-  }
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-  const uploadInput = document.getElementById('fileUpload');
-  if (uploadInput) {
-    uploadInput.addEventListener('change', function(e) {
-      handleFileUpload(e, 10);
-    });
-  }
-});const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'application/pdf'];
-
-class FileUploadHandler {
-  constructor(uploadUrl, options = {}) {
-    this.uploadUrl = uploadUrl;
-    this.maxSize = options.maxSize || MAX_FILE_SIZE;
-    this.allowedTypes = options.allowedTypes || ALLOWED_TYPES;
-    this.onProgress = options.onProgress || null;
-    this.onComplete = options.onComplete || null;
-    this.onError = options.onError || null;
-  }
-
-  validateFile(file) {
-    if (file.size > this.maxSize) {
-      throw new Error(`File size exceeds ${this.maxSize / 1024 / 1024}MB limit`);
-    }
-
-    if (!this.allowedTypes.includes(file.type)) {
-      throw new Error(`File type ${file.type} not allowed`);
-    }
-
-    return true;
-  }
-
-  async upload(file) {
-    try {
-      this.validateFile(file);
-      
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('timestamp', Date.now());
-
-      const xhr = new XMLHttpRequest();
-      
-      if (this.onProgress) {
-        xhr.upload.addEventListener('progress', (event) => {
-          if (event.lengthComputable) {
-            const percentComplete = (event.loaded / event.total) * 100;
-            this.onProgress(percentComplete);
-          }
-        });
-      }
-
-      const uploadPromise = new Promise((resolve, reject) => {
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            const response = JSON.parse(xhr.responseText);
-            if (this.onComplete) this.onComplete(response);
-            resolve(response);
-          } else {
-            const error = new Error(`Upload failed with status ${xhr.status}`);
-            if (this.onError) this.onError(error);
-            reject(error);
-          }
-        };
-
-        xhr.onerror = () => {
-          const error = new Error('Network error during upload');
-          if (this.onError) this.onError(error);
-          reject(error);
-        };
-      });
-
-      xhr.open('POST', this.uploadUrl, true);
-      xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-      xhr.send(formData);
-
-      return await uploadPromise;
-    } catch (error) {
-      if (this.onError) this.onError(error);
-      throw error;
-    }
-  }
-
-  async uploadMultiple(files) {
-    const uploadPromises = Array.from(files).map(file => this.upload(file));
-    return Promise.allSettled(uploadPromises);
-  }
-}
-
-export default FileUploadHandler;function validateFile(file, maxSize) {
-    const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
-    
-    if (!allowedTypes.includes(file.type)) {
-        throw new Error('Invalid file type. Only JPEG, PNG, and PDF files are allowed.');
-    }
-    
-    if (file.size > maxSize) {
-        throw new Error(`File size exceeds the limit of ${maxSize / 1024 / 1024}MB.`);
-    }
-    
-    return {
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        lastModified: file.lastModified
-    };
-}
-
-function handleFileUpload(event, maxSize = 5 * 1024 * 1024) {
-    const file = event.target.files[0];
-    
-    if (!file) {
-        console.log('No file selected.');
-        return;
-    }
-    
-    try {
-        const validatedFile = validateFile(file, maxSize);
-        console.log('File validated successfully:', validatedFile);
-        
-        // Simulate upload process
-        uploadFile(validatedFile);
-    } catch (error) {
-        console.error('Validation failed:', error.message);
-        alert(error.message);
-        event.target.value = '';
-    }
-}
-
-function uploadFile(fileData) {
-    // Simulate API call
-    console.log(`Uploading ${fileData.name}...`);
-    
-    setTimeout(() => {
-        console.log(`File ${fileData.name} uploaded successfully.`);
-    }, 2000);
-}
-
-// Example usage
-document.getElementById('fileInput').addEventListener('change', (event) => {
-    handleFileUpload(event, 10 * 1024 * 1024);
-});const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'application/pdf'];
-
 function validateFile(file) {
-    if (!ALLOWED_TYPES.includes(file.type)) {
+    const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+    const maxSize = 5 * 1024 * 1024;
+
+    if (!allowedTypes.includes(file.type)) {
         throw new Error('Invalid file type. Only JPEG, PNG, and PDF files are allowed.');
     }
-    
-    if (file.size > MAX_FILE_SIZE) {
-        throw new Error('File size exceeds the 5MB limit.');
+
+    if (file.size > maxSize) {
+        throw new Error('File size exceeds 5MB limit.');
     }
-    
+
     return true;
 }
 
-function handleFileUpload(event) {
-    const files = event.target.files;
-    const validFiles = [];
-    const errors = [];
+function trackUploadProgress(file, onProgress) {
+    let uploaded = 0;
+    const total = file.size;
+    const chunkSize = 1024 * 1024;
 
-    Array.from(files).forEach(file => {
-        try {
-            if (validateFile(file)) {
-                validFiles.push(file);
-            }
-        } catch (error) {
-            errors.push(`${file.name}: ${error.message}`);
+    function uploadChunk() {
+        const chunk = file.slice(uploaded, uploaded + chunkSize);
+        uploaded += chunk.size;
+
+        const progress = Math.round((uploaded / total) * 100);
+        onProgress(progress);
+
+        if (uploaded < total) {
+            setTimeout(uploadChunk, 100);
         }
-    });
-
-    if (errors.length > 0) {
-        console.error('Upload errors:', errors);
-        alert(`Some files were rejected:\n${errors.join('\n')}`);
     }
 
-    if (validFiles.length > 0) {
-        console.log('Valid files ready for upload:', validFiles);
-        // Proceed with upload logic here
-        return validFiles;
-    }
-
-    return [];
+    uploadChunk();
 }
 
-// Example usage with event listener
-document.addEventListener('DOMContentLoaded', () => {
-    const fileInput = document.getElementById('fileInput');
-    if (fileInput) {
-        fileInput.addEventListener('change', handleFileUpload);
-    }
-});function validateFile(file, maxSize) {
-    const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
-    
-    if (!allowedTypes.includes(file.type)) {
-        throw new Error('Invalid file type. Only JPEG, PNG, and PDF files are allowed.');
-    }
-    
-    if (file.size > maxSize) {
-        throw new Error(`File size exceeds the limit of ${maxSize / 1024 / 1024}MB.`);
-    }
-    
-    return {
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        lastModified: file.lastModified
-    };
-}
-
-function handleFileUpload(event, maxSize = 5 * 1024 * 1024) {
-    const file = event.target.files[0];
-    
-    if (!file) {
-        console.log('No file selected.');
-        return;
-    }
-    
+function handleFileUpload(file) {
     try {
-        const validatedFile = validateFile(file, maxSize);
-        console.log('File validated successfully:', validatedFile);
+        validateFile(file);
         
-        // Simulate upload process
-        const uploadPromise = new Promise((resolve) => {
-            setTimeout(() => {
-                resolve({
-                    id: Date.now(),
-                    ...validatedFile,
-                    uploadDate: new Date().toISOString()
-                });
-            }, 1000);
+        trackUploadProgress(file, (progress) => {
+            console.log(`Upload progress: ${progress}%`);
         });
-        
-        uploadPromise.then(uploadedFile => {
-            console.log('File uploaded:', uploadedFile);
-        }).catch(error => {
-            console.error('Upload failed:', error);
-        });
-        
+
+        return Promise.resolve({ success: true, message: 'File upload completed' });
     } catch (error) {
-        console.error('Validation error:', error.message);
-        event.target.value = '';
+        return Promise.reject({ success: false, error: error.message });
     }
-}
-
-// Example usage
-document.addEventListener('DOMContentLoaded', function() {
-    const fileInput = document.getElementById('fileInput');
-    if (fileInput) {
-        fileInput.addEventListener('change', (event) => {
-            handleFileUpload(event);
-        });
-    }
-});function validateFileUpload(fileInput, maxSizeMB) {
-    const maxSizeBytes = maxSizeMB * 1024 * 1024;
-    const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
-    
-    if (!fileInput.files || fileInput.files.length === 0) {
-        return { valid: false, error: 'No file selected' };
-    }
-    
-    const file = fileInput.files[0];
-    
-    if (!allowedTypes.includes(file.type)) {
-        return { valid: false, error: 'Invalid file type. Allowed: JPEG, PNG, PDF' };
-    }
-    
-    if (file.size > maxSizeBytes) {
-        return { valid: false, error: `File size exceeds ${maxSizeMB}MB limit` };
-    }
-    
-    return { valid: true, file: file };
-}
-
-function handleFileUpload(event) {
-    const result = validateFileUpload(event.target, 5);
-    
-    if (!result.valid) {
-        alert(result.error);
-        event.target.value = '';
-        return;
-    }
-    
-    console.log('File validated:', result.file.name);
-    // Proceed with upload logic
 }
