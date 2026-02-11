@@ -35,4 +35,43 @@ function validateMultipleFiles(files) {
     };
 }
 
-export { validateFile, validateMultipleFiles };
+export { validateFile, validateMultipleFiles };function validateFileUpload(file, allowedTypes, maxSize) {
+    if (!file) {
+        throw new Error('No file provided');
+    }
+
+    if (!allowedTypes.includes(file.type)) {
+        throw new Error(`File type not allowed. Allowed types: ${allowedTypes.join(', ')}`);
+    }
+
+    if (file.size > maxSize) {
+        throw new Error(`File size exceeds limit of ${maxSize} bytes`);
+    }
+
+    return {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        isValid: true
+    };
+}
+
+function createFileUploadHandler(allowedTypes, maxSize) {
+    return function(event) {
+        const file = event.target.files[0];
+        try {
+            const validationResult = validateFileUpload(file, allowedTypes, maxSize);
+            console.log('File validation successful:', validationResult);
+            return validationResult;
+        } catch (error) {
+            console.error('File validation failed:', error.message);
+            event.target.value = '';
+            throw error;
+        }
+    };
+}
+
+const imageUploadHandler = createFileUploadHandler(
+    ['image/jpeg', 'image/png', 'image/gif'],
+    5 * 1024 * 1024
+);
