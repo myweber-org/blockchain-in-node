@@ -282,4 +282,25 @@ function uploadChunk(chunk, index, total) {
 
 function generateFileId() {
     return 'file_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+}function validateFileUpload(fileInput, maxSizeMB) {
+    const file = fileInput.files[0];
+    if (!file) {
+        console.error('No file selected');
+        return false;
+    }
+
+    const maxSizeBytes = maxSizeMB * 1024 * 1024;
+    if (file.size > maxSizeBytes) {
+        console.error(`File size exceeds ${maxSizeMB}MB limit`);
+        return false;
+    }
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+    if (!allowedTypes.includes(file.type)) {
+        console.error('Invalid file type. Allowed: JPEG, PNG, PDF');
+        return false;
+    }
+
+    console.log('File validation passed:', file.name);
+    return true;
 }
