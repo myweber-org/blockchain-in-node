@@ -72,4 +72,57 @@ export { validateUserRegistration, formatRegistrationResponse };function validat
     }
     
     return { valid: true, message: "Registration data is valid" };
+}const bcrypt = require('bcrypt');
+const validator = require('validator');
+
+class UserRegistration {
+    constructor() {
+        this.users = [];
+    }
+
+    async registerUser(email, password, username) {
+        if (!validator.isEmail(email)) {
+            throw new Error('Invalid email format');
+        }
+
+        if (password.length < 8) {
+            throw new Error('Password must be at least 8 characters');
+        }
+
+        if (this.users.find(user => user.email === email)) {
+            throw new Error('Email already registered');
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        
+        const newUser = {
+            id: Date.now().toString(),
+            email: email,
+            username: username,
+            password: hashedPassword,
+            createdAt: new Date().toISOString()
+        };
+
+        this.users.push(newUser);
+        return {
+            id: newUser.id,
+            email: newUser.email,
+            username: newUser.username,
+            createdAt: newUser.createdAt
+        };
+    }
+
+    async verifyPassword(email, password) {
+        const user = this.users.find(user => user.email === email);
+        if (!user) {
+            return false;
+        }
+        return await bcrypt.compare(password, user.password);
+    }
+
+    getUserByEmail(email) {
+        return this.users.find(user => user.email === email);
+    }
 }
+
+module.exports = UserRegistration;
