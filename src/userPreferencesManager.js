@@ -1309,4 +1309,56 @@ if (typeof module !== 'undefined' && module.exports) {
         setPreference,
         subscribe
     };
-})();
+})();const UserPreferences = {
+  preferences: {
+    theme: 'light',
+    language: 'en',
+    fontSize: 16,
+    notifications: true
+  },
+
+  init() {
+    const saved = localStorage.getItem('userPreferences');
+    if (saved) {
+      this.preferences = JSON.parse(saved);
+    }
+    this.applyPreferences();
+  },
+
+  save() {
+    localStorage.setItem('userPreferences', JSON.stringify(this.preferences));
+    this.applyPreferences();
+  },
+
+  update(key, value) {
+    if (this.preferences.hasOwnProperty(key)) {
+      this.preferences[key] = value;
+      this.save();
+      return true;
+    }
+    return false;
+  },
+
+  applyPreferences() {
+    document.documentElement.setAttribute('data-theme', this.preferences.theme);
+    document.documentElement.lang = this.preferences.language;
+    document.documentElement.style.fontSize = `${this.preferences.fontSize}px`;
+    
+    const event = new CustomEvent('preferencesChanged', {
+      detail: { preferences: this.preferences }
+    });
+    window.dispatchEvent(event);
+  },
+
+  reset() {
+    this.preferences = {
+      theme: 'light',
+      language: 'en',
+      fontSize: 16,
+      notifications: true
+    };
+    this.save();
+  }
+};
+
+UserPreferences.init();
