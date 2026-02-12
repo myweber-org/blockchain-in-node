@@ -1361,4 +1361,60 @@ if (typeof module !== 'undefined' && module.exports) {
   }
 };
 
-UserPreferences.init();
+UserPreferences.init();const userPreferences = {
+  theme: 'light',
+  language: 'en',
+  notifications: true,
+  fontSize: 16
+};
+
+const PREFERENCES_KEY = 'app_preferences';
+
+function loadPreferences() {
+  const saved = localStorage.getItem(PREFERENCES_KEY);
+  if (saved) {
+    try {
+      return JSON.parse(saved);
+    } catch (error) {
+      console.error('Failed to parse saved preferences:', error);
+      return userPreferences;
+    }
+  }
+  return userPreferences;
+}
+
+function savePreferences(preferences) {
+  try {
+    localStorage.setItem(PREFERENCES_KEY, JSON.stringify(preferences));
+    return true;
+  } catch (error) {
+    console.error('Failed to save preferences:', error);
+    return false;
+  }
+}
+
+function updatePreference(key, value) {
+  const current = loadPreferences();
+  if (current.hasOwnProperty(key)) {
+    current[key] = value;
+    return savePreferences(current);
+  }
+  return false;
+}
+
+function resetPreferences() {
+  return savePreferences(userPreferences);
+}
+
+function getPreference(key) {
+  const preferences = loadPreferences();
+  return preferences[key] || null;
+}
+
+export {
+  loadPreferences,
+  savePreferences,
+  updatePreference,
+  resetPreferences,
+  getPreference
+};
