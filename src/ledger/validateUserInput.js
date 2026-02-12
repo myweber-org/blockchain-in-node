@@ -364,4 +364,29 @@ module.exports = { validateUserInput, validateUsername, validateEmail };function
     return { valid: true, message: 'Input validation successful.' };
 }
 
-module.exports = validateUserInput;
+module.exports = validateUserInput;function validateUsername(username) {
+    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+    return usernameRegex.test(username);
+}
+
+function validatePassword(password) {
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/;
+    return passwordRegex.test(password);
+}
+
+function validateUserInput(username, password) {
+    const isUsernameValid = validateUsername(username);
+    const isPasswordValid = validatePassword(password);
+    
+    if (!isUsernameValid) {
+        throw new Error('Invalid username format');
+    }
+    
+    if (!isPasswordValid) {
+        throw new Error('Password must be at least 8 characters with uppercase, lowercase and number');
+    }
+    
+    return true;
+}
+
+module.exports = { validateUserInput, validateUsername, validatePassword };
