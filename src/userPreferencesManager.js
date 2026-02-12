@@ -1179,4 +1179,62 @@ if (typeof module !== 'undefined' && module.exports) {
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = UserPreferencesManager;
+}const userPreferencesManager = (function() {
+    const PREFERENCES_KEY = 'app_preferences';
+    
+    const defaultPreferences = {
+        theme: 'light',
+        language: 'en',
+        notifications: true,
+        fontSize: 16,
+        autoSave: false
+    };
+
+    function getPreferences() {
+        const stored = localStorage.getItem(PREFERENCES_KEY);
+        return stored ? JSON.parse(stored) : {...defaultPreferences};
+    }
+
+    function savePreferences(preferences) {
+        const current = getPreferences();
+        const updated = {...current, ...preferences};
+        localStorage.setItem(PREFERENCES_KEY, JSON.stringify(updated));
+        dispatchChangeEvent(updated);
+        return updated;
+    }
+
+    function resetPreferences() {
+        localStorage.removeItem(PREFERENCES_KEY);
+        dispatchChangeEvent(defaultPreferences);
+        return {...defaultPreferences};
+    }
+
+    function getPreference(key) {
+        const prefs = getPreferences();
+        return prefs[key] !== undefined ? prefs[key] : defaultPreferences[key];
+    }
+
+    function dispatchChangeEvent(preferences) {
+        window.dispatchEvent(new CustomEvent('preferencesChanged', {
+            detail: { preferences }
+        }));
+    }
+
+    function subscribe(callback) {
+        window.addEventListener('preferencesChanged', (event) => {
+            callback(event.detail.preferences);
+        });
+    }
+
+    return {
+        get: getPreference,
+        getAll: getPreferences,
+        set: savePreferences,
+        reset: resetPreferences,
+        subscribe: subscribe
+    };
+})();
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = userPreferencesManager;
 }
