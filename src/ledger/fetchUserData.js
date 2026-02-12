@@ -264,4 +264,55 @@ function clearUserCache(userId = null) {
     }
 }
 
-export { fetchUserData, clearUserCache };
+export { fetchUserData, clearUserCache };function fetchUserData(userId) {
+    const apiUrl = `https://jsonplaceholder.typicode.com/users/${userId}`;
+    
+    fetch(apiUrl)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('User Data:', data);
+            displayUserInfo(data);
+        })
+        .catch(error => {
+            console.error('Error fetching user data:', error);
+            displayErrorMessage(error.message);
+        });
+}
+
+function displayUserInfo(user) {
+    const container = document.getElementById('userInfoContainer') || createDisplayContainer();
+    
+    container.innerHTML = `
+        <h3>User Information</h3>
+        <p><strong>Name:</strong> ${user.name}</p>
+        <p><strong>Email:</strong> ${user.email}</p>
+        <p><strong>Phone:</strong> ${user.phone}</p>
+        <p><strong>Company:</strong> ${user.company.name}</p>
+        <p><strong>Website:</strong> <a href="https://${user.website}" target="_blank">${user.website}</a></p>
+    `;
+}
+
+function displayErrorMessage(message) {
+    const container = document.getElementById('userInfoContainer') || createDisplayContainer();
+    container.innerHTML = `<div class="error">Failed to load user data: ${message}</div>`;
+}
+
+function createDisplayContainer() {
+    const container = document.createElement('div');
+    container.id = 'userInfoContainer';
+    document.body.appendChild(container);
+    return container;
+}
+
+// Example usage
+document.addEventListener('DOMContentLoaded', () => {
+    const testButton = document.createElement('button');
+    testButton.textContent = 'Load User Data';
+    testButton.addEventListener('click', () => fetchUserData(1));
+    document.body.appendChild(testButton);
+});
