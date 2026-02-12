@@ -234,4 +234,38 @@ const userPrefs = new UserPreferencesManager();const userPreferencesManager = ((
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = userPreferencesManager;
-}
+}const UserPreferences = {
+    preferences: {},
+
+    init() {
+        const stored = localStorage.getItem('userPreferences');
+        if (stored) {
+            this.preferences = JSON.parse(stored);
+        }
+    },
+
+    setPreference(key, value) {
+        this.preferences[key] = value;
+        this.save();
+    },
+
+    getPreference(key) {
+        return this.preferences[key];
+    },
+
+    removePreference(key) {
+        delete this.preferences[key];
+        this.save();
+    },
+
+    save() {
+        localStorage.setItem('userPreferences', JSON.stringify(this.preferences));
+    },
+
+    clearAll() {
+        this.preferences = {};
+        localStorage.removeItem('userPreferences');
+    }
+};
+
+UserPreferences.init();
