@@ -441,4 +441,59 @@ function loadPreferences() {
     return validateUserPreferences({});
 }
 
+export { validateUserPreferences, savePreferences, loadPreferences };function validateUserPreferences(preferences) {
+    const defaults = {
+        theme: 'light',
+        notifications: true,
+        language: 'en',
+        timezone: 'UTC',
+        resultsPerPage: 25
+    };
+
+    const validated = { ...defaults, ...preferences };
+
+    if (!['light', 'dark', 'auto'].includes(validated.theme)) {
+        validated.theme = defaults.theme;
+    }
+
+    if (typeof validated.notifications !== 'boolean') {
+        validated.notifications = defaults.notifications;
+    }
+
+    if (!Number.isInteger(validated.resultsPerPage) || validated.resultsPerPage < 10 || validated.resultsPerPage > 100) {
+        validated.resultsPerPage = defaults.resultsPerPage;
+    }
+
+    const supportedLanguages = ['en', 'es', 'fr', 'de', 'ja'];
+    if (!supportedLanguages.includes(validated.language)) {
+        validated.language = defaults.language;
+    }
+
+    try {
+        Intl.DateTimeFormat(undefined, { timeZone: validated.timezone });
+    } catch (error) {
+        validated.timezone = defaults.timezone;
+    }
+
+    return validated;
+}
+
+function savePreferences(preferences) {
+    const validated = validateUserPreferences(preferences);
+    localStorage.setItem('userPreferences', JSON.stringify(validated));
+    return validated;
+}
+
+function loadPreferences() {
+    const stored = localStorage.getItem('userPreferences');
+    if (stored) {
+        try {
+            return validateUserPreferences(JSON.parse(stored));
+        } catch (error) {
+            return validateUserPreferences({});
+        }
+    }
+    return validateUserPreferences({});
+}
+
 export { validateUserPreferences, savePreferences, loadPreferences };
