@@ -49,4 +49,54 @@ const UserPreferencesManager = (() => {
     clear: clearAllPreferences,
     getAll: getAllPreferences
   };
+})();const UserPreferencesManager = (function() {
+    const STORAGE_KEY = 'user_preferences';
+    const DEFAULT_PREFERENCES = {
+        theme: 'light',
+        language: 'en',
+        fontSize: 'medium',
+        notifications: true
+    };
+
+    function getPreferences() {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        return stored ? JSON.parse(stored) : {...DEFAULT_PREFERENCES};
+    }
+
+    function updatePreferences(newPreferences) {
+        const current = getPreferences();
+        const updated = {...current, ...newPreferences};
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        dispatchPreferenceChangeEvent(updated);
+        return updated;
+    }
+
+    function resetPreferences() {
+        localStorage.removeItem(STORAGE_KEY);
+        dispatchPreferenceChangeEvent({...DEFAULT_PREFERENCES});
+        return {...DEFAULT_PREFERENCES};
+    }
+
+    function dispatchPreferenceChangeEvent(preferences) {
+        const event = new CustomEvent('preferencesChanged', {
+            detail: preferences
+        });
+        window.dispatchEvent(event);
+    }
+
+    function getPreference(key) {
+        const prefs = getPreferences();
+        return prefs[key] !== undefined ? prefs[key] : DEFAULT_PREFERENCES[key];
+    }
+
+    return {
+        get: getPreference,
+        getAll: getPreferences,
+        update: updatePreferences,
+        reset: resetPreferences
+    };
 })();
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = UserPreferencesManager;
+}
