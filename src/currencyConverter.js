@@ -245,4 +245,75 @@ class CurrencyConverter {
     }
 }
 
+module.exports = CurrencyConverter;const axios = require('axios');
+
+class CurrencyConverter {
+    constructor(apiKey) {
+        this.apiKey = apiKey;
+        this.baseUrl = 'https://api.exchangerate-api.com/v4/latest';
+        this.cache = new Map();
+        this.cacheDuration = 3600000; // 1 hour in milliseconds
+    }
+
+    async getExchangeRate(baseCurrency, targetCurrency) {
+        const cacheKey = `${baseCurrency}_${targetCurrency}`;
+        const cached = this.cache.get(cacheKey);
+
+        if (cached && Date.now() - cached.timestamp < this.cacheDuration) {
+            return cached.rate;
+        }
+
+        try {
+            const response = await axios.get(`${this.baseUrl}/${baseCurrency}`);
+            const rates = response.data.rates;
+            const rate = rates[targetCurrency];
+
+            if (!rate) {
+                throw new Error(`Target currency ${targetCurrency} not found`);
+            }
+
+            this.cache.set(cacheKey, {
+                rate: rate,
+                timestamp: Date.now()
+            });
+
+            return rate;
+        } catch (error) {
+            console.error('Error fetching exchange rate:', error.message);
+            throw error;
+        }
+    }
+
+    async convert(amount, fromCurrency, toCurrency) {
+        if (typeof amount !== 'number' || amount <= 0) {
+            throw new Error('Amount must be a positive number');
+        }
+
+        const rate = await this.getExchangeRate(fromCurrency, toCurrency);
+        const convertedAmount = amount * rate;
+
+        return {
+            originalAmount: amount,
+            fromCurrency: fromCurrency,
+            toCurrency: toCurrency,
+            exchangeRate: rate,
+            convertedAmount: parseFloat(convertedAmount.toFixed(2))
+        };
+    }
+
+    async getAvailableCurrencies(baseCurrency = 'USD') {
+        try {
+            const response = await axios.get(`${this.baseUrl}/${baseCurrency}`);
+            return Object.keys(response.data.rates);
+        } catch (error) {
+            console.error('Error fetching available currencies:', error.message);
+            return [];
+        }
+    }
+
+    clearCache() {
+        this.cache.clear();
+    }
+}
+
 module.exports = CurrencyConverter;
