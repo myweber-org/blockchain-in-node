@@ -303,4 +303,28 @@ function generateFileId() {
 
     console.log('File validation passed:', file.name);
     return true;
+}function validateFileUpload(fileInput, maxSizeMB) {
+    const maxSizeBytes = maxSizeMB * 1024 * 1024;
+    const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+    
+    if (!fileInput.files || fileInput.files.length === 0) {
+        throw new Error('No file selected');
+    }
+    
+    const file = fileInput.files[0];
+    
+    if (!allowedTypes.includes(file.type)) {
+        throw new Error('Invalid file type. Allowed: JPEG, PNG, PDF');
+    }
+    
+    if (file.size > maxSizeBytes) {
+        throw new Error(`File size exceeds ${maxSizeMB}MB limit`);
+    }
+    
+    return {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        lastModified: file.lastModified
+    };
 }
