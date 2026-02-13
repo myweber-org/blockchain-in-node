@@ -448,4 +448,109 @@ export default UserPreferences;const UserPreferencesManager = (function() {
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = UserPreferencesManager;
+}const UserPreferencesManager = (() => {
+  const PREFIX = 'user_pref_';
+  const DEFAULT_PREFERENCES = {
+    theme: 'light',
+    language: 'en',
+    notifications: true,
+    fontSize: 16,
+    autoSave: false
+  };
+
+  const validateKey = (key) => {
+    if (!key || typeof key !== 'string') {
+      throw new Error('Invalid preference key');
+    }
+    return key;
+  };
+
+  const getStorageKey = (key) => `${PREFIX}${key}`;
+
+  const getAllPreferences = () => {
+    const preferences = { ...DEFAULT_PREFERENCES };
+    Object.keys(localStorage).forEach((storageKey) => {
+      if (storageKey.startsWith(PREFIX)) {
+        const key = storageKey.replace(PREFIX, '');
+        try {
+          preferences[key] = JSON.parse(localStorage.getItem(storageKey));
+        } catch {
+          preferences[key] = localStorage.getItem(storageKey);
+        }
+      }
+    });
+    return preferences;
+  };
+
+  const setPreference = (key, value) => {
+    validateKey(key);
+    const storageKey = getStorageKey(key);
+    const serializedValue = typeof value === 'object' 
+      ? JSON.stringify(value) 
+      : value;
+    localStorage.setItem(storageKey, serializedValue);
+    return value;
+  };
+
+  const getPreference = (key) => {
+    validateKey(key);
+    const storageKey = getStorageKey(key);
+    const storedValue = localStorage.getItem(storageKey);
+    
+    if (storedValue === null) {
+      return DEFAULT_PREFERENCES[key];
+    }
+
+    try {
+      return JSON.parse(storedValue);
+    } catch {
+      return storedValue;
+    }
+  };
+
+  const removePreference = (key) => {
+    validateKey(key);
+    localStorage.removeItem(getStorageKey(key));
+  };
+
+  const resetToDefaults = () => {
+    Object.keys(localStorage).forEach((storageKey) => {
+      if (storageKey.startsWith(PREFIX)) {
+        localStorage.removeItem(storageKey);
+      }
+    });
+  };
+
+  const exportPreferences = () => {
+    const prefs = getAllPreferences();
+    return JSON.stringify(prefs, null, 2);
+  };
+
+  const importPreferences = (jsonString) => {
+    try {
+      const importedPrefs = JSON.parse(jsonString);
+      Object.entries(importedPrefs).forEach(([key, value]) => {
+        setPreference(key, value);
+      });
+      return true;
+    } catch (error) {
+      console.error('Failed to import preferences:', error);
+      return false;
+    }
+  };
+
+  return {
+    getAll: getAllPreferences,
+    get: getPreference,
+    set: setPreference,
+    remove: removePreference,
+    reset: resetToDefaults,
+    export: exportPreferences,
+    import: importPreferences,
+    defaults: { ...DEFAULT_PREFERENCES }
+  };
+})();
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = UserPreferencesManager;
 }
