@@ -19,4 +19,14 @@ function saveTextAsFile(textContent, fileName) {
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
     }, 100);
+}function saveTextAsFile(content, filename) {
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
 }
