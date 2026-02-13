@@ -381,4 +381,72 @@ function getStrengthLabel(score) {
     return labels[Math.min(score, labels.length - 1)];
 }
 
-export { checkPasswordStrength, calculateStrengthScore };
+export { checkPasswordStrength, calculateStrengthScore };function calculatePasswordStrength(password, options = {}) {
+    const defaults = {
+        minLength: 8,
+        requireUppercase: true,
+        requireLowercase: true,
+        requireNumbers: true,
+        requireSpecialChars: true,
+        specialChars: "!@#$%^&*()_+-=[]{}|;:,.<>?"
+    };
+    
+    const config = { ...defaults, ...options };
+    let score = 0;
+    const feedback = [];
+    
+    if (!password || password.length < config.minLength) {
+        feedback.push(`Password must be at least ${config.minLength} characters`);
+        return { score: 0, strength: 'Weak', feedback };
+    }
+    
+    if (password.length >= 12) score += 2;
+    else if (password.length >= 8) score += 1;
+    
+    if (config.requireUppercase && /[A-Z]/.test(password)) {
+        score += 1;
+    } else if (config.requireUppercase) {
+        feedback.push('Add uppercase letters');
+    }
+    
+    if (config.requireLowercase && /[a-z]/.test(password)) {
+        score += 1;
+    } else if (config.requireLowercase) {
+        feedback.push('Add lowercase letters');
+    }
+    
+    if (config.requireNumbers && /\d/.test(password)) {
+        score += 1;
+    } else if (config.requireNumbers) {
+        feedback.push('Add numbers');
+    }
+    
+    const specialRegex = new RegExp(`[${config.specialChars.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}]`);
+    if (config.requireSpecialChars && specialRegex.test(password)) {
+        score += 1;
+    } else if (config.requireSpecialChars) {
+        feedback.push('Add special characters');
+    }
+    
+    if (/^(.)\1+$/.test(password)) {
+        score = Math.max(0, score - 2);
+        feedback.push('Avoid repeating characters');
+    }
+    
+    let strength;
+    if (score >= 5) strength = 'Strong';
+    else if (score >= 3) strength = 'Medium';
+    else strength = 'Weak';
+    
+    return { score, strength, feedback };
+}
+
+function validatePassword(password, options = {}) {
+    const result = calculatePasswordStrength(password, options);
+    return {
+        isValid: result.strength === 'Strong',
+        ...result
+    };
+}
+
+export { calculatePasswordStrength, validatePassword };
