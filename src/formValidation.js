@@ -110,4 +110,39 @@ document.getElementById('loginForm').addEventListener('submit', function(event) 
     if (!validateForm()) {
         event.preventDefault();
     }
+});function validateForm() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const errorElement = document.getElementById('error-message');
+    
+    errorElement.textContent = '';
+    
+    if (!emailPattern.test(email)) {
+        errorElement.textContent = 'Please enter a valid email address.';
+        return false;
+    }
+    
+    if (password.length < 8) {
+        errorElement.textContent = 'Password must be at least 8 characters long.';
+        return false;
+    }
+    
+    if (!/[A-Z]/.test(password)) {
+        errorElement.textContent = 'Password must contain at least one uppercase letter.';
+        return false;
+    }
+    
+    if (!/\d/.test(password)) {
+        errorElement.textContent = 'Password must contain at least one number.';
+        return false;
+    }
+    
+    return true;
+}
+
+document.getElementById('submit-btn').addEventListener('click', function(event) {
+    if (!validateForm()) {
+        event.preventDefault();
+    }
 });
