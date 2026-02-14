@@ -72,4 +72,52 @@ function getStrengthLabel(score) {
     return "Very Strong";
 }
 
-export { validatePassword, calculateStrengthScore, getStrengthLabel };
+export { validatePassword, calculateStrengthScore, getStrengthLabel };function calculatePasswordEntropy(password) {
+    if (!password || password.length === 0) return 0;
+    
+    let poolSize = 0;
+    const hasLower = /[a-z]/.test(password);
+    const hasUpper = /[A-Z]/.test(password);
+    const hasDigits = /\d/.test(password);
+    const hasSpecial = /[^a-zA-Z0-9]/.test(password);
+    
+    if (hasLower) poolSize += 26;
+    if (hasUpper) poolSize += 26;
+    if (hasDigits) poolSize += 10;
+    if (hasSpecial) poolSize += 32;
+    
+    if (poolSize === 0) return 0;
+    
+    const entropy = Math.log2(Math.pow(poolSize, password.length));
+    return Math.round(entropy * 100) / 100;
+}
+
+function evaluatePasswordStrength(password) {
+    const entropy = calculatePasswordEntropy(password);
+    
+    if (entropy < 40) return { strength: 'Weak', score: 1 };
+    if (entropy < 60) return { strength: 'Moderate', score: 2 };
+    if (entropy < 80) return { strength: 'Strong', score: 3 };
+    return { strength: 'Very Strong', score: 4 };
+}
+
+function validatePassword(password) {
+    const strength = evaluatePasswordStrength(password);
+    const requirements = {
+        minLength: password.length >= 8,
+        hasLower: /[a-z]/.test(password),
+        hasUpper: /[A-Z]/.test(password),
+        hasDigit: /\d/.test(password),
+        hasSpecial: /[^a-zA-Z0-9]/.test(password)
+    };
+    
+    return {
+        entropy: calculatePasswordEntropy(password),
+        strength: strength.strength,
+        score: strength.score,
+        requirements: requirements,
+        isValid: Object.values(requirements).every(req => req === true)
+    };
+}
+
+export { calculatePasswordEntropy, evaluatePasswordStrength, validatePassword };
