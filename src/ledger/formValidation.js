@@ -220,4 +220,47 @@ export { validateEmail, validatePassword, validateForm };function validateForm()
     }
     
     return true;
+}function validateForm() {
+    const form = document.getElementById('userForm');
+    const email = document.getElementById('email');
+    const password = document.getElementById('password');
+    const emailError = document.getElementById('emailError');
+    const passwordError = document.getElementById('passwordError');
+    
+    let isValid = true;
+    
+    emailError.textContent = '';
+    passwordError.textContent = '';
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.value)) {
+        emailError.textContent = 'Please enter a valid email address';
+        isValid = false;
+    }
+    
+    if (password.value.length < 8) {
+        passwordError.textContent = 'Password must be at least 8 characters long';
+        isValid = false;
+    }
+    
+    if (!/[A-Z]/.test(password.value)) {
+        passwordError.textContent = 'Password must contain at least one uppercase letter';
+        isValid = false;
+    }
+    
+    if (!/[0-9]/.test(password.value)) {
+        passwordError.textContent = 'Password must contain at least one number';
+        isValid = false;
+    }
+    
+    if (isValid) {
+        form.submit();
+    }
+    
+    return isValid;
 }
+
+document.getElementById('userForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+    validateForm();
+});
