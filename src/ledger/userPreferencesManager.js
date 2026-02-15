@@ -645,4 +645,66 @@ window.addEventListener('storage', (event) => {
   if (event.key === UserPreferencesManager.storageKey) {
     UserPreferencesManager.initialize();
   }
-});
+});const UserPreferencesManager = (function() {
+    const STORAGE_KEY = 'user_preferences';
+    const DEFAULT_PREFERENCES = {
+        theme: 'light',
+        language: 'en',
+        fontSize: 'medium',
+        notifications: true,
+        autoSave: false
+    };
+
+    function getPreferences() {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+            try {
+                return { ...DEFAULT_PREFERENCES, ...JSON.parse(stored) };
+            } catch (error) {
+                console.error('Failed to parse stored preferences:', error);
+                return DEFAULT_PREFERENCES;
+            }
+        }
+        return DEFAULT_PREFERENCES;
+    }
+
+    function updatePreferences(updates) {
+        const current = getPreferences();
+        const merged = { ...current, ...updates };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+        dispatchPreferenceChangeEvent(merged);
+        return merged;
+    }
+
+    function resetPreferences() {
+        localStorage.removeItem(STORAGE_KEY);
+        dispatchPreferenceChangeEvent(DEFAULT_PREFERENCES);
+        return DEFAULT_PREFERENCES;
+    }
+
+    function dispatchPreferenceChangeEvent(preferences) {
+        const event = new CustomEvent('preferencesChanged', { 
+            detail: preferences 
+        });
+        window.dispatchEvent(event);
+    }
+
+    function subscribe(callback) {
+        window.addEventListener('preferencesChanged', (event) => {
+            callback(event.detail);
+        });
+        return () => window.removeEventListener('preferencesChanged', callback);
+    }
+
+    return {
+        get: getPreferences,
+        update: updatePreferences,
+        reset: resetPreferences,
+        subscribe: subscribe,
+        constants: {
+            THEMES: ['light', 'dark', 'auto'],
+            LANGUAGES: ['en', 'es', 'fr', 'de'],
+            FONT_SIZES: ['small', 'medium', 'large']
+        }
+    };
+})();
