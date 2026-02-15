@@ -1109,4 +1109,83 @@ if (typeof module !== 'undefined' && module.exports) {
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = UserPreferencesManager;
-}
+}const UserPreferences = {
+  preferences: {},
+
+  init() {
+    this.loadPreferences();
+    this.setupListeners();
+  },
+
+  loadPreferences() {
+    const stored = localStorage.getItem('userPreferences');
+    if (stored) {
+      try {
+        this.preferences = JSON.parse(stored);
+      } catch (error) {
+        console.error('Failed to parse preferences:', error);
+        this.preferences = this.getDefaultPreferences();
+      }
+    } else {
+      this.preferences = this.getDefaultPreferences();
+    }
+  },
+
+  savePreferences() {
+    try {
+      localStorage.setItem('userPreferences', JSON.stringify(this.preferences));
+      this.dispatchEvent('preferencesUpdated', this.preferences);
+      return true;
+    } catch (error) {
+      console.error('Failed to save preferences:', error);
+      return false;
+    }
+  },
+
+  getDefaultPreferences() {
+    return {
+      theme: 'light',
+      fontSize: 'medium',
+      notifications: true,
+      language: 'en',
+      autoSave: true
+    };
+  },
+
+  getPreference(key) {
+    return this.preferences[key] || this.getDefaultPreferences()[key];
+  },
+
+  setPreference(key, value) {
+    if (key in this.getDefaultPreferences()) {
+      this.preferences[key] = value;
+      return this.savePreferences();
+    }
+    return false;
+  },
+
+  resetPreferences() {
+    this.preferences = this.getDefaultPreferences();
+    return this.savePreferences();
+  },
+
+  getAllPreferences() {
+    return { ...this.preferences };
+  },
+
+  setupListeners() {
+    window.addEventListener('storage', (event) => {
+      if (event.key === 'userPreferences') {
+        this.loadPreferences();
+        this.dispatchEvent('preferencesSynced', this.preferences);
+      }
+    });
+  },
+
+  dispatchEvent(eventName, detail) {
+    const event = new CustomEvent(eventName, { detail });
+    window.dispatchEvent(event);
+  }
+};
+
+UserPreferences.init();
