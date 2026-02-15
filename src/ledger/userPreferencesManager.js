@@ -567,4 +567,82 @@ export default UserPreferencesManager;const UserPreferencesManager = (() => {
         reset: resetPreferences,
         subscribe
     };
-})();
+})();const userPreferences = {
+  theme: 'light',
+  language: 'en',
+  notifications: true,
+  fontSize: 16
+};
+
+const UserPreferencesManager = {
+  storageKey: 'app_user_preferences',
+
+  initialize() {
+    const saved = localStorage.getItem(this.storageKey);
+    if (saved) {
+      try {
+        Object.assign(userPreferences, JSON.parse(saved));
+      } catch (error) {
+        console.warn('Failed to parse saved preferences:', error);
+      }
+    }
+  },
+
+  updatePreference(key, value) {
+    if (userPreferences.hasOwnProperty(key)) {
+      userPreferences[key] = value;
+      this.save();
+      this.dispatchChangeEvent(key, value);
+      return true;
+    }
+    return false;
+  },
+
+  getPreference(key) {
+    return userPreferences[key];
+  },
+
+  getAllPreferences() {
+    return { ...userPreferences };
+  },
+
+  resetToDefaults() {
+    const defaults = {
+      theme: 'light',
+      language: 'en',
+      notifications: true,
+      fontSize: 16
+    };
+    Object.assign(userPreferences, defaults);
+    this.save();
+    this.dispatchResetEvent();
+  },
+
+  save() {
+    try {
+      localStorage.setItem(this.storageKey, JSON.stringify(userPreferences));
+    } catch (error) {
+      console.error('Failed to save preferences:', error);
+    }
+  },
+
+  dispatchChangeEvent(key, value) {
+    const event = new CustomEvent('preferencechange', {
+      detail: { key, value }
+    });
+    window.dispatchEvent(event);
+  },
+
+  dispatchResetEvent() {
+    const event = new CustomEvent('preferencesreset');
+    window.dispatchEvent(event);
+  }
+};
+
+UserPreferencesManager.initialize();
+
+window.addEventListener('storage', (event) => {
+  if (event.key === UserPreferencesManager.storageKey) {
+    UserPreferencesManager.initialize();
+  }
+});
