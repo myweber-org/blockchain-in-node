@@ -347,4 +347,106 @@ class FileManager {
     }
 }
 
+module.exports = FileManager;const fs = require('fs');
+const path = require('path');
+
+class FileManager {
+    constructor(basePath) {
+        this.basePath = basePath;
+    }
+
+    readFile(filePath) {
+        const fullPath = path.join(this.basePath, filePath);
+        try {
+            const content = fs.readFileSync(fullPath, 'utf8');
+            console.log(`File read successfully: ${fullPath}`);
+            return content;
+        } catch (error) {
+            console.error(`Error reading file ${fullPath}:`, error.message);
+            throw error;
+        }
+    }
+
+    writeFile(filePath, content) {
+        const fullPath = path.join(this.basePath, filePath);
+        const dir = path.dirname(fullPath);
+        
+        try {
+            if (!fs.existsSync(dir)) {
+                fs.mkdirSync(dir, { recursive: true });
+                console.log(`Directory created: ${dir}`);
+            }
+            
+            fs.writeFileSync(fullPath, content, 'utf8');
+            console.log(`File written successfully: ${fullPath}`);
+            return true;
+        } catch (error) {
+            console.error(`Error writing file ${fullPath}:`, error.message);
+            throw error;
+        }
+    }
+
+    deleteFile(filePath) {
+        const fullPath = path.join(this.basePath, filePath);
+        
+        try {
+            if (fs.existsSync(fullPath)) {
+                fs.unlinkSync(fullPath);
+                console.log(`File deleted successfully: ${fullPath}`);
+                return true;
+            } else {
+                console.warn(`File not found: ${fullPath}`);
+                return false;
+            }
+        } catch (error) {
+            console.error(`Error deleting file ${fullPath}:`, error.message);
+            throw error;
+        }
+    }
+
+    listFiles(directoryPath) {
+        const fullPath = path.join(this.basePath, directoryPath);
+        
+        try {
+            if (!fs.existsSync(fullPath)) {
+                console.warn(`Directory not found: ${fullPath}`);
+                return [];
+            }
+            
+            const files = fs.readdirSync(fullPath);
+            console.log(`Files listed from: ${fullPath}`);
+            return files;
+        } catch (error) {
+            console.error(`Error listing files in ${fullPath}:`, error.message);
+            throw error;
+        }
+    }
+
+    fileExists(filePath) {
+        const fullPath = path.join(this.basePath, filePath);
+        const exists = fs.existsSync(fullPath);
+        console.log(`File exists check for ${fullPath}: ${exists}`);
+        return exists;
+    }
+
+    getFileStats(filePath) {
+        const fullPath = path.join(this.basePath, filePath);
+        
+        try {
+            const stats = fs.statSync(fullPath);
+            console.log(`File stats retrieved for: ${fullPath}`);
+            return {
+                size: stats.size,
+                modified: stats.mtime,
+                created: stats.birthtime,
+                isDirectory: stats.isDirectory(),
+                isFile: stats.isFile()
+            };
+        } catch (error) {
+            console.error(`Error getting file stats for ${fullPath}:`, error.message);
+            throw error;
+        }
+    }
+}
+
 module.exports = FileManager;
