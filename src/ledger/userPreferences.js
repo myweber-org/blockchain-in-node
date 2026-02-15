@@ -156,4 +156,81 @@ function loadUserPreferences() {
     return validateUserPreferences({});
 }
 
-export { validateUserPreferences, saveUserPreferences, loadUserPreferences };
+export { validateUserPreferences, saveUserPreferences, loadUserPreferences };function validateUserPreferences(prefs) {
+    const defaults = {
+        theme: 'light',
+        language: 'en',
+        notifications: true,
+        fontSize: 16
+    };
+
+    const validatedPrefs = { ...defaults, ...prefs };
+
+    if (!['light', 'dark', 'auto'].includes(validatedPrefs.theme)) {
+        validatedPrefs.theme = defaults.theme;
+    }
+
+    if (!['en', 'es', 'fr', 'de'].includes(validatedPrefs.language)) {
+        validatedPrefs.language = defaults.language;
+    }
+
+    if (typeof validatedPrefs.notifications !== 'boolean') {
+        validatedPrefs.notifications = defaults.notifications;
+    }
+
+    if (typeof validatedPrefs.fontSize !== 'number' || 
+        validatedPrefs.fontSize < 12 || 
+        validatedPrefs.fontSize > 24) {
+        validatedPrefs.fontSize = defaults.fontSize;
+    }
+
+    return validatedPrefs;
+}
+
+function initializeUserPreferences() {
+    const storedPrefs = localStorage.getItem('userPreferences');
+    let userPrefs = {};
+
+    try {
+        userPrefs = storedPrefs ? JSON.parse(storedPrefs) : {};
+    } catch (error) {
+        console.error('Failed to parse stored preferences:', error);
+    }
+
+    const validatedPrefs = validateUserPreferences(userPrefs);
+    
+    if (JSON.stringify(userPrefs) !== JSON.stringify(validatedPrefs)) {
+        localStorage.setItem('userPreferences', JSON.stringify(validatedPrefs));
+    }
+
+    return validatedPrefs;
+}
+
+function updateUserPreferences(newPrefs) {
+    const currentPrefs = initializeUserPreferences();
+    const updatedPrefs = validateUserPreferences({ ...currentPrefs, ...newPrefs });
+    
+    localStorage.setItem('userPreferences', JSON.stringify(updatedPrefs));
+    
+    return updatedPrefs;
+}
+
+function resetUserPreferences() {
+    const defaults = {
+        theme: 'light',
+        language: 'en',
+        notifications: true,
+        fontSize: 16
+    };
+    
+    localStorage.setItem('userPreferences', JSON.stringify(defaults));
+    
+    return defaults;
+}
+
+export { 
+    validateUserPreferences, 
+    initializeUserPreferences, 
+    updateUserPreferences, 
+    resetUserPreferences 
+};
