@@ -1,164 +1,37 @@
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-const userDataCache = new Map();
-
-async function fetchUserData(userId, forceRefresh = false) {
-    const cacheKey = `user_${userId}`;
-    const cached = userDataCache.get(cacheKey);
-
-    if (!forceRefresh && cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
-        console.log(`Returning cached data for user ${userId}`);
-        return cached.data;
-    }
-
-    try {
-        const response = await fetch(`https://api.example.com/users/${userId}`);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const userData = await response.json();
-        
-        userDataCache.set(cacheKey, {
-            data: userData,
-            timestamp: Date.now()
-        });
-
-        console.log(`Fetched fresh data for user ${userId}`);
-        return userData;
-    } catch (error) {
-        console.error('Failed to fetch user data:', error);
-        
-        if (cached) {
-            console.log('Returning stale cached data due to fetch error');
-            return cached.data;
-        }
-        
-        throw error;
-    }
-}
-
-function clearUserCache(userId = null) {
-    if (userId) {
-        userDataCache.delete(`user_${userId}`);
-    } else {
-        userDataCache.clear();
-    }
-}
-
-export { fetchUserData, clearUserCache };async function fetchUserData(url) {
-  try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const data = await response.json();
-    console.log('User data fetched successfully:', data);
-    return data;
-  } catch (error) {
-    console.error('Failed to fetch user data:', error);
-    return null;
-  }
-}
-
-const apiUrl = 'https://jsonplaceholder.typicode.com/users';
-fetchUserData(apiUrl);
-const CACHE_DURATION = 5 * 60 * 1000;
-const userDataCache = new Map();
-
-async function fetchUserData(userId) {
-    const cacheKey = `user_${userId}`;
-    const cached = userDataCache.get(cacheKey);
+function fetchUserData(userId) {
+    const apiUrl = `https://jsonplaceholder.typicode.com/users/${userId}`;
     
-    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-        console.log(`Returning cached data for user ${userId}`);
-        return cached.data;
-    }
-    
-    try {
-        const response = await fetch(`https://api.example.com/users/${userId}`);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const userData = await response.json();
-        
-        userDataCache.set(cacheKey, {
-            data: userData,
-            timestamp: Date.now()
-        });
-        
-        console.log(`Fetched fresh data for user ${userId}`);
-        return userData;
-        
-    } catch (error) {
-        console.error(`Failed to fetch user data for ${userId}:`, error);
-        
-        if (cached) {
-            console.log(`Returning stale cached data for user ${userId}`);
-            return cached.data;
-        }
-        
-        throw error;
-    }
-}
-
-function clearUserCache(userId = null) {
-    if (userId) {
-        userDataCache.delete(`user_${userId}`);
-    } else {
-        userDataCache.clear();
-    }
-}
-
-export { fetchUserData, clearUserCache };function fetchUserData(userId) {
-    const apiUrl = `https://api.example.com/users/${userId}`;
-    
-    return fetch(apiUrl)
+    fetch(apiUrl)
         .then(response => {
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                throw new Error('Network response was not ok');
             }
             return response.json();
         })
         .then(data => {
-            return {
-                id: data.id,
-                name: data.name,
-                email: data.email,
-                active: data.status === 'active'
-            };
+            console.log('User Data:', data);
+            displayUserInfo(data);
         })
         .catch(error => {
             console.error('Error fetching user data:', error);
-            return null;
         });
-}function fetchUserData(userId, maxRetries = 3) {
-    const url = `https://api.example.com/users/${userId}`;
-    let retryCount = 0;
-
-    async function attemptFetch() {
-        try {
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const data = await response.json();
-            console.log('User data fetched successfully:', data);
-            return data;
-        } catch (error) {
-            retryCount++;
-            if (retryCount <= maxRetries) {
-                console.warn(`Attempt ${retryCount} failed. Retrying...`);
-                await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
-                return attemptFetch();
-            } else {
-                console.error('Max retries reached. Operation failed:', error);
-                throw error;
-            }
-        }
-    }
-
-    return attemptFetch();
 }
+
+function displayUserInfo(user) {
+    const userInfoDiv = document.getElementById('user-info');
+    
+    if (userInfoDiv) {
+        userInfoDiv.innerHTML = `
+            <h2>${user.name}</h2>
+            <p><strong>Email:</strong> ${user.email}</p>
+            <p><strong>Phone:</strong> ${user.phone}</p>
+            <p><strong>Website:</strong> ${user.website}</p>
+            <p><strong>Company:</strong> ${user.company.name}</p>
+        `;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const userId = 1;
+    fetchUserData(userId);
+});
