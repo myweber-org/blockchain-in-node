@@ -1,64 +1,97 @@
-function trackUploadProgress(file, onProgress) {
-    const startTime = Date.now();
-    let lastLoaded = 0;
-    let lastTime = startTime;
+const uploadProgress = (file, onProgress, onComplete, onError) => {
+  if (!file) {
+    onError('No file provided');
+    return;
+  }
 
-    const xhr = new XMLHttpRequest();
-    
-    xhr.upload.addEventListener('progress', (event) => {
-        if (event.lengthComputable) {
-            const currentTime = Date.now();
-            const loaded = event.loaded;
-            const total = event.total;
-            
-            const percentage = Math.round((loaded / total) * 100);
-            const speed = calculateSpeed(loaded, lastLoaded, currentTime, lastTime);
-            
-            lastLoaded = loaded;
-            lastTime = currentTime;
-            
-            onProgress({
-                percentage: percentage,
-                loaded: loaded,
-                total: total,
-                speed: speed,
-                timeElapsed: currentTime - startTime
-            });
-        }
-    });
-    
-    xhr.open('POST', '/upload');
-    xhr.send(file);
-}
+  const totalSize = file.size;
+  let uploadedSize = 0;
+  const chunkSize = 1024 * 1024; // 1MB chunks
+  const totalChunks = Math.ceil(totalSize / chunkSize);
+  let currentChunk = 0;
 
-function calculateSpeed(currentLoaded, previousLoaded, currentTime, previousTime) {
-    const timeDiff = (currentTime - previousTime) / 1000;
-    if (timeDiff === 0) return 0;
-    
-    const dataDiff = currentLoaded - previousLoaded;
-    const speedBps = dataDiff / timeDiff;
-    
-    if (speedBps >= 1048576) {
-        return (speedBps / 1048576).toFixed(2) + ' MB/s';
-    } else if (speedBps >= 1024) {
-        return (speedBps / 1024).toFixed(2) + ' KB/s';
-    } else {
-        return speedBps.toFixed(2) + ' B/s';
+  const simulateUpload = () => {
+    if (currentChunk >= totalChunks) {
+      onComplete({ totalSize, uploadedSize });
+      return;
     }
-}
 
-function formatTimeRemaining(loaded, total, speed) {
-    if (speed === 0) return 'Calculating...';
-    
-    const remainingBytes = total - loaded;
-    const speedNum = parseFloat(speed);
-    const timeSeconds = remainingBytes / speedNum;
-    
-    if (timeSeconds > 3600) {
-        return (timeSeconds / 3600).toFixed(1) + ' hours';
-    } else if (timeSeconds > 60) {
-        return (timeSeconds / 60).toFixed(1) + ' minutes';
-    } else {
-        return timeSeconds.toFixed(1) + ' seconds';
+    const chunkStart = currentChunk * chunkSize;
+    const chunkEnd = Math.min(chunkStart + chunkSize, totalSize);
+    const chunk = file.slice(chunkStart, chunkEnd);
+
+    // Simulate network delay
+    const delay = Math.random() * 500 + 100;
+
+    setTimeout(() => {
+      uploadedSize += chunkEnd - chunkStart;
+      currentChunk++;
+
+      const progress = Math.round((uploadedSize / totalSize) * 100);
+      onProgress({
+        loaded: uploadedSize,
+        total: totalSize,
+        percentage: progress,
+        chunk: currentChunk,
+        totalChunks: totalChunks
+      });
+
+      // Randomly simulate errors (10% chance)
+      if (Math.random() < 0.1) {
+        onError(`Upload failed at chunk ${currentChunk}`);
+        return;
+      }
+
+      simulateUpload();
+    }, delay);
+  };
+
+  simulateUpload();
+};
+
+const createProgressHandler = (fileId) => {
+  return {
+    onProgress: (data) => {
+      console.log(`File ${fileId}: ${data.percentage}% uploaded (${data.loaded}/${data.total} bytes)`);
+    },
+    onComplete: (data) => {
+      console.log(`File ${fileId}: Upload complete. Total: ${data.totalSize} bytes`);
+    },
+    onError: (error) => {
+      console.error(`File ${fileId}: ${error}`);
     }
-}
+  };
+};
+
+// Example usage
+const handleFileSelect = (event) => {
+  const files = event.target.files;
+  
+  Array.from(files).forEach((file, index) => {
+    const fileId = `file-${index}-${Date.now()}`;
+    const handlers = createProgressHandler(fileId);
+    
+    console.log(`Starting upload: ${file.name} (${file.size} bytes)`);
+    
+    uploadProgress(
+      file,
+      handlers.onProgress,
+      handlers.onComplete,
+      handlers.onError
+    );
+  });
+};
+
+// Initialize file input
+const initializeUploader = () => {
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.multiple = true;
+  fileInput.addEventListener('change', handleFileSelect);
+  
+  document.body.appendChild(fileInput);
+  fileInput.click();
+};
+
+// Export for module usage
+export { uploadProgress, createProgressHandler, initializeUploader };
