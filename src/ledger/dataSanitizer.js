@@ -81,4 +81,32 @@ function validateAndSanitizeUserData(userInput) {
 module.exports = {
     sanitizeInput,
     validateAndSanitizeUserData
-};
+};function sanitizeInput(input) {
+  const div = document.createElement('div');
+  div.textContent = input;
+  return div.innerHTML;
+}
+
+function validateAndSanitize(userInput) {
+  if (typeof userInput !== 'string') {
+    return '';
+  }
+  
+  const trimmedInput = userInput.trim();
+  const sanitized = sanitizeInput(trimmedInput);
+  
+  const patterns = {
+    script: /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+    onEvent: /on\w+="[^"]*"/gi,
+    javascript: /javascript:/gi
+  };
+  
+  let result = sanitized;
+  for (const pattern in patterns) {
+    result = result.replace(patterns[pattern], '');
+  }
+  
+  return result;
+}
+
+export { validateAndSanitize };
