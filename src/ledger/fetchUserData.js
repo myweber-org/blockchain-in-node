@@ -18,4 +18,27 @@ function fetchUserData(userId) {
             console.error('Error fetching user data:', error);
             return null;
         });
+}function fetchUserData(apiUrl) {
+    return fetch(apiUrl)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (Array.isArray(data)) {
+                return data.map(user => ({
+                    id: user.id,
+                    name: user.name || 'Unknown',
+                    email: user.email || 'No email provided',
+                    active: user.status === 'active'
+                }));
+            }
+            throw new Error('Invalid data format: expected an array');
+        })
+        .catch(error => {
+            console.error('Error fetching user data:', error.message);
+            return [];
+        });
 }
