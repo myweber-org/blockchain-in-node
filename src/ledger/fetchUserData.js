@@ -1,68 +1,31 @@
-function fetchUserData(userId) {
-    return fetch(`https://api.example.com/users/${userId}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            return {
-                id: data.id,
-                name: data.name,
-                email: data.email,
-                isActive: data.status === 'active'
-            };
-        })
-        .catch(error => {
-            console.error('Error fetching user data:', error);
-            return null;
-        });
-}function fetchUserData(apiUrl) {
-    return fetch(apiUrl)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (Array.isArray(data)) {
-                return data.map(user => ({
-                    id: user.id,
-                    name: user.name || 'Unknown',
-                    email: user.email || 'No email provided',
-                    active: user.status === 'active'
-                }));
-            }
-            throw new Error('Invalid data format: expected an array');
-        })
-        .catch(error => {
-            console.error('Error fetching user data:', error.message);
-            return [];
-        });
-}function fetchUserData(userId) {
-  const apiUrl = `https://api.example.com/users/${userId}`;
+async function fetchUserData(userId) {
+  const cacheKey = `user_${userId}`;
+  const cacheDuration = 5 * 60 * 1000; // 5 minutes
   
-  return fetch(apiUrl)
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+  try {
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      const { data, timestamp } = JSON.parse(cached);
+      if (Date.now() - timestamp < cacheDuration) {
+        return data;
       }
-      return response.json();
-    })
-    .then(data => {
-      const processedData = {
-        id: data.id,
-        name: data.name.toUpperCase(),
-        email: data.email,
-        isActive: data.status === 'active',
-        lastLogin: new Date(data.last_login)
-      };
-      return processedData;
-    })
-    .catch(error => {
-      console.error('Error fetching user data:', error);
-      throw error;
-    });
+    }
+
+    const response = await fetch(`https://api.example.com/users/${userId}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const userData = await response.json();
+    
+    localStorage.setItem(cacheKey, JSON.stringify({
+      data: userData,
+      timestamp: Date.now()
+    }));
+    
+    return userData;
+  } catch (error) {
+    console.error('Failed to fetch user data:', error);
+    throw error;
+  }
 }
