@@ -707,4 +707,59 @@ window.addEventListener('storage', (event) => {
             FONT_SIZES: ['small', 'medium', 'large']
         }
     };
-})();
+})();const UserPreferences = {
+  preferences: {},
+
+  init() {
+    this.loadPreferences();
+    this.setupAutoSave();
+  },
+
+  loadPreferences() {
+    const stored = localStorage.getItem('userPreferences');
+    if (stored) {
+      try {
+        this.preferences = JSON.parse(stored);
+      } catch (e) {
+        console.warn('Failed to parse stored preferences:', e);
+        this.preferences = {};
+      }
+    }
+    return this.preferences;
+  },
+
+  savePreferences() {
+    localStorage.setItem('userPreferences', JSON.stringify(this.preferences));
+  },
+
+  getPreference(key, defaultValue = null) {
+    return this.preferences.hasOwnProperty(key) ? this.preferences[key] : defaultValue;
+  },
+
+  setPreference(key, value) {
+    this.preferences[key] = value;
+    this.savePreferences();
+  },
+
+  removePreference(key) {
+    delete this.preferences[key];
+    this.savePreferences();
+  },
+
+  clearAllPreferences() {
+    this.preferences = {};
+    localStorage.removeItem('userPreferences');
+  },
+
+  getAllPreferences() {
+    return { ...this.preferences };
+  },
+
+  setupAutoSave() {
+    window.addEventListener('beforeunload', () => {
+      this.savePreferences();
+    });
+  }
+};
+
+UserPreferences.init();
