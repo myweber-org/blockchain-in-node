@@ -60,4 +60,108 @@ const UserPreferences = {
   }
 };
 
-export default UserPreferences;
+export default UserPreferences;const UserPreferencesManager = (() => {
+  const STORAGE_KEY = 'app_preferences';
+  
+  const defaultPreferences = {
+    theme: 'light',
+    language: 'en',
+    notifications: true,
+    fontSize: 16,
+    autoSave: false,
+    lastUpdated: null
+  };
+
+  const getPreferences = () => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        return { ...defaultPreferences, ...parsed };
+      }
+      return { ...defaultPreferences };
+    } catch (error) {
+      console.error('Failed to retrieve preferences:', error);
+      return { ...defaultPreferences };
+    }
+  };
+
+  const savePreferences = (updates) => {
+    try {
+      const current = getPreferences();
+      const updated = {
+        ...current,
+        ...updates,
+        lastUpdated: new Date().toISOString()
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      return updated;
+    } catch (error) {
+      console.error('Failed to save preferences:', error);
+      return null;
+    }
+  };
+
+  const resetPreferences = () => {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      return { ...defaultPreferences };
+    } catch (error) {
+      console.error('Failed to reset preferences:', error);
+      return null;
+    }
+  };
+
+  const exportPreferences = () => {
+    const prefs = getPreferences();
+    const blob = new Blob([JSON.stringify(prefs, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `preferences_${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const importPreferences = (jsonString) => {
+    try {
+      const imported = JSON.parse(jsonString);
+      const validated = validatePreferences(imported);
+      return savePreferences(validated);
+    } catch (error) {
+      console.error('Failed to import preferences:', error);
+      return null;
+    }
+  };
+
+  const validatePreferences = (prefs) => {
+    const valid = {};
+    Object.keys(defaultPreferences).forEach(key => {
+      if (prefs[key] !== undefined && typeof prefs[key] === typeof defaultPreferences[key]) {
+        valid[key] = prefs[key];
+      }
+    });
+    return valid;
+  };
+
+  const subscribe = (callback) => {
+    const handler = (event) => {
+      if (event.key === STORAGE_KEY) {
+        callback(getPreferences());
+      }
+    };
+    window.addEventListener('storage', handler);
+    return () => window.removeEventListener('storage', handler);
+  };
+
+  return {
+    get: getPreferences,
+    save: savePreferences,
+    reset: resetPreferences,
+    export: exportPreferences,
+    import: importPreferences,
+    subscribe
+  };
+})();
