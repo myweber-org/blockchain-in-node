@@ -85,4 +85,112 @@ function getStrengthLevel(score) {
     return "Weak";
 }
 
-export { checkPasswordStrength };
+export { checkPasswordStrength };function checkPasswordStrength(password, options = {}) {
+    const defaults = {
+        minLength: 8,
+        requireUppercase: true,
+        requireLowercase: true,
+        requireNumbers: true,
+        requireSpecialChars: true,
+        specialChars: "!@#$%^&*()_+-=[]{}|;:,.<>?"
+    };
+    
+    const config = { ...defaults, ...options };
+    const errors = [];
+    const suggestions = [];
+    
+    if (password.length < config.minLength) {
+        errors.push(`Password must be at least ${config.minLength} characters long`);
+    }
+    
+    if (config.requireUppercase && !/[A-Z]/.test(password)) {
+        errors.push("Password must contain at least one uppercase letter");
+    }
+    
+    if (config.requireLowercase && !/[a-z]/.test(password)) {
+        errors.push("Password must contain at least one lowercase letter");
+    }
+    
+    if (config.requireNumbers && !/\d/.test(password)) {
+        errors.push("Password must contain at least one number");
+    }
+    
+    if (config.requireSpecialChars) {
+        const specialCharRegex = new RegExp(`[${config.specialChars.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}]`);
+        if (!specialCharRegex.test(password)) {
+            errors.push(`Password must contain at least one special character (${config.specialChars})`);
+        }
+    }
+    
+    if (password.length > 20) {
+        suggestions.push("Consider using a shorter password for better memorability");
+    }
+    
+    if (/(.)\1{2,}/.test(password)) {
+        suggestions.push("Avoid repeating characters multiple times in a row");
+    }
+    
+    if (/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]).{12,}$/.test(password)) {
+        suggestions.push("Strong password! Consider using a password manager to store it securely");
+    }
+    
+    const score = Math.max(0, 100 - (errors.length * 20));
+    const strength = score >= 80 ? "strong" : score >= 60 ? "moderate" : "weak";
+    
+    return {
+        isValid: errors.length === 0,
+        score: score,
+        strength: strength,
+        errors: errors,
+        suggestions: suggestions,
+        passedChecks: {
+            length: password.length >= config.minLength,
+            hasUppercase: config.requireUppercase ? /[A-Z]/.test(password) : true,
+            hasLowercase: config.requireLowercase ? /[a-z]/.test(password) : true,
+            hasNumbers: config.requireNumbers ? /\d/.test(password) : true,
+            hasSpecialChars: config.requireSpecialChars ? 
+                new RegExp(`[${config.specialChars.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}]`).test(password) : true
+        }
+    };
+}
+
+function generatePassword(length = 16, options = {}) {
+    const defaults = {
+        includeUppercase: true,
+        includeLowercase: true,
+        includeNumbers: true,
+        includeSpecialChars: true,
+        specialChars: "!@#$%^&*()_+-=[]{}|;:,.<>?"
+    };
+    
+    const config = { ...defaults, ...options };
+    let charset = "";
+    let password = "";
+    
+    if (config.includeLowercase) charset += "abcdefghijklmnopqrstuvwxyz";
+    if (config.includeUppercase) charset += "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    if (config.includeNumbers) charset += "0123456789";
+    if (config.includeSpecialChars) charset += config.specialChars;
+    
+    if (charset.length === 0) {
+        throw new Error("At least one character set must be enabled");
+    }
+    
+    const crypto = window.crypto || window.msCrypto;
+    const randomValues = new Uint32Array(length);
+    
+    if (crypto && crypto.getRandomValues) {
+        crypto.getRandomValues(randomValues);
+        for (let i = 0; i < length; i++) {
+            password += charset[randomValues[i] % charset.length];
+        }
+    } else {
+        for (let i = 0; i < length; i++) {
+            password += charset[Math.floor(Math.random() * charset.length)];
+        }
+    }
+    
+    return password;
+}
+
+export { checkPasswordStrength, generatePassword };
