@@ -146,4 +146,36 @@ async function getUserProfile(userId) {
     }
 }
 
-export { fetchUserData, getUserProfile };
+export { fetchUserData, getUserProfile };async function fetchUserData(userId, timeout = 5000) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+    try {
+        const response = await fetch(`https://api.example.com/users/${userId}`, {
+            signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return {
+            success: true,
+            data: data
+        };
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            return {
+                success: false,
+                error: 'Request timeout'
+            };
+        }
+        return {
+            success: false,
+            error: error.message
+        };
+    }
+}
