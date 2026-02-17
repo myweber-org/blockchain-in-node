@@ -95,4 +95,74 @@ function initializeConverter() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', initializeConverter);
+document.addEventListener('DOMContentLoaded', initializeConverter);const exchangeRates = {};
+
+async function fetchExchangeRate(base, target) {
+  const cacheKey = `${base}_${target}`;
+  const cached = exchangeRates[cacheKey];
+  
+  if (cached && Date.now() - cached.timestamp < 300000) {
+    return cached.rate;
+  }
+
+  try {
+    const response = await fetch(`https://api.exchangerate-api.com/v4/latest/${base}`);
+    const data = await response.json();
+    const rate = data.rates[target];
+    
+    if (!rate) {
+      throw new Error(`Exchange rate for ${target} not found`);
+    }
+
+    exchangeRates[cacheKey] = {
+      rate: rate,
+      timestamp: Date.now()
+    };
+
+    return rate;
+  } catch (error) {
+    console.error('Failed to fetch exchange rate:', error);
+    throw error;
+  }
+}
+
+function validateAmount(amount) {
+  if (typeof amount !== 'number' || isNaN(amount)) {
+    throw new Error('Amount must be a valid number');
+  }
+  if (amount < 0) {
+    throw new Error('Amount cannot be negative');
+  }
+  return true;
+}
+
+function validateCurrencyCode(currency) {
+  if (typeof currency !== 'string' || currency.length !== 3) {
+    throw new Error('Currency code must be a 3-letter string');
+  }
+  return true;
+}
+
+async function convertCurrency(amount, fromCurrency, toCurrency) {
+  validateAmount(amount);
+  validateCurrencyCode(fromCurrency);
+  validateCurrencyCode(toCurrency);
+
+  const rate = await fetchExchangeRate(fromCurrency.toUpperCase(), toCurrency.toUpperCase());
+  const convertedAmount = amount * rate;
+  
+  return {
+    originalAmount: amount,
+    originalCurrency: fromCurrency.toUpperCase(),
+    convertedAmount: parseFloat(convertedAmount.toFixed(2)),
+    targetCurrency: toCurrency.toUpperCase(),
+    exchangeRate: rate,
+    timestamp: new Date().toISOString()
+  };
+}
+
+function formatCurrencyOutput(conversionResult) {
+  return `${conversionResult.originalAmount} ${conversionResult.originalCurrency} = ${conversionResult.convertedAmount} ${conversionResult.targetCurrency}`;
+}
+
+export { convertCurrency, formatCurrencyOutput, fetchExchangeRate };
