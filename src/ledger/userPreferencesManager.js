@@ -74,4 +74,77 @@ const UserPreferences = {
   }
 };
 
-export default UserPreferences;
+export default UserPreferences;const userPreferencesManager = (() => {
+  const STORAGE_KEY = 'app_preferences';
+  const defaultPreferences = {
+    theme: 'light',
+    language: 'en',
+    notifications: true,
+    fontSize: 16,
+    autoSave: false
+  };
+
+  const loadPreferences = () => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        return { ...defaultPreferences, ...JSON.parse(stored) };
+      }
+    } catch (error) {
+      console.warn('Failed to load preferences:', error);
+    }
+    return { ...defaultPreferences };
+  };
+
+  const savePreferences = (preferences) => {
+    try {
+      const validPreferences = {};
+      Object.keys(defaultPreferences).forEach(key => {
+        if (preferences[key] !== undefined) {
+          validPreferences[key] = preferences[key];
+        }
+      });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(validPreferences));
+      return true;
+    } catch (error) {
+      console.error('Failed to save preferences:', error);
+      return false;
+    }
+  };
+
+  const updatePreference = (key, value) => {
+    if (!defaultPreferences.hasOwnProperty(key)) {
+      console.warn(`Invalid preference key: ${key}`);
+      return false;
+    }
+    const current = loadPreferences();
+    current[key] = value;
+    return savePreferences(current);
+  };
+
+  const resetToDefaults = () => {
+    return savePreferences(defaultPreferences);
+  };
+
+  const getAllPreferences = () => {
+    return loadPreferences();
+  };
+
+  const subscribe = (callback) => {
+    const handler = (event) => {
+      if (event.key === STORAGE_KEY) {
+        callback(getAllPreferences());
+      }
+    };
+    window.addEventListener('storage', handler);
+    return () => window.removeEventListener('storage', handler);
+  };
+
+  return {
+    get: getAllPreferences,
+    set: savePreferences,
+    update: updatePreference,
+    reset: resetToDefaults,
+    subscribe
+  };
+})();
