@@ -1188,4 +1188,80 @@ if (typeof module !== 'undefined' && module.exports) {
   }
 };
 
-UserPreferences.init();
+UserPreferences.init();const UserPreferencesManager = (() => {
+  const STORAGE_KEY = 'app_preferences';
+  const DEFAULT_PREFERENCES = {
+    theme: 'light',
+    language: 'en',
+    notifications: true,
+    fontSize: 16,
+    autoSave: false
+  };
+
+  let currentPreferences = { ...DEFAULT_PREFERENCES };
+
+  const loadPreferences = () => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        currentPreferences = { ...DEFAULT_PREFERENCES, ...JSON.parse(stored) };
+      }
+      return currentPreferences;
+    } catch (error) {
+      console.error('Failed to load preferences:', error);
+      return currentPreferences;
+    }
+  };
+
+  const savePreferences = (updates) => {
+    try {
+      currentPreferences = { ...currentPreferences, ...updates };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(currentPreferences));
+      return currentPreferences;
+    } catch (error) {
+      console.error('Failed to save preferences:', error);
+      return currentPreferences;
+    }
+  };
+
+  const resetPreferences = () => {
+    currentPreferences = { ...DEFAULT_PREFERENCES };
+    localStorage.removeItem(STORAGE_KEY);
+    return currentPreferences;
+  };
+
+  const getPreference = (key) => {
+    return currentPreferences[key] !== undefined 
+      ? currentPreferences[key] 
+      : DEFAULT_PREFERENCES[key];
+  };
+
+  const getAllPreferences = () => {
+    return { ...currentPreferences };
+  };
+
+  const subscribe = (callback) => {
+    const storageHandler = (event) => {
+      if (event.key === STORAGE_KEY) {
+        loadPreferences();
+        callback(getAllPreferences());
+      }
+    };
+    window.addEventListener('storage', storageHandler);
+    
+    return () => window.removeEventListener('storage', storageHandler);
+  };
+
+  loadPreferences();
+
+  return {
+    load: loadPreferences,
+    save: savePreferences,
+    reset: resetPreferences,
+    get: getPreference,
+    getAll: getAllPreferences,
+    subscribe
+  };
+})();
+
+export default UserPreferencesManager;
