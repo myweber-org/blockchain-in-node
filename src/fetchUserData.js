@@ -141,4 +141,21 @@ export { fetchUserData, validateUserId };function fetchUserData(userId) {
       console.error('Error fetching user data:', error);
       throw error;
     });
+}async function fetchUserData(userId) {
+  try {
+    const response = await fetch(`https://api.example.com/users/${userId}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const userData = await response.json();
+    return {
+      id: userData.id,
+      name: userData.name,
+      email: userData.email,
+      active: userData.status === 'active'
+    };
+  } catch (error) {
+    console.error('Failed to fetch user data:', error);
+    return null;
+  }
 }
