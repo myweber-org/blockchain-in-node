@@ -45,4 +45,152 @@ function handleFileUpload(file) {
     } catch (error) {
         return Promise.reject({ success: false, error: error.message });
     }
+}function validateFile(file, maxSize) {
+    if (!file) {
+        throw new Error('No file provided');
+    }
+    
+    const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+    if (!allowedTypes.includes(file.type)) {
+        throw new Error('Invalid file type. Allowed types: JPEG, PNG, PDF');
+    }
+    
+    if (file.size > maxSize) {
+        throw new Error(`File size exceeds limit of ${maxSize} bytes`);
+    }
+    
+    return {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        lastModified: file.lastModified
+    };
+}
+
+function processUpload(file, options = {}) {
+    const defaults = {
+        maxSize: 5 * 1024 * 1024,
+        onProgress: null,
+        onComplete: null,
+        onError: null
+    };
+    
+    const config = { ...defaults, ...options };
+    
+    try {
+        const validatedFile = validateFile(file, config.maxSize);
+        
+        if (config.onProgress) {
+            config.onProgress({ status: 'validated', file: validatedFile });
+        }
+        
+        const reader = new FileReader();
+        
+        reader.onloadstart = () => {
+            if (config.onProgress) {
+                config.onProgress({ status: 'reading', progress: 0 });
+            }
+        };
+        
+        reader.onprogress = (event) => {
+            if (event.lengthComputable && config.onProgress) {
+                const progress = Math.round((event.loaded / event.total) * 100);
+                config.onProgress({ status: 'reading', progress });
+            }
+        };
+        
+        reader.onload = (event) => {
+            const result = {
+                file: validatedFile,
+                content: event.target.result,
+                uploadedAt: new Date().toISOString()
+            };
+            
+            if (config.onComplete) {
+                config.onComplete(result);
+            }
+        };
+        
+        reader.onerror = (error) => {
+            if (config.onError) {
+                config.onError(new Error('Failed to read file'));
+            }
+        };
+        
+        reader.readAsDataURL(file);
+        
+    } catch (error) {
+        if (config.onError) {
+            config.onError(error);
+        }
+        throw error;
+    }
+}
+
+function createUploadForm(containerId, options) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    const form = document.createElement('form');
+    form.className = 'upload-form';
+    
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.name = 'file';
+    fileInput.accept = '.jpg,.jpeg,.png,.pdf';
+    fileInput.required = true;
+    
+    const submitBtn = document.createElement('button');
+    submitBtn.type = 'submit';
+    submitBtn.textContent = 'Upload File';
+    
+    const progressBar = document.createElement('div');
+    progressBar.className = 'progress-bar';
+    progressBar.style.width = '0%';
+    
+    const statusText = document.createElement('div');
+    statusText.className = 'status-text';
+    
+    form.appendChild(fileInput);
+    form.appendChild(submitBtn);
+    form.appendChild(progressBar);
+    form.appendChild(statusText);
+    container.appendChild(form);
+    
+    form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        
+        if (!fileInput.files.length) return;
+        
+        const file = fileInput.files[0];
+        
+        processUpload(file, {
+            ...options,
+            onProgress: (data) => {
+                if (data.progress !== undefined) {
+                    progressBar.style.width = `${data.progress}%`;
+                    statusText.textContent = `Uploading: ${data.progress}%`;
+                } else {
+                    statusText.textContent = `Status: ${data.status}`;
+                }
+            },
+            onComplete: (result) => {
+                progressBar.style.width = '100%';
+                statusText.textContent = 'Upload complete!';
+                console.log('Upload successful:', result);
+            },
+            onError: (error) => {
+                statusText.textContent = `Error: ${error.message}`;
+                console.error('Upload failed:', error);
+            }
+        });
+    });
+    
+    return {
+        form,
+        fileInput,
+        submitBtn,
+        progressBar,
+        statusText
+    };
 }
