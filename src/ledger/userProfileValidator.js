@@ -26,4 +26,32 @@ function validateUserProfile(profile) {
   };
 }
 
-module.exports = validateUserProfile;
+module.exports = validateUserProfile;function validateUserProfile(formData) {
+  const errors = {};
+  
+  if (!formData.username || formData.username.trim().length < 3) {
+    errors.username = 'Username must be at least 3 characters';
+  }
+  
+  if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    errors.email = 'Please enter a valid email address';
+  }
+  
+  if (formData.age && (formData.age < 0 || formData.age > 150)) {
+    errors.age = 'Age must be between 0 and 150';
+  }
+  
+  if (formData.password) {
+    if (formData.password.length < 8) {
+      errors.password = 'Password must be at least 8 characters';
+    }
+    if (!/(?=.*[A-Z])/.test(formData.password)) {
+      errors.password = 'Password must contain at least one uppercase letter';
+    }
+  }
+  
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors: errors
+  };
+}
