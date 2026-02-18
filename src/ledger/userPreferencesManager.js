@@ -66,4 +66,136 @@ const UserPreferencesManager = (() => {
     resetPreferences,
     subscribe
   };
-})();
+})();const UserPreferencesManager = {
+  preferences: {},
+
+  init() {
+    this.loadPreferences();
+    this.setupEventListeners();
+  },
+
+  loadPreferences() {
+    const stored = localStorage.getItem('userPreferences');
+    if (stored) {
+      try {
+        this.preferences = JSON.parse(stored);
+      } catch (error) {
+        console.error('Failed to parse stored preferences:', error);
+        this.preferences = this.getDefaultPreferences();
+      }
+    } else {
+      this.preferences = this.getDefaultPreferences();
+    }
+    this.applyPreferences();
+  },
+
+  getDefaultPreferences() {
+    return {
+      theme: 'light',
+      fontSize: 'medium',
+      notifications: true,
+      language: 'en',
+      autoSave: true
+    };
+  },
+
+  savePreferences() {
+    try {
+      localStorage.setItem('userPreferences', JSON.stringify(this.preferences));
+      this.dispatchEvent('preferencesUpdated', this.preferences);
+      return true;
+    } catch (error) {
+      console.error('Failed to save preferences:', error);
+      return false;
+    }
+  },
+
+  updatePreference(key, value) {
+    if (this.preferences.hasOwnProperty(key)) {
+      this.preferences[key] = value;
+      this.applyPreference(key, value);
+      this.savePreferences();
+      return true;
+    }
+    return false;
+  },
+
+  applyPreferences() {
+    Object.entries(this.preferences).forEach(([key, value]) => {
+      this.applyPreference(key, value);
+    });
+  },
+
+  applyPreference(key, value) {
+    switch (key) {
+      case 'theme':
+        document.documentElement.setAttribute('data-theme', value);
+        break;
+      case 'fontSize':
+        document.documentElement.style.fontSize = this.getFontSizeValue(value);
+        break;
+      case 'notifications':
+        this.toggleNotifications(value);
+        break;
+    }
+  },
+
+  getFontSizeValue(size) {
+    const sizes = {
+      small: '14px',
+      medium: '16px',
+      large: '18px',
+      xlarge: '20px'
+    };
+    return sizes[size] || sizes.medium;
+  },
+
+  toggleNotifications(enabled) {
+    if (enabled && 'Notification' in window && Notification.permission === 'granted') {
+      console.log('Notifications are enabled');
+    }
+  },
+
+  resetToDefaults() {
+    this.preferences = this.getDefaultPreferences();
+    this.applyPreferences();
+    this.savePreferences();
+  },
+
+  setupEventListeners() {
+    document.addEventListener('DOMContentLoaded', () => {
+      const themeSelector = document.getElementById('themeSelector');
+      const fontSizeSelector = document.getElementById('fontSizeSelector');
+      const resetButton = document.getElementById('resetPreferences');
+
+      if (themeSelector) {
+        themeSelector.value = this.preferences.theme;
+        themeSelector.addEventListener('change', (e) => {
+          this.updatePreference('theme', e.target.value);
+        });
+      }
+
+      if (fontSizeSelector) {
+        fontSizeSelector.value = this.preferences.fontSize;
+        fontSizeSelector.addEventListener('change', (e) => {
+          this.updatePreference('fontSize', e.target.value);
+        });
+      }
+
+      if (resetButton) {
+        resetButton.addEventListener('click', () => {
+          this.resetToDefaults();
+        });
+      }
+    });
+  },
+
+  dispatchEvent(eventName, detail) {
+    const event = new CustomEvent(eventName, { detail });
+    document.dispatchEvent(event);
+  }
+};
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = UserPreferencesManager;
+}
