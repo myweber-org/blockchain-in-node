@@ -598,4 +598,68 @@ function updatePreference(key, value) {
   return currentPrefs;
 }
 
-export { initializePreferences, updatePreference, validatePreferences };
+export { initializePreferences, updatePreference, validatePreferences };function initializeUserPreferences(preferences) {
+  const defaults = {
+    theme: 'light',
+    language: 'en',
+    notifications: true,
+    fontSize: 14,
+    autoSave: false
+  };
+
+  function validatePreferences(prefs) {
+    const validThemes = ['light', 'dark', 'auto'];
+    const validLanguages = ['en', 'es', 'fr', 'de'];
+    
+    return {
+      theme: validThemes.includes(prefs.theme) ? prefs.theme : defaults.theme,
+      language: validLanguages.includes(prefs.language) ? prefs.language : defaults.language,
+      notifications: typeof prefs.notifications === 'boolean' ? prefs.notifications : defaults.notifications,
+      fontSize: Number.isInteger(prefs.fontSize) && prefs.fontSize >= 10 && prefs.fontSize <= 24 ? prefs.fontSize : defaults.fontSize,
+      autoSave: typeof prefs.autoSave === 'boolean' ? prefs.autoSave : defaults.autoSave
+    };
+  }
+
+  function mergeWithDefaults(prefs) {
+    return {
+      ...defaults,
+      ...validatePreferences(prefs)
+    };
+  }
+
+  function savePreferences(prefs) {
+    try {
+      localStorage.setItem('userPreferences', JSON.stringify(prefs));
+      return true;
+    } catch (error) {
+      console.error('Failed to save preferences:', error);
+      return false;
+    }
+  }
+
+  const validatedPrefs = mergeWithDefaults(preferences || {});
+  const saved = savePreferences(validatedPrefs);
+  
+  return {
+    preferences: validatedPrefs,
+    saved: saved,
+    timestamp: new Date().toISOString()
+  };
+}
+
+function loadUserPreferences() {
+  try {
+    const stored = localStorage.getItem('userPreferences');
+    return stored ? JSON.parse(stored) : null;
+  } catch (error) {
+    console.error('Failed to load preferences:', error);
+    return null;
+  }
+}
+
+function resetToDefaultPreferences() {
+  const result = initializeUserPreferences({});
+  return result.preferences;
+}
+
+export { initializeUserPreferences, loadUserPreferences, resetToDefaultPreferences };
