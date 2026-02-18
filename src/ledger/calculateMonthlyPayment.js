@@ -1,44 +1,4 @@
-function calculateMonthlyPayment(principal, annualInterestRate, years) {
-    const monthlyInterestRate = annualInterestRate / 12 / 100;
-    const numberOfPayments = years * 12;
-    
-    if (monthlyInterestRate === 0) {
-        return principal / numberOfPayments;
-    }
-    
-    const monthlyPayment = principal * 
-        (monthlyInterestRate * Math.pow(1 + monthlyInterestRate, numberOfPayments)) / 
-        (Math.pow(1 + monthlyInterestRate, numberOfPayments) - 1);
-    
-    return Math.round(monthlyPayment * 100) / 100;
-}
-
-function validateInput(principal, annualInterestRate, years) {
-    if (principal <= 0 || annualInterestRate < 0 || years <= 0) {
-        throw new Error('Invalid input values');
-    }
-    
-    if (!Number.isFinite(principal) || !Number.isFinite(annualInterestRate) || !Number.isFinite(years)) {
-        throw new Error('Input values must be numbers');
-    }
-    
-    return true;
-}
-
-module.exports = { calculateMonthlyPayment, validateInput };function calculateMonthlyPayment(principal, annualInterestRate, loanTermYears) {
-    const monthlyInterestRate = annualInterestRate / 12 / 100;
-    const numberOfPayments = loanTermYears * 12;
-    
-    if (monthlyInterestRate === 0) {
-        return principal / numberOfPayments;
-    }
-    
-    const monthlyPayment = principal * 
-        (monthlyInterestRate * Math.pow(1 + monthlyInterestRate, numberOfPayments)) / 
-        (Math.pow(1 + monthlyInterestRate, numberOfPayments) - 1);
-    
-    return Math.round(monthlyPayment * 100) / 100;
-}function calculateMonthlyPayment(principal, annualInterestRate, loanTermYears) {
+function calculateMonthlyPayment(principal, annualInterestRate, loanTermYears) {
     const monthlyInterestRate = annualInterestRate / 12 / 100;
     const totalPayments = loanTermYears * 12;
     
@@ -71,43 +31,42 @@ function validateLoanInputs(principal, annualInterestRate, loanTermYears) {
     return errors;
 }
 
+function formatCurrency(amount) {
+    return '$' + amount.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
 function calculateAmortizationSchedule(principal, annualInterestRate, loanTermYears) {
     const monthlyPayment = calculateMonthlyPayment(principal, annualInterestRate, loanTermYears);
     const monthlyInterestRate = annualInterestRate / 12 / 100;
     const totalPayments = loanTermYears * 12;
     
-    let remainingBalance = principal;
+    let balance = principal;
     const schedule = [];
     
     for (let month = 1; month <= totalPayments; month++) {
-        const interestPayment = remainingBalance * monthlyInterestRate;
+        const interestPayment = balance * monthlyInterestRate;
         const principalPayment = monthlyPayment - interestPayment;
-        
-        remainingBalance -= principalPayment;
         
         schedule.push({
             month: month,
             payment: monthlyPayment,
-            principal: Math.round(principalPayment * 100) / 100,
-            interest: Math.round(interestPayment * 100) / 100,
-            remainingBalance: Math.round(Math.max(remainingBalance, 0) * 100) / 100
+            principal: principalPayment,
+            interest: interestPayment,
+            balance: Math.max(0, balance - principalPayment)
         });
+        
+        balance -= principalPayment;
     }
     
     return schedule;
 }
 
-module.exports = {
+export {
     calculateMonthlyPayment,
     validateLoanInputs,
+    formatCurrency,
     calculateAmortizationSchedule
-};function calculateMonthlyPayment(principal, annualRate, years) {
-    const monthlyRate = annualRate / 12 / 100;
-    const totalPayments = years * 12;
-    if (monthlyRate === 0) {
-        return principal / totalPayments;
-    }
-    const numerator = monthlyRate * Math.pow(1 + monthlyRate, totalPayments);
-    const denominator = Math.pow(1 + monthlyRate, totalPayments) - 1;
-    return principal * (numerator / denominator);
-}
+};
