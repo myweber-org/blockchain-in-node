@@ -109,4 +109,26 @@ function validateAndSanitize(userInput) {
   return result;
 }
 
+export { validateAndSanitize };function sanitizeInput(input) {
+    const div = document.createElement('div');
+    div.textContent = input;
+    return div.innerHTML;
+}
+
+function validateAndSanitize(userInput) {
+    if (typeof userInput !== 'string') {
+        return '';
+    }
+    
+    const trimmedInput = userInput.trim();
+    if (trimmedInput.length === 0) {
+        return '';
+    }
+    
+    const sanitized = sanitizeInput(trimmedInput);
+    const maxLength = 1000;
+    
+    return sanitized.length > maxLength ? sanitized.substring(0, maxLength) : sanitized;
+}
+
 export { validateAndSanitize };
