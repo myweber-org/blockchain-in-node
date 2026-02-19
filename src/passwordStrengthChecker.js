@@ -284,4 +284,46 @@ function getStrengthLevel(score) {
   return "weak";
 }
 
+export { checkPasswordStrength };function calculatePasswordEntropy(password) {
+    const charsetSize = getCharsetSize(password);
+    const length = password.length;
+    return Math.log2(Math.pow(charsetSize, length));
+}
+
+function getCharsetSize(password) {
+    let size = 0;
+    if (/[a-z]/.test(password)) size += 26;
+    if (/[A-Z]/.test(password)) size += 26;
+    if (/[0-9]/.test(password)) size += 10;
+    if (/[^a-zA-Z0-9]/.test(password)) size += 32;
+    return size;
+}
+
+function evaluateStrength(entropy) {
+    if (entropy < 40) return 'Weak';
+    if (entropy < 80) return 'Moderate';
+    if (entropy < 120) return 'Strong';
+    return 'Very Strong';
+}
+
+function checkPasswordStrength(password) {
+    const entropy = calculatePasswordEntropy(password);
+    const strength = evaluateStrength(entropy);
+    return {
+        entropy: entropy.toFixed(2),
+        strength: strength,
+        recommendations: generateRecommendations(password, strength)
+    };
+}
+
+function generateRecommendations(password, strength) {
+    const recs = [];
+    if (password.length < 12) recs.push('Increase length to at least 12 characters');
+    if (!/[A-Z]/.test(password)) recs.push('Add uppercase letters');
+    if (!/[0-9]/.test(password)) recs.push('Add numbers');
+    if (!/[^a-zA-Z0-9]/.test(password)) recs.push('Add special characters');
+    if (strength === 'Weak') recs.push('Consider using a passphrase');
+    return recs;
+}
+
 export { checkPasswordStrength };
