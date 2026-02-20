@@ -571,4 +571,91 @@ if (typeof module !== 'undefined' && module.exports) {
     };
 })();
 
-export default UserPreferencesManager;
+export default UserPreferencesManager;class UserPreferencesManager {
+  constructor() {
+    this.preferences = this.loadPreferences();
+  }
+
+  loadPreferences() {
+    const stored = localStorage.getItem('userPreferences');
+    return stored ? JSON.parse(stored) : {
+      theme: 'light',
+      language: 'en',
+      notifications: true,
+      fontSize: 16,
+      autoSave: false
+    };
+  }
+
+  savePreferences() {
+    localStorage.setItem('userPreferences', JSON.stringify(this.preferences));
+    return this;
+  }
+
+  updatePreference(key, value) {
+    if (this.preferences.hasOwnProperty(key)) {
+      this.preferences[key] = value;
+      this.savePreferences();
+      this.dispatchChangeEvent(key, value);
+    }
+    return this;
+  }
+
+  getPreference(key) {
+    return this.preferences[key];
+  }
+
+  getAllPreferences() {
+    return { ...this.preferences };
+  }
+
+  resetToDefaults() {
+    this.preferences = {
+      theme: 'light',
+      language: 'en',
+      notifications: true,
+      fontSize: 16,
+      autoSave: false
+    };
+    this.savePreferences();
+    this.dispatchChangeEvent('reset', this.preferences);
+    return this;
+  }
+
+  dispatchChangeEvent(key, value) {
+    const event = new CustomEvent('preferencesChanged', {
+      detail: { key, value, allPreferences: this.getAllPreferences() }
+    });
+    window.dispatchEvent(event);
+  }
+
+  exportPreferences() {
+    const dataStr = JSON.stringify(this.preferences, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    return dataUri;
+  }
+
+  importPreferences(jsonString) {
+    try {
+      const imported = JSON.parse(jsonString);
+      const validKeys = Object.keys(this.preferences);
+      
+      for (const key of validKeys) {
+        if (imported.hasOwnProperty(key)) {
+          this.preferences[key] = imported[key];
+        }
+      }
+      
+      this.savePreferences();
+      this.dispatchChangeEvent('import', this.preferences);
+      return true;
+    } catch (error) {
+      console.error('Failed to import preferences:', error);
+      return false;
+    }
+  }
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = UserPreferencesManager;
+}
