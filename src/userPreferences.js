@@ -662,4 +662,42 @@ function resetToDefaultPreferences() {
   return result.preferences;
 }
 
-export { initializeUserPreferences, loadUserPreferences, resetToDefaultPreferences };
+export { initializeUserPreferences, loadUserPreferences, resetToDefaultPreferences };const USER_PREFERENCES_KEY = 'app_preferences';
+
+function saveUserPreferences(preferences) {
+    try {
+        const serialized = JSON.stringify(preferences);
+        localStorage.setItem(USER_PREFERENCES_KEY, serialized);
+        return true;
+    } catch (error) {
+        console.error('Failed to save preferences:', error);
+        return false;
+    }
+}
+
+function loadUserPreferences() {
+    try {
+        const stored = localStorage.getItem(USER_PREFERENCES_KEY);
+        return stored ? JSON.parse(stored) : {};
+    } catch (error) {
+        console.error('Failed to load preferences:', error);
+        return {};
+    }
+}
+
+function updateUserPreferences(updates) {
+    const current = loadUserPreferences();
+    const updated = { ...current, ...updates };
+    return saveUserPreferences(updated);
+}
+
+function clearUserPreferences() {
+    localStorage.removeItem(USER_PREFERENCES_KEY);
+}
+
+export {
+    saveUserPreferences,
+    loadUserPreferences,
+    updateUserPreferences,
+    clearUserPreferences
+};
