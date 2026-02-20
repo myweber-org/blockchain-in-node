@@ -1,48 +1,58 @@
-const CACHE_DURATION = 5 * 60 * 1000;
-const userDataCache = new Map();
+const fetchUserData = async (userId, maxRetries = 3) => {
+    const baseUrl = 'https://api.example.com/users';
+    let lastError;
 
-async function fetchUserData(userId) {
-    const cached = userDataCache.get(userId);
-    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-        return cached.data;
-    }
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            const response = await fetch(`${baseUrl}/${userId}`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
 
-    try {
-        const response = await fetch(`https://api.example.com/users/${userId}`);
-        if (!response.ok) {
-            throw new Error(`HTTP error: ${response.status}`);
+            const data = await response.json();
+            return { success: true, data };
+        } catch (error) {
+            lastError = error;
+            console.warn(`Attempt ${attempt} failed:`, error.message);
+            
+            if (attempt < maxRetries) {
+                await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            }
         }
-        const data = await response.json();
-        userDataCache.set(userId, {
-            data: data,
-            timestamp: Date.now()
-        });
-        return data;
-    } catch (error) {
-        console.error('Failed to fetch user data:', error);
-        throw error;
     }
-}async function fetchUserData(userId) {
-  const apiUrl = `https://api.example.com/users/${userId}`;
-  
-  try {
-    const response = await fetch(apiUrl);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const userData = await response.json();
-    
-    return {
-      id: userData.id,
-      name: userData.name,
-      email: userData.email,
-      isActive: userData.status === 'active',
-      lastLogin: new Date(userData.last_login)
+
+    return { 
+        success: false, 
+        error: `Failed after ${maxRetries} attempts: ${lastError.message}` 
     };
-  } catch (error) {
-    console.error('Failed to fetch user data:', error);
-    throw error;
-  }
-}
+};
+
+const validateUserData = (userData) => {
+    const requiredFields = ['id', 'name', 'email'];
+    return requiredFields.every(field => userData.hasOwnProperty(field));
+};
+
+const processUserData = async (userId) => {
+    const result = await fetchUserData(userId);
+    
+    if (!result.success) {
+        console.error('Failed to fetch user data:', result.error);
+        return null;
+    }
+
+    if (!validateUserData(result.data)) {
+        console.error('Invalid user data structure');
+        return null;
+    }
+
+    const processedData = {
+        ...result.data,
+        fetchedAt: new Date().toISOString(),
+        displayName: `${result.data.name} (${result.data.email})`
+    };
+
+    return processedData;
+};
+
+export { fetchUserData, processUserData };
