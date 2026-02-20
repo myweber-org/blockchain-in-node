@@ -162,4 +162,60 @@ const UserPreferencesManager = (() => {
         clear: clearPreferences,
         getAll: getAllPreferences
     };
+})();const UserPreferencesManager = (function() {
+    const STORAGE_KEY = 'user_preferences';
+    
+    const defaultPreferences = {
+        theme: 'light',
+        language: 'en',
+        notifications: true,
+        fontSize: 16,
+        autoSave: true
+    };
+
+    function getPreferences() {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+            try {
+                return { ...defaultPreferences, ...JSON.parse(stored) };
+            } catch (e) {
+                console.error('Failed to parse stored preferences:', e);
+                return defaultPreferences;
+            }
+        }
+        return defaultPreferences;
+    }
+
+    function updatePreferences(updates) {
+        const current = getPreferences();
+        const updated = { ...current, ...updates };
+        
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+            return updated;
+        } catch (e) {
+            console.error('Failed to save preferences:', e);
+            return current;
+        }
+    }
+
+    function resetPreferences() {
+        localStorage.removeItem(STORAGE_KEY);
+        return defaultPreferences;
+    }
+
+    function subscribe(callback) {
+        window.addEventListener('storage', function(event) {
+            if (event.key === STORAGE_KEY) {
+                callback(getPreferences());
+            }
+        });
+    }
+
+    return {
+        get: getPreferences,
+        update: updatePreferences,
+        reset: resetPreferences,
+        subscribe: subscribe
+    };
 })();
