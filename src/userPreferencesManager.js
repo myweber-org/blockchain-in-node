@@ -124,4 +124,42 @@ const UserPreferencesManager = (() => {
         reset: resetPreferences,
         subscribe: subscribe
     };
+})();const UserPreferencesManager = (function() {
+    const PREFERENCES_KEY = 'app_user_preferences';
+
+    function getPreferences() {
+        const stored = localStorage.getItem(PREFERENCES_KEY);
+        return stored ? JSON.parse(stored) : {};
+    }
+
+    function setPreference(key, value) {
+        const preferences = getPreferences();
+        preferences[key] = value;
+        localStorage.setItem(PREFERENCES_KEY, JSON.stringify(preferences));
+        return preferences;
+    }
+
+    function removePreference(key) {
+        const preferences = getPreferences();
+        delete preferences[key];
+        localStorage.setItem(PREFERENCES_KEY, JSON.stringify(preferences));
+        return preferences;
+    }
+
+    function clearPreferences() {
+        localStorage.removeItem(PREFERENCES_KEY);
+        return {};
+    }
+
+    function getAllPreferences() {
+        return getPreferences();
+    }
+
+    return {
+        get: getPreferences,
+        set: setPreference,
+        remove: removePreference,
+        clear: clearPreferences,
+        getAll: getAllPreferences
+    };
 })();
