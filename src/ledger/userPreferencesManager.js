@@ -789,4 +789,128 @@ if (typeof module !== 'undefined' && module.exports) {
   }
 }
 
-export default UserPreferencesManager;
+export default UserPreferencesManager;const UserPreferences = {
+  defaults: {
+    theme: 'light',
+    fontSize: 16,
+    notifications: true,
+    language: 'en',
+    autoSave: true
+  },
+
+  init() {
+    if (!this.isSupported()) {
+      console.warn('localStorage not supported, using defaults');
+      return this.defaults;
+    }
+
+    const stored = this.getAll();
+    if (!stored || Object.keys(stored).length === 0) {
+      this.setAll(this.defaults);
+      return this.defaults;
+    }
+
+    return { ...this.defaults, ...stored };
+  },
+
+  isSupported() {
+    try {
+      const testKey = '__storage_test__';
+      localStorage.setItem(testKey, testKey);
+      localStorage.removeItem(testKey);
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  get(key) {
+    if (!this.isSupported()) return this.defaults[key];
+
+    try {
+      const item = localStorage.getItem(`pref_${key}`);
+      return item ? JSON.parse(item) : this.defaults[key];
+    } catch {
+      return this.defaults[key];
+    }
+  },
+
+  set(key, value) {
+    if (!this.isSupported()) return false;
+
+    try {
+      localStorage.setItem(`pref_${key}`, JSON.stringify(value));
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  getAll() {
+    if (!this.isSupported()) return {};
+
+    const preferences = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key.startsWith('pref_')) {
+        try {
+          const prefKey = key.replace('pref_', '');
+          preferences[prefKey] = JSON.parse(localStorage.getItem(key));
+        } catch {
+          continue;
+        }
+      }
+    }
+    return preferences;
+  },
+
+  setAll(prefs) {
+    if (!this.isSupported()) return false;
+
+    try {
+      Object.keys(prefs).forEach(key => {
+        this.set(key, prefs[key]);
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  reset() {
+    if (!this.isSupported()) return false;
+
+    try {
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith('pref_')) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+      this.setAll(this.defaults);
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  export() {
+    const prefs = this.getAll();
+    return JSON.stringify(prefs, null, 2);
+  },
+
+  import(jsonString) {
+    if (!this.isSupported()) return false;
+
+    try {
+      const prefs = JSON.parse(jsonString);
+      return this.setAll(prefs);
+    } catch {
+      return false;
+    }
+  }
+};
+
+export default UserPreferences;
