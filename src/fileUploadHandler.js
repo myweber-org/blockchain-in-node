@@ -327,4 +327,78 @@ function generateFileId() {
         type: file.type,
         lastModified: file.lastModified
     };
+}function validateFile(file, maxSize) {
+    if (!file) {
+        throw new Error('No file provided');
+    }
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+    if (!allowedTypes.includes(file.type)) {
+        throw new Error('Invalid file type. Allowed types: JPEG, PNG, PDF');
+    }
+
+    if (file.size > maxSize) {
+        throw new Error(`File size exceeds limit of ${maxSize} bytes`);
+    }
+
+    return {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        isValid: true
+    };
 }
+
+function handleFileUpload(event, maxSize = 5 * 1024 * 1024) {
+    try {
+        const file = event.target.files[0];
+        const validationResult = validateFile(file, maxSize);
+        
+        console.log('File validation successful:', validationResult);
+        return validationResult;
+    } catch (error) {
+        console.error('File validation failed:', error.message);
+        return {
+            isValid: false,
+            error: error.message
+        };
+    }
+}
+
+function createFileUploader(options = {}) {
+    const defaultOptions = {
+        maxSize: 5 * 1024 * 1024,
+        allowedTypes: ['image/jpeg', 'image/png', 'application/pdf'],
+        onSuccess: (file) => console.log('Upload successful:', file),
+        onError: (error) => console.error('Upload failed:', error)
+    };
+
+    const config = { ...defaultOptions, ...options };
+
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = config.allowedTypes.join(',');
+    input.style.display = 'none';
+
+    input.addEventListener('change', (event) => {
+        try {
+            const file = event.target.files[0];
+            const result = validateFile(file, config.maxSize);
+            
+            if (result.isValid) {
+                config.onSuccess(result);
+            }
+        } catch (error) {
+            config.onError(error.message);
+        }
+        
+        input.value = '';
+    });
+
+    return {
+        trigger: () => input.click(),
+        element: input
+    };
+}
+
+export { validateFile, handleFileUpload, createFileUploader };
