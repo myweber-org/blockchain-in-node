@@ -234,4 +234,35 @@ function validateRegistrationForm(userData) {
   };
 }
 
-module.exports = { validateRegistrationForm };
+module.exports = { validateRegistrationForm };function validateEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+function validatePhoneNumber(phone) {
+    const phoneRegex = /^\+?[\d\s\-\(\)]{10,}$/;
+    return phoneRegex.test(phone);
+}
+
+function validateUserInput(userData) {
+    const errors = [];
+    
+    if (!validateEmail(userData.email)) {
+        errors.push('Invalid email format');
+    }
+    
+    if (!validatePhoneNumber(userData.phone)) {
+        errors.push('Invalid phone number format');
+    }
+    
+    if (userData.username && userData.username.length < 3) {
+        errors.push('Username must be at least 3 characters');
+    }
+    
+    return {
+        isValid: errors.length === 0,
+        errors: errors
+    };
+}
+
+export { validateUserInput, validateEmail, validatePhoneNumber };
