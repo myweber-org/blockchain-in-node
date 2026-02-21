@@ -44,4 +44,63 @@ class FileManager {
     }
 }
 
+module.exports = FileManager;const fs = require('fs');
+const path = require('path');
+
+class FileManager {
+    constructor(directory) {
+        this.directory = directory;
+        if (!fs.existsSync(directory)) {
+            fs.mkdirSync(directory, { recursive: true });
+        }
+    }
+
+    readFile(filename) {
+        const filePath = path.join(this.directory, filename);
+        try {
+            const data = fs.readFileSync(filePath, 'utf8');
+            return JSON.parse(data);
+        } catch (error) {
+            if (error.code === 'ENOENT') {
+                console.log(`File ${filename} not found. Returning empty object.`);
+                return {};
+            }
+            console.error(`Error reading file ${filename}:`, error.message);
+            return null;
+        }
+    }
+
+    writeFile(filename, data) {
+        const filePath = path.join(this.directory, filename);
+        try {
+            const jsonData = JSON.stringify(data, null, 2);
+            fs.writeFileSync(filePath, jsonData, 'utf8');
+            return true;
+        } catch (error) {
+            console.error(`Error writing to file ${filename}:`, error.message);
+            return false;
+        }
+    }
+
+    listFiles() {
+        try {
+            return fs.readdirSync(this.directory).filter(file => file.endsWith('.json'));
+        } catch (error) {
+            console.error('Error listing files:', error.message);
+            return [];
+        }
+    }
+
+    deleteFile(filename) {
+        const filePath = path.join(this.directory, filename);
+        try {
+            fs.unlinkSync(filePath);
+            return true;
+        } catch (error) {
+            console.error(`Error deleting file ${filename}:`, error.message);
+            return false;
+        }
+    }
+}
+
 module.exports = FileManager;
