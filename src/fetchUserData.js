@@ -233,4 +233,25 @@ function displayUserData(user) {
       console.error('Error fetching user data:', error);
       throw error;
     });
+}const cache = new Map();
+
+async function fetchUserData(userId) {
+    if (cache.has(userId)) {
+        console.log(`Cache hit for user ${userId}`);
+        return cache.get(userId);
+    }
+
+    try {
+        const response = await fetch(`https://api.example.com/users/${userId}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const userData = await response.json();
+        cache.set(userId, userData);
+        console.log(`Fetched and cached data for user ${userId}`);
+        return userData;
+    } catch (error) {
+        console.error(`Failed to fetch data for user ${userId}:`, error);
+        throw error;
+    }
 }
