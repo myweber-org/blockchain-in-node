@@ -994,4 +994,113 @@ class UserPreferencesManager {
   }
 }
 
-export default UserPreferencesManager;
+export default UserPreferencesManager;const UserPreferencesManager = (() => {
+  const STORAGE_KEY = 'app_user_preferences';
+  
+  const defaultPreferences = {
+    theme: 'light',
+    language: 'en',
+    notifications: true,
+    fontSize: 16,
+    autoSave: true,
+    recentItems: []
+  };
+
+  const getPreferences = () => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        return { ...defaultPreferences, ...JSON.parse(stored) };
+      }
+    } catch (error) {
+      console.error('Failed to load preferences:', error);
+    }
+    return { ...defaultPreferences };
+  };
+
+  const savePreferences = (preferences) => {
+    try {
+      const current = getPreferences();
+      const updated = { ...current, ...preferences };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      return updated;
+    } catch (error) {
+      console.error('Failed to save preferences:', error);
+      return null;
+    }
+  };
+
+  const resetPreferences = () => {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      return { ...defaultPreferences };
+    } catch (error) {
+      console.error('Failed to reset preferences:', error);
+      return null;
+    }
+  };
+
+  const updatePreference = (key, value) => {
+    const current = getPreferences();
+    return savePreferences({ ...current, [key]: value });
+  };
+
+  const addRecentItem = (item) => {
+    const current = getPreferences();
+    const recentItems = [...current.recentItems];
+    
+    const existingIndex = recentItems.findIndex(i => i.id === item.id);
+    if (existingIndex !== -1) {
+      recentItems.splice(existingIndex, 1);
+    }
+    
+    recentItems.unshift(item);
+    
+    if (recentItems.length > 10) {
+      recentItems.pop();
+    }
+    
+    return updatePreference('recentItems', recentItems);
+  };
+
+  const clearRecentItems = () => {
+    return updatePreference('recentItems', []);
+  };
+
+  const exportPreferences = () => {
+    const preferences = getPreferences();
+    const dataStr = JSON.stringify(preferences, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    
+    const exportFileDefaultName = 'user-preferences.json';
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+  };
+
+  const importPreferences = (jsonString) => {
+    try {
+      const imported = JSON.parse(jsonString);
+      return savePreferences(imported);
+    } catch (error) {
+      console.error('Failed to import preferences:', error);
+      return null;
+    }
+  };
+
+  return {
+    getPreferences,
+    savePreferences,
+    resetPreferences,
+    updatePreference,
+    addRecentItem,
+    clearRecentItems,
+    exportPreferences,
+    importPreferences
+  };
+})();
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = UserPreferencesManager;
+}
