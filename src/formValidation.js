@@ -292,4 +292,44 @@ export { validateEmail, validatePassword, validateForm };function validateForm()
     }
 
     return true;
+}function validateForm() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const errors = [];
+
+    if (!emailPattern.test(email)) {
+        errors.push('Please enter a valid email address.');
+        document.getElementById('email').classList.add('invalid');
+    } else {
+        document.getElementById('email').classList.remove('invalid');
+    }
+
+    if (password.length < 8) {
+        errors.push('Password must be at least 8 characters long.');
+        document.getElementById('password').classList.add('invalid');
+    } else {
+        document.getElementById('password').classList.remove('invalid');
+    }
+
+    const errorContainer = document.getElementById('error-messages');
+    errorContainer.innerHTML = '';
+    
+    if (errors.length > 0) {
+        errors.forEach(error => {
+            const errorElement = document.createElement('p');
+            errorElement.textContent = error;
+            errorElement.className = 'error';
+            errorContainer.appendChild(errorElement);
+        });
+        return false;
+    }
+    
+    return true;
 }
+
+document.getElementById('login-form').addEventListener('submit', function(event) {
+    if (!validateForm()) {
+        event.preventDefault();
+    }
+});
