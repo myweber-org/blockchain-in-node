@@ -113,4 +113,50 @@ const UserPreferencesManager = (() => {
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = UserPreferencesManager;
-}
+}const UserPreferences = {
+  preferences: {},
+
+  init() {
+    this.loadPreferences();
+    window.addEventListener('beforeunload', () => this.savePreferences());
+  },
+
+  setPreference(key, value) {
+    this.preferences[key] = value;
+    this.savePreferences();
+  },
+
+  getPreference(key, defaultValue = null) {
+    return this.preferences[key] !== undefined ? this.preferences[key] : defaultValue;
+  },
+
+  removePreference(key) {
+    delete this.preferences[key];
+    this.savePreferences();
+  },
+
+  clearAll() {
+    this.preferences = {};
+    localStorage.removeItem('userPreferences');
+  },
+
+  savePreferences() {
+    try {
+      localStorage.setItem('userPreferences', JSON.stringify(this.preferences));
+    } catch (error) {
+      console.error('Failed to save preferences:', error);
+    }
+  },
+
+  loadPreferences() {
+    try {
+      const stored = localStorage.getItem('userPreferences');
+      this.preferences = stored ? JSON.parse(stored) : {};
+    } catch (error) {
+      console.error('Failed to load preferences:', error);
+      this.preferences = {};
+    }
+  }
+};
+
+UserPreferences.init();
