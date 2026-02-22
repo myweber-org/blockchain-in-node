@@ -55,4 +55,40 @@ module.exports = calculateFibonacci;function calculateFibonacci(n) {
         sequence.push(sequence[sequence.length - 1] + sequence[sequence.length - 2]);
     }
     return sequence;
+}function calculateFibonacci(limit) {
+    const sequence = [0, 1];
+    
+    if (limit <= 0) {
+        return [];
+    }
+    
+    if (limit === 1) {
+        return [0];
+    }
+    
+    while (sequence[sequence.length - 1] + sequence[sequence.length - 2] <= limit) {
+        const nextNumber = sequence[sequence.length - 1] + sequence[sequence.length - 2];
+        sequence.push(nextNumber);
+    }
+    
+    return sequence;
 }
+
+function isFibonacciNumber(num) {
+    if (num < 0) return false;
+    
+    const check1 = 5 * num * num + 4;
+    const check2 = 5 * num * num - 4;
+    
+    const isPerfectSquare = (n) => {
+        const sqrt = Math.sqrt(n);
+        return sqrt === Math.floor(sqrt);
+    };
+    
+    return isPerfectSquare(check1) || isPerfectSquare(check2);
+}
+
+module.exports = {
+    calculateFibonacci,
+    isFibonacciNumber
+};
