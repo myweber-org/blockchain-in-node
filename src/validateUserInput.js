@@ -75,4 +75,17 @@ function validateUserInput(email, password) {
     };
 }
 
-module.exports = validateUserInput;
+module.exports = validateUserInput;function validateUserInput(username, password) {
+    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/;
+
+    if (!usernameRegex.test(username)) {
+        throw new Error('Invalid username. Must be 3-20 characters, alphanumeric and underscores only.');
+    }
+
+    if (!passwordRegex.test(password)) {
+        throw new Error('Invalid password. Must be at least 8 characters with at least one letter and one number.');
+    }
+
+    return { username, password };
+}
