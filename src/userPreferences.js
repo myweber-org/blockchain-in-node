@@ -700,4 +700,65 @@ export {
     loadUserPreferences,
     updateUserPreferences,
     clearUserPreferences
+};const userPreferences = {
+  theme: 'light',
+  language: 'en',
+  notifications: true,
+  fontSize: 16,
+  autoSave: true
 };
+
+const defaultPreferences = {
+  theme: 'dark',
+  language: 'en',
+  notifications: false,
+  fontSize: 14,
+  autoSave: false
+};
+
+function validatePreferences(prefs) {
+  const validated = {};
+  const keys = Object.keys(defaultPreferences);
+  
+  keys.forEach(key => {
+    if (prefs[key] !== undefined && typeof prefs[key] === typeof defaultPreferences[key]) {
+      validated[key] = prefs[key];
+    } else {
+      validated[key] = defaultPreferences[key];
+    }
+  });
+  
+  return validated;
+}
+
+function mergePreferences(userPrefs) {
+  return {
+    ...defaultPreferences,
+    ...validatePreferences(userPrefs)
+  };
+}
+
+function savePreferences(prefs) {
+  try {
+    localStorage.setItem('userPreferences', JSON.stringify(prefs));
+    return true;
+  } catch (error) {
+    console.error('Failed to save preferences:', error);
+    return false;
+  }
+}
+
+function loadPreferences() {
+  try {
+    const saved = localStorage.getItem('userPreferences');
+    if (saved) {
+      return mergePreferences(JSON.parse(saved));
+    }
+    return defaultPreferences;
+  } catch (error) {
+    console.error('Failed to load preferences:', error);
+    return defaultPreferences;
+  }
+}
+
+export { validatePreferences, mergePreferences, savePreferences, loadPreferences };
