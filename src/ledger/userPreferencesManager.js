@@ -115,4 +115,92 @@ export { preferencesManager, PreferencesManager };const UserPreferencesManager =
     };
 })();
 
+export default UserPreferencesManager;const UserPreferencesManager = (() => {
+  const STORAGE_KEY = 'app_user_preferences';
+  
+  const defaultPreferences = {
+    theme: 'light',
+    language: 'en',
+    notifications: true,
+    fontSize: 16,
+    autoSave: true,
+    sidebarCollapsed: false
+  };
+
+  const loadPreferences = () => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      return stored ? { ...defaultPreferences, ...JSON.parse(stored) } : defaultPreferences;
+    } catch (error) {
+      console.error('Failed to load preferences:', error);
+      return defaultPreferences;
+    }
+  };
+
+  const savePreferences = (preferences) => {
+    try {
+      const validated = validatePreferences(preferences);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(validated));
+      return true;
+    } catch (error) {
+      console.error('Failed to save preferences:', error);
+      return false;
+    }
+  };
+
+  const validatePreferences = (preferences) => {
+    const validThemes = ['light', 'dark', 'auto'];
+    const validLanguages = ['en', 'es', 'fr', 'de'];
+    
+    return {
+      theme: validThemes.includes(preferences.theme) ? preferences.theme : defaultPreferences.theme,
+      language: validLanguages.includes(preferences.language) ? preferences.language : defaultPreferences.language,
+      notifications: typeof preferences.notifications === 'boolean' ? preferences.notifications : defaultPreferences.notifications,
+      fontSize: typeof preferences.fontSize === 'number' && preferences.fontSize >= 12 && preferences.fontSize <= 24 ? preferences.fontSize : defaultPreferences.fontSize,
+      autoSave: typeof preferences.autoSave === 'boolean' ? preferences.autoSave : defaultPreferences.autoSave,
+      sidebarCollapsed: typeof preferences.sidebarCollapsed === 'boolean' ? preferences.sidebarCollapsed : defaultPreferences.sidebarCollapsed
+    };
+  };
+
+  const resetToDefaults = () => {
+    localStorage.removeItem(STORAGE_KEY);
+    return defaultPreferences;
+  };
+
+  const getPreference = (key) => {
+    const preferences = loadPreferences();
+    return preferences[key] !== undefined ? preferences[key] : defaultPreferences[key];
+  };
+
+  const setPreference = (key, value) => {
+    const preferences = loadPreferences();
+    preferences[key] = value;
+    return savePreferences(preferences);
+  };
+
+  const getAllPreferences = () => {
+    return loadPreferences();
+  };
+
+  const subscribe = (callback) => {
+    const storageHandler = (event) => {
+      if (event.key === STORAGE_KEY) {
+        callback(loadPreferences());
+      }
+    };
+    window.addEventListener('storage', storageHandler);
+    
+    return () => window.removeEventListener('storage', storageHandler);
+  };
+
+  return {
+    get: getPreference,
+    set: setPreference,
+    getAll: getAllPreferences,
+    save: savePreferences,
+    reset: resetToDefaults,
+    subscribe: subscribe
+  };
+})();
+
 export default UserPreferencesManager;
