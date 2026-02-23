@@ -1,97 +1,118 @@
-const uploadProgress = (file, onProgress, onComplete, onError) => {
-  if (!file) {
-    onError('No file provided');
-    return;
-  }
+const uploadProgressTracker = (() => {
+    const progressBars = new Map();
+    const uploadEvents = new Map();
 
-  const totalSize = file.size;
-  let uploadedSize = 0;
-  const chunkSize = 1024 * 1024; // 1MB chunks
-  const totalChunks = Math.ceil(totalSize / chunkSize);
-  let currentChunk = 0;
+    const createProgressElement = (fileId) => {
+        const container = document.createElement('div');
+        container.className = 'upload-progress-container';
+        container.dataset.fileId = fileId;
 
-  const simulateUpload = () => {
-    if (currentChunk >= totalChunks) {
-      onComplete({ totalSize, uploadedSize });
-      return;
-    }
+        const fileName = document.createElement('span');
+        fileName.className = 'file-name';
+        fileName.textContent = `Uploading: ${fileId}`;
 
-    const chunkStart = currentChunk * chunkSize;
-    const chunkEnd = Math.min(chunkStart + chunkSize, totalSize);
-    const chunk = file.slice(chunkStart, chunkEnd);
+        const progressBar = document.createElement('div');
+        progressBar.className = 'progress-bar';
+        progressBar.innerHTML = `
+            <div class="progress-fill"></div>
+            <span class="progress-text">0%</span>
+        `;
 
-    // Simulate network delay
-    const delay = Math.random() * 500 + 100;
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'cancel-upload';
+        cancelBtn.textContent = 'Cancel';
+        cancelBtn.onclick = () => cancelUpload(fileId);
 
-    setTimeout(() => {
-      uploadedSize += chunkEnd - chunkStart;
-      currentChunk++;
+        container.appendChild(fileName);
+        container.appendChild(progressBar);
+        container.appendChild(cancelBtn);
 
-      const progress = Math.round((uploadedSize / totalSize) * 100);
-      onProgress({
-        loaded: uploadedSize,
-        total: totalSize,
-        percentage: progress,
-        chunk: currentChunk,
-        totalChunks: totalChunks
-      });
+        progressBars.set(fileId, {
+            container,
+            fill: progressBar.querySelector('.progress-fill'),
+            text: progressBar.querySelector('.progress-text')
+        });
 
-      // Randomly simulate errors (10% chance)
-      if (Math.random() < 0.1) {
-        onError(`Upload failed at chunk ${currentChunk}`);
-        return;
-      }
+        return container;
+    };
 
-      simulateUpload();
-    }, delay);
-  };
+    const updateProgress = (fileId, percentage) => {
+        const progress = progressBars.get(fileId);
+        if (!progress) return;
 
-  simulateUpload();
-};
+        const clampedPercentage = Math.min(100, Math.max(0, percentage));
+        progress.fill.style.width = `${clampedPercentage}%`;
+        progress.text.textContent = `${Math.round(clampedPercentage)}%`;
 
-const createProgressHandler = (fileId) => {
-  return {
-    onProgress: (data) => {
-      console.log(`File ${fileId}: ${data.percentage}% uploaded (${data.loaded}/${data.total} bytes)`);
-    },
-    onComplete: (data) => {
-      console.log(`File ${fileId}: Upload complete. Total: ${data.totalSize} bytes`);
-    },
-    onError: (error) => {
-      console.error(`File ${fileId}: ${error}`);
-    }
-  };
-};
+        if (clampedPercentage === 100) {
+            progress.container.classList.add('completed');
+            setTimeout(() => {
+                progress.container.remove();
+                progressBars.delete(fileId);
+                uploadEvents.delete(fileId);
+            }, 1500);
+        }
+    };
 
-// Example usage
-const handleFileSelect = (event) => {
-  const files = event.target.files;
-  
-  Array.from(files).forEach((file, index) => {
-    const fileId = `file-${index}-${Date.now()}`;
-    const handlers = createProgressHandler(fileId);
-    
-    console.log(`Starting upload: ${file.name} (${file.size} bytes)`);
-    
-    uploadProgress(
-      file,
-      handlers.onProgress,
-      handlers.onComplete,
-      handlers.onError
-    );
-  });
-};
+    const cancelUpload = (fileId) => {
+        const event = uploadEvents.get(fileId);
+        if (event && event.cancelable) {
+            event.dispatchEvent(new CustomEvent('uploadCancelled', {
+                detail: { fileId }
+            }));
+        }
 
-// Initialize file input
-const initializeUploader = () => {
-  const fileInput = document.createElement('input');
-  fileInput.type = 'file';
-  fileInput.multiple = true;
-  fileInput.addEventListener('change', handleFileSelect);
-  
-  document.body.appendChild(fileInput);
-  fileInput.click();
-};
+        const progress = progressBars.get(fileId);
+        if (progress) {
+            progress.container.remove();
+            progressBars.delete(fileId);
+        }
+        uploadEvents.delete(fileId);
+    };
 
-// Export for module usage
-export { uploadProgress, createProgressHandler, initializeUploader };
+    const handleUploadError = (fileId, error) => {
+        const progress = progressBars.get(fileId);
+        if (progress) {
+            progress.container.classList.add('error');
+            progress.text.textContent = `Error: ${error.message}`;
+            progress.container.querySelector('.cancel-upload').textContent = 'Dismiss';
+
+            setTimeout(() => {
+                progress.container.remove();
+                progressBars.delete(fileId);
+                uploadEvents.delete(fileId);
+            }, 5000);
+        }
+    };
+
+    const trackUpload = (file, uploadEvent) => {
+        const fileId = `${file.name}-${Date.now()}`;
+        const progressElement = createProgressElement(fileId);
+        document.getElementById('upload-container').appendChild(progressElement);
+
+        uploadEvents.set(fileId, uploadEvent);
+
+        uploadEvent.addEventListener('progress', (e) => {
+            if (e.lengthComputable) {
+                const percentComplete = (e.loaded / e.total) * 100;
+                updateProgress(fileId, percentComplete);
+            }
+        });
+
+        uploadEvent.addEventListener('error', (e) => {
+            handleUploadError(fileId, e.error || new Error('Upload failed'));
+        });
+
+        uploadEvent.addEventListener('abort', () => {
+            cancelUpload(fileId);
+        });
+
+        return fileId;
+    };
+
+    return {
+        trackUpload,
+        cancelUpload,
+        getActiveUploads: () => Array.from(progressBars.keys())
+    };
+})();
