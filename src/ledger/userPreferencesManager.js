@@ -1,49 +1,45 @@
-const UserPreferencesManager = (function() {
-    const STORAGE_KEY = 'user_preferences';
-    
-    function getPreferences() {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        return stored ? JSON.parse(stored) : {};
-    }
-    
-    function setPreference(key, value) {
-        const preferences = getPreferences();
-        preferences[key] = value;
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
-        return preferences;
-    }
-    
-    function removePreference(key) {
-        const preferences = getPreferences();
-        delete preferences[key];
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
-        return preferences;
-    }
-    
-    function clearAllPreferences() {
-        localStorage.removeItem(STORAGE_KEY);
-        return {};
-    }
-    
-    function hasPreference(key) {
-        const preferences = getPreferences();
-        return key in preferences;
-    }
-    
-    function getAllPreferences() {
-        return getPreferences();
-    }
-    
-    return {
-        get: getPreferences,
-        set: setPreference,
-        remove: removePreference,
-        clear: clearAllPreferences,
-        has: hasPreference,
-        all: getAllPreferences
-    };
-})();
+const userPreferences = {
+  theme: 'light',
+  fontSize: 16,
+  notifications: true,
+  language: 'en'
+};
 
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = UserPreferencesManager;
+class PreferencesManager {
+  constructor() {
+    this.prefs = this.loadPreferences();
+  }
+
+  loadPreferences() {
+    const stored = localStorage.getItem('userPreferences');
+    return stored ? JSON.parse(stored) : { ...userPreferences };
+  }
+
+  savePreferences() {
+    localStorage.setItem('userPreferences', JSON.stringify(this.prefs));
+    return this.prefs;
+  }
+
+  updatePreference(key, value) {
+    if (this.prefs.hasOwnProperty(key)) {
+      this.prefs[key] = value;
+      this.savePreferences();
+      return true;
+    }
+    return false;
+  }
+
+  resetToDefaults() {
+    this.prefs = { ...userPreferences };
+    this.savePreferences();
+    return this.prefs;
+  }
+
+  getAllPreferences() {
+    return { ...this.prefs };
+  }
 }
+
+const preferencesManager = new PreferencesManager();
+
+export { preferencesManager, PreferencesManager };
