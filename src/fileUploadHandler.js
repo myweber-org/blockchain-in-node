@@ -401,4 +401,61 @@ function createFileUploader(options = {}) {
     };
 }
 
-export { validateFile, handleFileUpload, createFileUploader };
+export { validateFile, handleFileUpload, createFileUploader };function validateFileUpload(file, maxSize, allowedTypes) {
+    if (!file) {
+        throw new Error('No file provided');
+    }
+
+    if (file.size > maxSize) {
+        throw new Error(`File size exceeds limit of ${maxSize / 1024 / 1024}MB`);
+    }
+
+    const fileExtension = file.name.split('.').pop().toLowerCase();
+    if (!allowedTypes.includes(fileExtension)) {
+        throw new Error(`File type not allowed. Allowed types: ${allowedTypes.join(', ')}`);
+    }
+
+    return {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        extension: fileExtension,
+        lastModified: file.lastModified
+    };
+}
+
+function handleFileUpload(event, config) {
+    const file = event.target.files[0];
+    
+    try {
+        const validatedFile = validateFileUpload(
+            file, 
+            config.maxSize || 5 * 1024 * 1024, 
+            config.allowedTypes || ['jpg', 'jpeg', 'png', 'gif']
+        );
+        
+        console.log('File validated successfully:', validatedFile);
+        return validatedFile;
+        
+    } catch (error) {
+        console.error('File validation failed:', error.message);
+        event.target.value = '';
+        alert(error.message);
+        return null;
+    }
+}
+
+function createFileUploader(config = {}) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = config.allowedTypes ? config.allowedTypes.map(t => `.${t}`).join(',') : '.jpg,.jpeg,.png,.gif';
+    
+    input.addEventListener('change', (event) => {
+        const result = handleFileUpload(event, config);
+        if (result && config.onSuccess) {
+            config.onSuccess(result);
+        }
+    });
+    
+    return input;
+}
