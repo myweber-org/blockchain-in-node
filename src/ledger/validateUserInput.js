@@ -52,4 +52,53 @@ function validateUserInput(username, email) {
   };
 }
 
-export { validateUsername, validateEmail, validateUserInput };
+export { validateUsername, validateEmail, validateUserInput };function validateUserInput(input, options = {}) {
+  const defaults = {
+    maxLength: 100,
+    minLength: 1,
+    allowSpecialChars: false,
+    trim: true
+  };
+  
+  const config = { ...defaults, ...options };
+  
+  if (typeof input !== 'string') {
+    return { isValid: false, error: 'Input must be a string' };
+  }
+  
+  let processedInput = input;
+  
+  if (config.trim) {
+    processedInput = processedInput.trim();
+  }
+  
+  if (processedInput.length < config.minLength) {
+    return { 
+      isValid: false, 
+      error: `Input must be at least ${config.minLength} characters long` 
+    };
+  }
+  
+  if (processedInput.length > config.maxLength) {
+    return { 
+      isValid: false, 
+      error: `Input must not exceed ${config.maxLength} characters` 
+    };
+  }
+  
+  if (!config.allowSpecialChars) {
+    const specialCharRegex = /[<>{}[\];'"`]/;
+    if (specialCharRegex.test(processedInput)) {
+      return { 
+        isValid: false, 
+        error: 'Input contains disallowed special characters' 
+      };
+    }
+  }
+  
+  return { 
+    isValid: true, 
+    cleanedInput: processedInput,
+    length: processedInput.length
+  };
+}
