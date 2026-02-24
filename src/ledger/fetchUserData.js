@@ -1,32 +1,31 @@
-function fetchUserData(userId, maxRetries = 3) {
-    const url = `https://api.example.com/users/${userId}`;
+function fetchUserData(userId) {
+    const apiUrl = `https://api.example.com/users/${userId}`;
     
-    async function attemptFetch(retryCount) {
-        try {
-            const response = await fetch(url);
-            
+    return fetch(apiUrl)
+        .then(response => {
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                throw new Error('Network response was not ok');
             }
-            
-            const data = await response.json();
+            return response.json();
+        })
+        .then(data => {
             console.log('User data fetched successfully:', data);
-            return data;
-            
-        } catch (error) {
-            console.error(`Attempt ${retryCount + 1} failed:`, error.message);
-            
-            if (retryCount < maxRetries - 1) {
-                console.log(`Retrying in ${Math.pow(2, retryCount)} seconds...`);
-                await new Promise(resolve => 
-                    setTimeout(resolve, Math.pow(2, retryCount) * 1000)
-                );
-                return attemptFetch(retryCount + 1);
-            } else {
-                throw new Error(`Failed to fetch user data after ${maxRetries} attempts: ${error.message}`);
-            }
-        }
-    }
+            return processUserData(data);
+        })
+        .catch(error => {
+            console.error('Error fetching user data:', error);
+            throw error;
+        });
+}
+
+function processUserData(userData) {
+    const processedData = {
+        id: userData.id,
+        name: userData.name.toUpperCase(),
+        email: userData.email,
+        isActive: userData.status === 'active',
+        registeredDate: new Date(userData.registeredAt).toLocaleDateString()
+    };
     
-    return attemptFetch(0);
+    return processedData;
 }
