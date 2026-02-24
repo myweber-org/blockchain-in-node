@@ -11,4 +11,9 @@ function calculateCircleArea(radius) {
     return Math.PI * radius * radius;
 }
 
-module.exports = calculateCircleArea;
+module.exports = calculateCircleArea;function calculateCircleArea(radius) {
+    if (typeof radius !== 'number' || radius < 0) {
+        throw new Error('Radius must be a non-negative number');
+    }
+    return Math.PI * radius * radius;
+}
