@@ -270,4 +270,68 @@ UserPreferencesManager.init();const UserPreferencesManager = (function() {
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = UserPreferencesManager;
-}
+}const UserPreferences = {
+  preferences: {},
+
+  init() {
+    this.loadPreferences();
+    this.setupAutoSave();
+  },
+
+  loadPreferences() {
+    try {
+      const stored = localStorage.getItem('userPreferences');
+      if (stored) {
+        this.preferences = JSON.parse(stored);
+      }
+    } catch (error) {
+      console.error('Failed to load preferences:', error);
+      this.preferences = {};
+    }
+  },
+
+  savePreferences() {
+    try {
+      localStorage.setItem('userPreferences', JSON.stringify(this.preferences));
+      return true;
+    } catch (error) {
+      console.error('Failed to save preferences:', error);
+      return false;
+    }
+  },
+
+  getPreference(key, defaultValue = null) {
+    return this.preferences.hasOwnProperty(key) ? this.preferences[key] : defaultValue;
+  },
+
+  setPreference(key, value) {
+    this.preferences[key] = value;
+    return this.savePreferences();
+  },
+
+  removePreference(key) {
+    if (this.preferences.hasOwnProperty(key)) {
+      delete this.preferences[key];
+      return this.savePreferences();
+    }
+    return false;
+  },
+
+  clearAllPreferences() {
+    this.preferences = {};
+    localStorage.removeItem('userPreferences');
+    return true;
+  },
+
+  getAllPreferences() {
+    return { ...this.preferences };
+  },
+
+  setupAutoSave() {
+    window.addEventListener('beforeunload', () => {
+      this.savePreferences();
+    });
+  }
+};
+
+UserPreferences.init();
