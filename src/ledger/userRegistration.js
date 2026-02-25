@@ -1,6 +1,6 @@
 function validateRegistrationForm(email, password) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/;
     
     if (!emailRegex.test(email)) {
         return { valid: false, message: "Invalid email format" };
@@ -24,11 +24,11 @@ function handleRegistrationSubmit(event) {
     
     const validationResult = validateRegistrationForm(email, password);
     
-    const resultElement = document.getElementById('registrationResult');
-    resultElement.textContent = validationResult.message;
-    resultElement.className = validationResult.valid ? 'success' : 'error';
+    const messageElement = document.getElementById('message');
+    messageElement.textContent = validationResult.message;
+    messageElement.className = validationResult.valid ? 'success' : 'error';
     
     if (validationResult.valid) {
-        console.log('Proceeding with registration for:', email);
+        console.log('Registration data is valid, proceeding with submission...');
     }
 }
