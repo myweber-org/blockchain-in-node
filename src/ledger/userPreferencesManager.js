@@ -135,4 +135,124 @@ const userPreferencesManager = (() => {
   }
 }
 
-export default UserPreferencesManager;
+export default UserPreferencesManager;const UserPreferencesManager = (() => {
+    const STORAGE_KEY = 'app_user_preferences';
+    
+    const defaultPreferences = {
+        theme: 'light',
+        fontSize: 16,
+        notifications: true,
+        language: 'en',
+        autoSave: true,
+        sidebarCollapsed: false
+    };
+
+    const loadPreferences = () => {
+        try {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                return { ...defaultPreferences, ...JSON.parse(stored) };
+            }
+        } catch (error) {
+            console.warn('Failed to load preferences:', error);
+        }
+        return { ...defaultPreferences };
+    };
+
+    const savePreferences = (preferences) => {
+        try {
+            const validated = validatePreferences(preferences);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(validated));
+            return true;
+        } catch (error) {
+            console.error('Failed to save preferences:', error);
+            return false;
+        }
+    };
+
+    const validatePreferences = (preferences) => {
+        const valid = {};
+        
+        if (preferences.theme && ['light', 'dark', 'auto'].includes(preferences.theme)) {
+            valid.theme = preferences.theme;
+        }
+        
+        if (typeof preferences.fontSize === 'number' && preferences.fontSize >= 12 && preferences.fontSize <= 24) {
+            valid.fontSize = preferences.fontSize;
+        }
+        
+        if (typeof preferences.notifications === 'boolean') {
+            valid.notifications = preferences.notifications;
+        }
+        
+        if (preferences.language && ['en', 'es', 'fr', 'de'].includes(preferences.language)) {
+            valid.language = preferences.language;
+        }
+        
+        if (typeof preferences.autoSave === 'boolean') {
+            valid.autoSave = preferences.autoSave;
+        }
+        
+        if (typeof preferences.sidebarCollapsed === 'boolean') {
+            valid.sidebarCollapsed = preferences.sidebarCollapsed;
+        }
+        
+        return valid;
+    };
+
+    const resetToDefaults = () => {
+        localStorage.removeItem(STORAGE_KEY);
+        return { ...defaultPreferences };
+    };
+
+    const getPreference = (key) => {
+        const prefs = loadPreferences();
+        return prefs[key];
+    };
+
+    const setPreference = (key, value) => {
+        const prefs = loadPreferences();
+        prefs[key] = value;
+        return savePreferences(prefs);
+    };
+
+    const getAllPreferences = () => {
+        return loadPreferences();
+    };
+
+    const updateMultiplePreferences = (updates) => {
+        const prefs = loadPreferences();
+        const updated = { ...prefs, ...updates };
+        return savePreferences(updated);
+    };
+
+    const exportPreferences = () => {
+        const prefs = loadPreferences();
+        return JSON.stringify(prefs, null, 2);
+    };
+
+    const importPreferences = (jsonString) => {
+        try {
+            const imported = JSON.parse(jsonString);
+            return savePreferences(imported);
+        } catch (error) {
+            console.error('Failed to import preferences:', error);
+            return false;
+        }
+    };
+
+    return {
+        get: getPreference,
+        set: setPreference,
+        getAll: getAllPreferences,
+        updateMultiple: updateMultiplePreferences,
+        reset: resetToDefaults,
+        export: exportPreferences,
+        import: importPreferences,
+        validate: validatePreferences
+    };
+})();
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = UserPreferencesManager;
+}
