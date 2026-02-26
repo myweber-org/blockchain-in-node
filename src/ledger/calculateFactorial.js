@@ -1,0 +1,25 @@
+function calculateFactorial(n) {
+    if (typeof n !== 'number' || !Number.isInteger(n) || n < 0) {
+        throw new Error('Input must be a non-negative integer');
+    }
+    
+    if (n === 0 || n === 1) {
+        return 1;
+    }
+    
+    return n * calculateFactorial(n - 1);
+}
+
+function factorialWithLoop(n) {
+    if (typeof n !== 'number' || !Number.isInteger(n) || n < 0) {
+        throw new Error('Input must be a non-negative integer');
+    }
+    
+    let result = 1;
+    for (let i = 2; i <= n; i++) {
+        result *= i;
+    }
+    return result;
+}
+
+module.exports = { calculateFactorial, factorialWithLoop };
