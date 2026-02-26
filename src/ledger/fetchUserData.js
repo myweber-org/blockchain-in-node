@@ -86,4 +86,28 @@ const processUserData = async () => {
     }
 };
 
-export { fetchUserData, processUserData };
+export { fetchUserData, processUserData };function fetchUserData(userId, maxRetries = 3) {
+    const url = `https://api.example.com/users/${userId}`;
+    let retryCount = 0;
+
+    function attemptFetch() {
+        return fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .catch(error => {
+                if (retryCount < maxRetries) {
+                    retryCount++;
+                    console.warn(`Fetch attempt ${retryCount} failed. Retrying...`);
+                    return attemptFetch();
+                } else {
+                    throw new Error(`Failed to fetch user data after ${maxRetries} attempts: ${error.message}`);
+                }
+            });
+    }
+
+    return attemptFetch();
+}
