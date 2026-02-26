@@ -327,4 +327,43 @@ if (typeof module !== 'undefined' && module.exports) {
   };
 })();
 
-export default UserPreferencesManager;
+export default UserPreferencesManager;const userPreferencesManager = (function() {
+    const STORAGE_KEY = 'app_preferences';
+    const DEFAULT_PREFERENCES = {
+        theme: 'light',
+        language: 'en',
+        notifications: true,
+        fontSize: 16
+    };
+
+    function getPreferences() {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        return stored ? JSON.parse(stored) : { ...DEFAULT_PREFERENCES };
+    }
+
+    function updatePreferences(newPreferences) {
+        const current = getPreferences();
+        const updated = { ...current, ...newPreferences };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        dispatchEvent(new CustomEvent('preferencesChanged', { detail: updated }));
+        return updated;
+    }
+
+    function resetPreferences() {
+        localStorage.removeItem(STORAGE_KEY);
+        dispatchEvent(new CustomEvent('preferencesChanged', { detail: DEFAULT_PREFERENCES }));
+        return { ...DEFAULT_PREFERENCES };
+    }
+
+    function getPreference(key) {
+        const prefs = getPreferences();
+        return prefs[key] !== undefined ? prefs[key] : DEFAULT_PREFERENCES[key];
+    }
+
+    return {
+        get: getPreferences,
+        update: updatePreferences,
+        reset: resetPreferences,
+        getValue: getPreference
+    };
+})();
