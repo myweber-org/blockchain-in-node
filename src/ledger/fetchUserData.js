@@ -4,7 +4,7 @@ function fetchUserData(userId) {
     fetch(apiUrl)
         .then(response => {
             if (!response.ok) {
-                throw new Error('Network response was not ok');
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
             return response.json();
         })
@@ -19,9 +19,9 @@ function fetchUserData(userId) {
 }
 
 function displayUserInfo(user) {
-    const userInfoDiv = document.getElementById('userInfo');
-    if (userInfoDiv) {
-        userInfoDiv.innerHTML = `
+    const outputDiv = document.getElementById('user-info');
+    if (outputDiv) {
+        outputDiv.innerHTML = `
             <h3>${user.name}</h3>
             <p>Email: ${user.email}</p>
             <p>Phone: ${user.phone}</p>
@@ -32,95 +32,8 @@ function displayUserInfo(user) {
 }
 
 function displayErrorMessage(message) {
-    const userInfoDiv = document.getElementById('userInfo');
-    if (userInfoDiv) {
-        userInfoDiv.innerHTML = `<p class="error">Error: ${message}</p>`;
-    }
-}const fetchUserData = async (userId, maxRetries = 3) => {
-    const baseUrl = 'https://api.example.com/users';
-    
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-            const response = await fetch(`${baseUrl}/${userId}`);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            return {
-                success: true,
-                data: data,
-                attempts: attempt
-            };
-            
-        } catch (error) {
-            console.warn(`Attempt ${attempt} failed: ${error.message}`);
-            
-            if (attempt === maxRetries) {
-                return {
-                    success: false,
-                    error: error.message,
-                    attempts: attempt
-                };
-            }
-            
-            await new Promise(resolve => 
-                setTimeout(resolve, Math.pow(2, attempt) * 100)
-            );
-        }
-    }
-};
-
-const processUserData = async () => {
-    const result = await fetchUserData(12345);
-    
-    if (result.success) {
-        console.log(`User data fetched successfully after ${result.attempts} attempt(s)`);
-        console.log('User data:', result.data);
-        return result.data;
-    } else {
-        console.error(`Failed to fetch user data after ${result.attempts} attempts`);
-        console.error('Error:', result.error);
-        return null;
-    }
-};
-
-export { fetchUserData, processUserData };function fetchUserData(userId, maxRetries = 3) {
-    const url = `https://api.example.com/users/${userId}`;
-    let retryCount = 0;
-
-    function attemptFetch() {
-        return fetch(url)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .catch(error => {
-                if (retryCount < maxRetries) {
-                    retryCount++;
-                    console.warn(`Fetch attempt ${retryCount} failed. Retrying...`);
-                    return attemptFetch();
-                } else {
-                    throw new Error(`Failed to fetch user data after ${maxRetries} attempts: ${error.message}`);
-                }
-            });
-    }
-
-    return attemptFetch();
-}async function fetchUserData(url) {
-    try {
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        console.log('User data fetched successfully:', data);
-        return data;
-    } catch (error) {
-        console.error('Failed to fetch user data:', error);
-        return null;
+    const outputDiv = document.getElementById('user-info');
+    if (outputDiv) {
+        outputDiv.innerHTML = `<p class="error">Error: ${message}</p>`;
     }
 }
