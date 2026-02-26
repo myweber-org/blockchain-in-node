@@ -4,7 +4,7 @@ function fetchUserData(userId) {
     fetch(apiUrl)
         .then(response => {
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                throw new Error('Network response was not ok');
             }
             return response.json();
         })
@@ -19,39 +19,21 @@ function fetchUserData(userId) {
 }
 
 function displayUserInfo(user) {
-    const container = document.getElementById('user-info');
-    if (container) {
-        container.innerHTML = `
+    const userInfoDiv = document.getElementById('userInfo');
+    if (userInfoDiv) {
+        userInfoDiv.innerHTML = `
             <h3>${user.name}</h3>
             <p>Email: ${user.email}</p>
             <p>Phone: ${user.phone}</p>
-            <p>Website: <a href="http://${user.website}" target="_blank">${user.website}</a></p>
+            <p>Website: ${user.website}</p>
+            <p>Company: ${user.company.name}</p>
         `;
     }
 }
 
 function displayErrorMessage(message) {
-    const container = document.getElementById('user-info');
-    if (container) {
-        container.innerHTML = `<p class="error">Failed to load user data: ${message}</p>`;
-    }
-}
-
-// Example usage
-document.addEventListener('DOMContentLoaded', function() {
-    const userId = 1;
-    fetchUserData(userId);
-});async function fetchUserData(url) {
-    try {
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        console.log('Fetched user data:', data);
-        return data;
-    } catch (error) {
-        console.error('Error fetching user data:', error);
-        return null;
+    const userInfoDiv = document.getElementById('userInfo');
+    if (userInfoDiv) {
+        userInfoDiv.innerHTML = `<p class="error">Error: ${message}</p>`;
     }
 }
