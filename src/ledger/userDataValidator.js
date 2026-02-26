@@ -76,4 +76,31 @@ function validateUserData(userData) {
     };
 }
 
-export { validateEmail, validatePassword, validateUsername, validateUserData };
+export { validateEmail, validatePassword, validateUsername, validateUserData };function validateUserData(user) {
+    const errors = {};
+
+    if (!user.username || user.username.trim().length < 3) {
+        errors.username = 'Username must be at least 3 characters';
+    }
+
+    if (!user.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email)) {
+        errors.email = 'Valid email is required';
+    }
+
+    if (!user.password || user.password.length < 8) {
+        errors.password = 'Password must be at least 8 characters';
+    }
+
+    if (user.password !== user.confirmPassword) {
+        errors.confirmPassword = 'Passwords do not match';
+    }
+
+    if (user.age && (user.age < 0 || user.age > 150)) {
+        errors.age = 'Age must be between 0 and 150';
+    }
+
+    return {
+        isValid: Object.keys(errors).length === 0,
+        errors: errors
+    };
+}
