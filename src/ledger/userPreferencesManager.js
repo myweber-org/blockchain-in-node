@@ -114,4 +114,83 @@ const UserPreferencesManager = (() => {
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = UserPreferencesManager;
+}const UserPreferencesManager = (function() {
+    const PREFERENCES_KEY = 'app_user_preferences';
+    
+    const defaultPreferences = {
+        theme: 'light',
+        language: 'en',
+        notifications: true,
+        fontSize: 16,
+        autoSave: true,
+        sidebarCollapsed: false
+    };
+
+    function getPreferences() {
+        try {
+            const stored = localStorage.getItem(PREFERENCES_KEY);
+            return stored ? JSON.parse(stored) : { ...defaultPreferences };
+        } catch (error) {
+            console.error('Error reading preferences:', error);
+            return { ...defaultPreferences };
+        }
+    }
+
+    function savePreferences(preferences) {
+        try {
+            const current = getPreferences();
+            const updated = { ...current, ...preferences };
+            localStorage.setItem(PREFERENCES_KEY, JSON.stringify(updated));
+            return updated;
+        } catch (error) {
+            console.error('Error saving preferences:', error);
+            return null;
+        }
+    }
+
+    function resetToDefaults() {
+        try {
+            localStorage.setItem(PREFERENCES_KEY, JSON.stringify(defaultPreferences));
+            return { ...defaultPreferences };
+        } catch (error) {
+            console.error('Error resetting preferences:', error);
+            return null;
+        }
+    }
+
+    function getPreference(key) {
+        const prefs = getPreferences();
+        return prefs[key] !== undefined ? prefs[key] : defaultPreferences[key];
+    }
+
+    function setPreference(key, value) {
+        return savePreferences({ [key]: value });
+    }
+
+    function subscribe(callback) {
+        const originalSetItem = localStorage.setItem;
+        localStorage.setItem = function(key, value) {
+            originalSetItem.apply(this, arguments);
+            if (key === PREFERENCES_KEY) {
+                callback(getPreferences());
+            }
+        };
+        
+        return function unsubscribe() {
+            localStorage.setItem = originalSetItem;
+        };
+    }
+
+    return {
+        getPreferences,
+        savePreferences,
+        resetToDefaults,
+        getPreference,
+        setPreference,
+        subscribe
+    };
+})();
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = UserPreferencesManager;
 }
