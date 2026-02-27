@@ -458,4 +458,62 @@ function createFileUploader(config = {}) {
     });
     
     return input;
+}function uploadFile(file, uploadUrl, onProgress, onSuccess, onError) {
+    if (!file || !(file instanceof File)) {
+        onError('Invalid file provided');
+        return;
+    }
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+    const maxSize = 10 * 1024 * 1024; // 10MB
+
+    if (!allowedTypes.includes(file.type)) {
+        onError('File type not allowed');
+        return;
+    }
+
+    if (file.size > maxSize) {
+        onError('File size exceeds limit');
+        return;
+    }
+
+    const xhr = new XMLHttpRequest();
+    const formData = new FormData();
+    formData.append('file', file);
+
+    xhr.upload.addEventListener('progress', (event) => {
+        if (event.lengthComputable) {
+            const percentComplete = (event.loaded / event.total) * 100;
+            onProgress(Math.round(percentComplete));
+        }
+    });
+
+    xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+                const response = JSON.parse(xhr.responseText);
+                onSuccess(response);
+            } catch (error) {
+                onError('Invalid response from server');
+            }
+        } else {
+            onError(`Upload failed with status: ${xhr.status}`);
+        }
+    });
+
+    xhr.addEventListener('error', () => {
+        onError('Network error occurred');
+    });
+
+    xhr.addEventListener('abort', () => {
+        onError('Upload cancelled');
+    });
+
+    xhr.open('POST', uploadUrl);
+    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+    xhr.send(formData);
+
+    return {
+        abort: () => xhr.abort()
+    };
 }
