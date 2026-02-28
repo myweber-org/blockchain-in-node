@@ -193,4 +193,114 @@ if (typeof module !== 'undefined' && module.exports) {
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = UserPreferencesManager;
-}
+}const userPreferencesManager = (() => {
+  const STORAGE_KEY = 'app_user_preferences';
+  const DEFAULT_PREFERENCES = {
+    theme: 'light',
+    language: 'en',
+    notifications: true,
+    fontSize: 16,
+    autoSave: false,
+    lastUpdated: null
+  };
+
+  const getPreferences = () => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        return { ...DEFAULT_PREFERENCES, ...parsed };
+      }
+    } catch (error) {
+      console.warn('Failed to load preferences:', error);
+    }
+    return { ...DEFAULT_PREFERENCES };
+  };
+
+  const savePreferences = (updates) => {
+    try {
+      const current = getPreferences();
+      const merged = {
+        ...current,
+        ...updates,
+        lastUpdated: new Date().toISOString()
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+      return { success: true, preferences: merged };
+    } catch (error) {
+      console.error('Failed to save preferences:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
+  const resetPreferences = () => {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      return { success: true, preferences: DEFAULT_PREFERENCES };
+    } catch (error) {
+      console.error('Failed to reset preferences:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
+  const validatePreference = (key, value) => {
+    const validators = {
+      theme: (val) => ['light', 'dark', 'auto'].includes(val),
+      language: (val) => /^[a-z]{2}$/.test(val),
+      notifications: (val) => typeof val === 'boolean',
+      fontSize: (val) => Number.isInteger(val) && val >= 12 && val <= 24,
+      autoSave: (val) => typeof val === 'boolean'
+    };
+
+    if (!validators[key]) return false;
+    return validators[key](value);
+  };
+
+  const updatePreference = (key, value) => {
+    if (!validatePreference(key, value)) {
+      return { success: false, error: `Invalid value for ${key}` };
+    }
+    return savePreferences({ [key]: value });
+  };
+
+  const exportPreferences = () => {
+    const prefs = getPreferences();
+    const blob = new Blob([JSON.stringify(prefs, null, 2)], {
+      type: 'application/json'
+    });
+    return URL.createObjectURL(blob);
+  };
+
+  const importPreferences = (jsonString) => {
+    try {
+      const imported = JSON.parse(jsonString);
+      const validUpdates = {};
+      
+      Object.keys(imported).forEach(key => {
+        if (key in DEFAULT_PREFERENCES && validatePreference(key, imported[key])) {
+          validUpdates[key] = imported[key];
+        }
+      });
+
+      if (Object.keys(validUpdates).length > 0) {
+        return savePreferences(validUpdates);
+      }
+      return { success: false, error: 'No valid preferences found in import' };
+    } catch (error) {
+      return { success: false, error: 'Invalid JSON format' };
+    }
+  };
+
+  return {
+    get: getPreferences,
+    save: savePreferences,
+    reset: resetPreferences,
+    update: updatePreference,
+    export: exportPreferences,
+    import: importPreferences,
+    validate: validatePreference,
+    defaults: DEFAULT_PREFERENCES
+  };
+})();
+
+export default userPreferencesManager;
