@@ -1,14 +1,23 @@
-function validateUserInput(username, email) {
+function validateUserInput(username, password) {
     const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/;
 
     if (!usernameRegex.test(username)) {
-        throw new Error('Invalid username format');
+        return {
+            isValid: false,
+            message: "Username must be 3-20 characters and contain only letters, numbers, and underscores."
+        };
     }
 
-    if (!emailRegex.test(email)) {
-        throw new Error('Invalid email format');
+    if (!passwordRegex.test(password)) {
+        return {
+            isValid: false,
+            message: "Password must be at least 8 characters long and contain at least one letter and one number."
+        };
     }
 
-    return { username, email };
+    return {
+        isValid: true,
+        message: "Input validation passed."
+    };
 }
