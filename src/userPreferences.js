@@ -761,4 +761,40 @@ function loadPreferences() {
   }
 }
 
-export { validatePreferences, mergePreferences, savePreferences, loadPreferences };
+export { validatePreferences, mergePreferences, savePreferences, loadPreferences };const defaultPreferences = {
+  theme: 'light',
+  language: 'en',
+  fontSize: 16,
+  notifications: true,
+  autoSave: true
+};
+
+const UserPreferences = {
+  get: function(key) {
+    const stored = localStorage.getItem('userPreferences');
+    const preferences = stored ? JSON.parse(stored) : defaultPreferences;
+    return key ? preferences[key] : preferences;
+  },
+
+  set: function(key, value) {
+    const current = this.get();
+    const updated = { ...current, [key]: value };
+    localStorage.setItem('userPreferences', JSON.stringify(updated));
+    return updated;
+  },
+
+  reset: function() {
+    localStorage.setItem('userPreferences', JSON.stringify(defaultPreferences));
+    return defaultPreferences;
+  },
+
+  clear: function() {
+    localStorage.removeItem('userPreferences');
+  },
+
+  isSet: function() {
+    return localStorage.getItem('userPreferences') !== null;
+  }
+};
+
+export default UserPreferences;
