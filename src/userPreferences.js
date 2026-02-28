@@ -797,4 +797,56 @@ const UserPreferences = {
   }
 };
 
-export default UserPreferences;
+export default UserPreferences;const userPreferences = {
+  theme: 'light',
+  notifications: true,
+  language: 'en'
+};
+
+function validatePreferences(prefs) {
+  const validThemes = ['light', 'dark', 'auto'];
+  const validLanguages = ['en', 'es', 'fr', 'de'];
+  
+  if (!validThemes.includes(prefs.theme)) {
+    throw new Error('Invalid theme selection');
+  }
+  
+  if (!validLanguages.includes(prefs.language)) {
+    throw new Error('Invalid language selection');
+  }
+  
+  if (typeof prefs.notifications !== 'boolean') {
+    throw new Error('Notifications must be boolean');
+  }
+  
+  return true;
+}
+
+function savePreferences(prefs) {
+  if (validatePreferences(prefs)) {
+    localStorage.setItem('userPreferences', JSON.stringify(prefs));
+    return true;
+  }
+  return false;
+}
+
+function loadPreferences() {
+  const stored = localStorage.getItem('userPreferences');
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch (error) {
+      console.error('Failed to parse stored preferences:', error);
+      return userPreferences;
+    }
+  }
+  return userPreferences;
+}
+
+function updatePreference(key, value) {
+  const current = loadPreferences();
+  current[key] = value;
+  return savePreferences(current);
+}
+
+export { validatePreferences, savePreferences, loadPreferences, updatePreference };
