@@ -87,4 +87,54 @@ function initializeUserPreferences() {
     return preferences;
 }
 
-export { validateUserPreferences, initializeUserPreferences };
+export { validateUserPreferences, initializeUserPreferences };const USER_PREFERENCES_KEY = 'app_user_preferences';
+
+const defaultPreferences = {
+    theme: 'light',
+    language: 'en',
+    notifications: true,
+    fontSize: 16,
+    autoSave: false
+};
+
+function getUserPreferences() {
+    const stored = localStorage.getItem(USER_PREFERENCES_KEY);
+    if (stored) {
+        try {
+            return JSON.parse(stored);
+        } catch (error) {
+            console.error('Failed to parse stored preferences:', error);
+            return defaultPreferences;
+        }
+    }
+    return defaultPreferences;
+}
+
+function saveUserPreferences(preferences) {
+    try {
+        const merged = { ...defaultPreferences, ...preferences };
+        localStorage.setItem(USER_PREFERENCES_KEY, JSON.stringify(merged));
+        return true;
+    } catch (error) {
+        console.error('Failed to save preferences:', error);
+        return false;
+    }
+}
+
+function resetUserPreferences() {
+    localStorage.removeItem(USER_PREFERENCES_KEY);
+    return defaultPreferences;
+}
+
+function updatePreference(key, value) {
+    const current = getUserPreferences();
+    const updated = { ...current, [key]: value };
+    return saveUserPreferences(updated);
+}
+
+export {
+    getUserPreferences,
+    saveUserPreferences,
+    resetUserPreferences,
+    updatePreference
+};
