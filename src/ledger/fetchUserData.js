@@ -1,99 +1,31 @@
-function fetchUserData(userId) {
-    fetch(`https://api.example.com/users/${userId}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('User data:', data);
-            displayUserData(data);
-        })
-        .catch(error => {
-            console.error('Error fetching user data:', error);
-        });
-}
+function fetchUserData(userId, cacheDuration = 300000) {
+  const cacheKey = `user_${userId}`;
+  const cachedData = localStorage.getItem(cacheKey);
 
-function displayUserData(user) {
-    const container = document.getElementById('userDataContainer');
-    if (container) {
-        container.innerHTML = `
-            <h2>${user.name}</h2>
-            <p>Email: ${user.email}</p>
-            <p>Location: ${user.location}</p>
-        `;
+  if (cachedData) {
+    const { data, timestamp } = JSON.parse(cachedData);
+    if (Date.now() - timestamp < cacheDuration) {
+      return Promise.resolve(data);
     }
-}function fetchUserData(userId) {
-    const apiUrl = `https://api.example.com/users/${userId}`;
-    
-    return fetch(apiUrl)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            const processedData = {
-                id: data.id,
-                name: data.name,
-                email: data.email,
-                active: data.status === 'active',
-                lastLogin: new Date(data.last_login)
-            };
-            return processedData;
-        })
-        .catch(error => {
-            console.error('Error fetching user data:', error);
-            throw error;
-        });
-}function fetchUserData(userId) {
-    const apiUrl = `https://jsonplaceholder.typicode.com/users/${userId}`;
-    
-    fetch(apiUrl)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('User Data:', data);
-            displayUserInfo(data);
-        })
-        .catch(error => {
-            console.error('Error fetching user data:', error);
-            displayErrorMessage(error.message);
-        });
-}
+  }
 
-function displayUserInfo(user) {
-    const outputDiv = document.getElementById('userOutput');
-    if (outputDiv) {
-        outputDiv.innerHTML = `
-            <h3>User Information</h3>
-            <p><strong>Name:</strong> ${user.name}</p>
-            <p><strong>Email:</strong> ${user.email}</p>
-            <p><strong>Phone:</strong> ${user.phone}</p>
-            <p><strong>Company:</strong> ${user.company.name}</p>
-        `;
-    }
+  return fetch(`https://api.example.com/users/${userId}`)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      const cacheItem = {
+        data: data,
+        timestamp: Date.now()
+      };
+      localStorage.setItem(cacheKey, JSON.stringify(cacheItem));
+      return data;
+    })
+    .catch(error => {
+      console.error('Failed to fetch user data:', error);
+      throw error;
+    });
 }
-
-function displayErrorMessage(message) {
-    const outputDiv = document.getElementById('userOutput');
-    if (outputDiv) {
-        outputDiv.innerHTML = `<p class="error">Error: ${message}</p>`;
-    }
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    const fetchButton = document.getElementById('fetchUserBtn');
-    if (fetchButton) {
-        fetchButton.addEventListener('click', function() {
-            const userId = document.getElementById('userIdInput').value || 1;
-            fetchUserData(userId);
-        });
-    }
-});
