@@ -116,4 +116,65 @@ document.getElementById('loginForm').addEventListener('submit', function(event) 
     }
     
     return true;
+}function validateEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
 }
+
+function validatePassword(password) {
+    return password.length >= 8;
+}
+
+function setupFormValidation() {
+    const form = document.getElementById('userForm');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const emailError = document.getElementById('emailError');
+    const passwordError = document.getElementById('passwordError');
+
+    function validateForm() {
+        let isValid = true;
+
+        if (!validateEmail(emailInput.value)) {
+            emailError.textContent = 'Please enter a valid email address';
+            emailInput.classList.add('invalid');
+            isValid = false;
+        } else {
+            emailError.textContent = '';
+            emailInput.classList.remove('invalid');
+        }
+
+        if (!validatePassword(passwordInput.value)) {
+            passwordError.textContent = 'Password must be at least 8 characters long';
+            passwordInput.classList.add('invalid');
+            isValid = false;
+        } else {
+            passwordError.textContent = '';
+            passwordInput.classList.remove('invalid');
+        }
+
+        return isValid;
+    }
+
+    emailInput.addEventListener('input', function() {
+        if (validateEmail(this.value)) {
+            emailError.textContent = '';
+            this.classList.remove('invalid');
+        }
+    });
+
+    passwordInput.addEventListener('input', function() {
+        if (validatePassword(this.value)) {
+            passwordError.textContent = '';
+            this.classList.remove('invalid');
+        }
+    });
+
+    form.addEventListener('submit', function(event) {
+        if (!validateForm()) {
+            event.preventDefault();
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', setupFormValidation);
