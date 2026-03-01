@@ -883,4 +883,79 @@ export { validateFile, uploadFile, createFileUploader };const fileUploader = {
   }
 };
 
-export default fileUploader;
+export default fileUploader;function FileUploader(options) {
+  const defaultOptions = {
+    maxSize: 10 * 1024 * 1024,
+    allowedTypes: ['image/jpeg', 'image/png', 'application/pdf'],
+    endpoint: '/upload'
+  };
+  
+  this.config = { ...defaultOptions, ...options };
+  this.progressHandlers = [];
+  this.completeHandlers = [];
+  this.errorHandlers = [];
+}
+
+FileUploader.prototype.validateFile = function(file) {
+  if (file.size > this.config.maxSize) {
+    throw new Error('File size exceeds limit');
+  }
+  
+  if (!this.config.allowedTypes.includes(file.type)) {
+    throw new Error('File type not allowed');
+  }
+  
+  return true;
+};
+
+FileUploader.prototype.upload = function(file) {
+  try {
+    this.validateFile(file);
+  } catch (error) {
+    this.errorHandlers.forEach(handler => handler(error));
+    return;
+  }
+  
+  const formData = new FormData();
+  formData.append('file', file);
+  
+  const xhr = new XMLHttpRequest();
+  
+  xhr.upload.addEventListener('progress', (event) => {
+    if (event.lengthComputable) {
+      const percentComplete = (event.loaded / event.total) * 100;
+      this.progressHandlers.forEach(handler => handler(percentComplete));
+    }
+  });
+  
+  xhr.addEventListener('load', () => {
+    if (xhr.status === 200) {
+      const response = JSON.parse(xhr.responseText);
+      this.completeHandlers.forEach(handler => handler(response));
+    } else {
+      this.errorHandlers.forEach(handler => handler(new Error('Upload failed')));
+    }
+  });
+  
+  xhr.addEventListener('error', () => {
+    this.errorHandlers.forEach(handler => handler(new Error('Network error')));
+  });
+  
+  xhr.open('POST', this.config.endpoint);
+  xhr.send(formData);
+};
+
+FileUploader.prototype.onProgress = function(handler) {
+  this.progressHandlers.push(handler);
+  return this;
+};
+
+FileUploader.prototype.onComplete = function(handler) {
+  this.completeHandlers.push(handler);
+  return this;
+};
+
+FileUploader.prototype.onError = function(handler) {
+  this.errorHandlers.push(handler);
+  return this;
+};
