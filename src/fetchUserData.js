@@ -169,4 +169,23 @@ export { fetchUserData, clearUserCache };async function fetchUserData(userId) {
     }
 
     return attemptFetch();
+}function fetchUserData(userId) {
+    const url = `https://jsonplaceholder.typicode.com/users/${userId}`;
+    
+    fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('User Data:', data);
+            return data;
+        })
+        .catch(error => {
+            console.error('Error fetching user data:', error);
+        });
 }
+
+fetchUserData(1);
