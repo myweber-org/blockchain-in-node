@@ -202,4 +202,87 @@ if (typeof module !== 'undefined' && module.exports) {
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = UserPreferencesManager;
-}
+}const UserPreferences = {
+  storageKey: 'app_preferences',
+
+  defaults: {
+    theme: 'light',
+    fontSize: 16,
+    notifications: true,
+    language: 'en'
+  },
+
+  getPreferences() {
+    const stored = localStorage.getItem(this.storageKey);
+    return stored ? JSON.parse(stored) : { ...this.defaults };
+  },
+
+  updatePreferences(newPrefs) {
+    const current = this.getPreferences();
+    const updated = { ...current, ...newPrefs };
+    localStorage.setItem(this.storageKey, JSON.stringify(updated));
+    return updated;
+  },
+
+  resetToDefaults() {
+    localStorage.setItem(this.storageKey, JSON.stringify(this.defaults));
+    return { ...this.defaults };
+  },
+
+  getPreference(key) {
+    const prefs = this.getPreferences();
+    return prefs[key] !== undefined ? prefs[key] : this.defaults[key];
+  },
+
+  setPreference(key, value) {
+    const prefs = this.getPreferences();
+    prefs[key] = value;
+    localStorage.setItem(this.storageKey, JSON.stringify(prefs));
+    return value;
+  },
+
+  clearPreferences() {
+    localStorage.removeItem(this.storageKey);
+  },
+
+  exportPreferences() {
+    const prefs = this.getPreferences();
+    return JSON.stringify(prefs, null, 2);
+  },
+
+  importPreferences(jsonString) {
+    try {
+      const imported = JSON.parse(jsonString);
+      const validated = this.validatePreferences(imported);
+      localStorage.setItem(this.storageKey, JSON.stringify(validated));
+      return validated;
+    } catch (error) {
+      console.error('Invalid preferences format:', error);
+      return null;
+    }
+  },
+
+  validatePreferences(prefs) {
+    const validated = {};
+    for (const key in this.defaults) {
+      if (prefs[key] !== undefined && typeof prefs[key] === typeof this.defaults[key]) {
+        validated[key] = prefs[key];
+      } else {
+        validated[key] = this.defaults[key];
+      }
+    }
+    return validated;
+  },
+
+  getAllPreferences() {
+    return this.getPreferences();
+  },
+
+  hasCustomPreferences() {
+    const stored = localStorage.getItem(this.storageKey);
+    return stored !== null;
+  }
+};
+
+Object.freeze(UserPreferences.defaults);
+Object.freeze(UserPreferences);
