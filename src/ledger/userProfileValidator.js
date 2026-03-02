@@ -134,4 +134,28 @@ function validateProfileForm(userData) {
     };
 }
 
-export { validateProfileForm, validateEmail, validateUsername, validatePassword };
+export { validateProfileForm, validateEmail, validateUsername, validatePassword };function validateUserProfile(user) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const minAge = 18;
+    const maxAge = 120;
+
+    if (!user || typeof user !== 'object') {
+        return { isValid: false, error: 'Invalid user object' };
+    }
+
+    if (!user.email || !emailRegex.test(user.email)) {
+        return { isValid: false, error: 'Invalid email format' };
+    }
+
+    if (!user.age || typeof user.age !== 'number' || user.age < minAge || user.age > maxAge) {
+        return { isValid: false, error: `Age must be between ${minAge} and ${maxAge}` };
+    }
+
+    if (!user.username || user.username.trim().length < 3) {
+        return { isValid: false, error: 'Username must be at least 3 characters' };
+    }
+
+    return { isValid: true, data: user };
+}
+
+module.exports = { validateUserProfile };
