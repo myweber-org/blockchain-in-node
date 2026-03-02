@@ -19,4 +19,39 @@ function fetchUserData(userId) {
       console.error('Error fetching user data:', error);
       return null;
     });
+}async function fetchUserData(userId) {
+  const cacheKey = `user_${userId}`;
+  const cacheExpiry = 5 * 60 * 1000; // 5 minutes
+
+  try {
+    // Check cache first
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      const { data, timestamp } = JSON.parse(cached);
+      if (Date.now() - timestamp < cacheExpiry) {
+        console.log('Returning cached user data');
+        return data;
+      }
+    }
+
+    // Fetch fresh data
+    const response = await fetch(`https://api.example.com/users/${userId}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const userData = await response.json();
+    
+    // Cache the result
+    localStorage.setItem(cacheKey, JSON.stringify({
+      data: userData,
+      timestamp: Date.now()
+    }));
+    
+    return userData;
+  } catch (error) {
+    console.error('Failed to fetch user data:', error);
+    // Return fallback or re-throw based on requirements
+    throw error;
+  }
 }
