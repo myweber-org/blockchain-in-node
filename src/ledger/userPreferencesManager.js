@@ -1,27 +1,45 @@
+const USER_PREFERENCES_KEY = 'app_user_preferences';
+
 class UserPreferencesManager {
     constructor() {
         this.preferences = this.loadPreferences();
-        this.defaults = {
-            theme: 'light',
-            language: 'en',
-            notifications: true,
-            fontSize: 16
-        };
     }
 
     loadPreferences() {
         try {
-            const stored = localStorage.getItem('userPreferences');
-            return stored ? JSON.parse(stored) : {};
+            const stored = localStorage.getItem(USER_PREFERENCES_KEY);
+            return stored ? JSON.parse(stored) : this.getDefaultPreferences();
         } catch (error) {
             console.error('Failed to load preferences:', error);
-            return {};
+            return this.getDefaultPreferences();
         }
+    }
+
+    getDefaultPreferences() {
+        return {
+            theme: 'light',
+            language: 'en',
+            notifications: true,
+            fontSize: 16,
+            autoSave: true,
+            lastUpdated: new Date().toISOString()
+        };
+    }
+
+    updatePreference(key, value) {
+        if (!this.preferences.hasOwnProperty(key)) {
+            throw new Error(`Invalid preference key: ${key}`);
+        }
+        
+        this.preferences[key] = value;
+        this.preferences.lastUpdated = new Date().toISOString();
+        this.savePreferences();
+        return true;
     }
 
     savePreferences() {
         try {
-            localStorage.setItem('userPreferences', JSON.stringify(this.preferences));
+            localStorage.setItem(USER_PREFERENCES_KEY, JSON.stringify(this.preferences));
             return true;
         } catch (error) {
             console.error('Failed to save preferences:', error);
@@ -29,34 +47,37 @@ class UserPreferencesManager {
         }
     }
 
-    getPreference(key) {
-        return this.preferences[key] !== undefined ? this.preferences[key] : this.defaults[key];
-    }
-
-    setPreference(key, value) {
-        if (this.defaults[key] !== undefined) {
-            this.preferences[key] = value;
-            return this.savePreferences();
-        }
-        return false;
-    }
-
-    resetPreference(key) {
-        if (this.defaults[key] !== undefined) {
-            delete this.preferences[key];
-            return this.savePreferences();
-        }
-        return false;
+    resetToDefaults() {
+        this.preferences = this.getDefaultPreferences();
+        this.savePreferences();
+        return this.preferences;
     }
 
     getAllPreferences() {
-        return { ...this.defaults, ...this.preferences };
+        return { ...this.preferences };
     }
 
-    clearAllPreferences() {
-        this.preferences = {};
-        return this.savePreferences();
+    getPreference(key) {
+        return this.preferences[key];
+    }
+
+    exportPreferences() {
+        return JSON.stringify(this.preferences, null, 2);
+    }
+
+    importPreferences(jsonString) {
+        try {
+            const imported = JSON.parse(jsonString);
+            this.preferences = { ...this.getDefaultPreferences(), ...imported };
+            this.preferences.lastUpdated = new Date().toISOString();
+            this.savePreferences();
+            return true;
+        } catch (error) {
+            console.error('Failed to import preferences:', error);
+            return false;
+        }
     }
 }
 
-const preferenceManager = new UserPreferencesManager();
+const userPrefs = new UserPreferencesManager();
+export default userPrefs;
