@@ -8,16 +8,31 @@ function fahrenheitToCelsius(fahrenheit) {
 
 function convertTemperature(value, unit) {
     if (unit.toLowerCase() === 'c') {
-        return celsiusToFahrenheit(value);
+        return {
+            value: value,
+            originalUnit: 'C',
+            convertedValue: celsiusToFahrenheit(value),
+            convertedUnit: 'F'
+        };
     } else if (unit.toLowerCase() === 'f') {
-        return fahrenheitToCelsius(value);
+        return {
+            value: value,
+            originalUnit: 'F',
+            convertedValue: fahrenheitToCelsius(value),
+            convertedUnit: 'C'
+        };
     } else {
         throw new Error('Invalid unit. Use "C" for Celsius or "F" for Fahrenheit.');
     }
 }
 
+function formatTemperatureResult(result) {
+    return `${result.value}°${result.originalUnit} = ${result.convertedValue.toFixed(2)}°${result.convertedUnit}`;
+}
+
 module.exports = {
     celsiusToFahrenheit,
     fahrenheitToCelsius,
-    convertTemperature
+    convertTemperature,
+    formatTemperatureResult
 };
