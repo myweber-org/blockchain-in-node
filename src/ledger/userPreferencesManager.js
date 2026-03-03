@@ -396,4 +396,69 @@ const userPrefs = new UserPreferencesManager();const UserPreferencesManager = (f
   };
 })();
 
+export default UserPreferencesManager;const UserPreferencesManager = (function() {
+    const STORAGE_KEY = 'user_preferences';
+    
+    const defaultPreferences = {
+        theme: 'light',
+        language: 'en',
+        notifications: true,
+        fontSize: 16,
+        autoSave: true
+    };
+
+    function getPreferences() {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+            try {
+                return { ...defaultPreferences, ...JSON.parse(stored) };
+            } catch (error) {
+                console.error('Failed to parse stored preferences:', error);
+                return defaultPreferences;
+            }
+        }
+        return defaultPreferences;
+    }
+
+    function updatePreferences(newPreferences) {
+        const current = getPreferences();
+        const updated = { ...current, ...newPreferences };
+        
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+            return updated;
+        } catch (error) {
+            console.error('Failed to save preferences:', error);
+            return current;
+        }
+    }
+
+    function resetPreferences() {
+        try {
+            localStorage.removeItem(STORAGE_KEY);
+            return defaultPreferences;
+        } catch (error) {
+            console.error('Failed to reset preferences:', error);
+            return getPreferences();
+        }
+    }
+
+    function getPreference(key) {
+        const prefs = getPreferences();
+        return prefs[key] !== undefined ? prefs[key] : defaultPreferences[key];
+    }
+
+    function setPreference(key, value) {
+        return updatePreferences({ [key]: value });
+    }
+
+    return {
+        getPreferences,
+        updatePreferences,
+        resetPreferences,
+        getPreference,
+        setPreference
+    };
+})();
+
 export default UserPreferencesManager;
