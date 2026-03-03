@@ -215,4 +215,43 @@ fetchUserData(1);function fetchUserData(userId, maxRetries = 3) {
     }
 
     return attemptFetch();
+}function fetchUserData(userId) {
+    const apiUrl = `https://jsonplaceholder.typicode.com/users/${userId}`;
+    
+    fetch(apiUrl)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('User Data:', data);
+            displayUserInfo(data);
+        })
+        .catch(error => {
+            console.error('Error fetching user data:', error);
+            displayErrorMessage(error.message);
+        });
+}
+
+function displayUserInfo(user) {
+    const userInfoDiv = document.getElementById('user-info');
+    if (userInfoDiv) {
+        userInfoDiv.innerHTML = `
+            <h3>${user.name}</h3>
+            <p>Email: ${user.email}</p>
+            <p>Phone: ${user.phone}</p>
+            <p>Website: ${user.website}</p>
+            <p>Company: ${user.company.name}</p>
+        `;
+    }
+}
+
+function displayErrorMessage(message) {
+    const errorDiv = document.getElementById('error-message');
+    if (errorDiv) {
+        errorDiv.textContent = `Error: ${message}`;
+        errorDiv.style.color = 'red';
+    }
 }
