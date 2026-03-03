@@ -138,4 +138,55 @@ class FileEncryptor {
     }
 }
 
-module.exports = FileEncryptor;
+module.exports = FileEncryptor;const crypto = require('crypto');
+const fs = require('fs');
+
+class FileEncryption {
+    constructor(key) {
+        this.algorithm = 'aes-256-cbc';
+        this.key = crypto.createHash('sha256').update(String(key)).digest('base64').substr(0, 32);
+    }
+
+    encryptFile(inputPath, outputPath) {
+        return new Promise((resolve, reject) => {
+            const iv = crypto.randomBytes(16);
+            const cipher = crypto.createCipheriv(this.algorithm, this.key, iv);
+            const input = fs.createReadStream(inputPath);
+            const output = fs.createWriteStream(outputPath);
+
+            output.write(iv);
+
+            input.pipe(cipher).pipe(output)
+                .on('finish', () => resolve(outputPath))
+                .on('error', reject);
+        });
+    }
+
+    decryptFile(inputPath, outputPath) {
+        return new Promise((resolve, reject) => {
+            const input = fs.createReadStream(inputPath, { start: 0, end: 15 });
+            let iv;
+
+            input.on('data', (chunk) => {
+                iv = chunk;
+                input.destroy();
+            });
+
+            input.on('close', () => {
+                const decipher = crypto.createDecipheriv(this.algorithm, this.key, iv);
+                const fileInput = fs.createReadStream(inputPath, { start: 16 });
+                const output = fs.createWriteStream(outputPath);
+
+                fileInput.pipe(decipher).pipe(output)
+                    .on('finish', () => resolve(outputPath))
+                    .on('error', reject);
+            });
+        });
+    }
+
+    static generateKey() {
+        return crypto.randomBytes(32).toString('hex');
+    }
+}
+
+module.exports = FileEncryption;
