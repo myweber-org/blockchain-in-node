@@ -1,28 +1,14 @@
-function sanitizeInput(input) {
-    if (typeof input !== 'string') {
-        return '';
+function validateUserInput(username, password) {
+    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/;
+
+    if (!usernameRegex.test(username)) {
+        throw new Error('Username must be 3-20 characters and contain only letters, numbers, and underscores.');
     }
-    return input
-        .replace(/[<>&"']/g, function(match) {
-            const escapeMap = {
-                '<': '&lt;',
-                '>': '&gt;',
-                '&': '&amp;',
-                '"': '&quot;',
-                "'": '&#x27;'
-            };
-            return escapeMap[match] || match;
-        })
-        .trim()
-        .substring(0, 255);
-}
 
-function validateEmail(email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-}
+    if (!passwordRegex.test(password)) {
+        throw new Error('Password must be at least 8 characters, contain at least one letter and one number.');
+    }
 
-module.exports = {
-    sanitizeInput,
-    validateEmail
-};
+    return { username, password };
+}
