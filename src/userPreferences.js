@@ -137,4 +137,55 @@ export {
     saveUserPreferences,
     resetUserPreferences,
     updatePreference
+};const defaultPreferences = {
+  theme: 'light',
+  notifications: true,
+  language: 'en',
+  resultsPerPage: 25
 };
+
+function validatePreferences(userPrefs) {
+  const validPrefs = { ...defaultPreferences };
+  
+  if (userPrefs && typeof userPrefs === 'object') {
+    if (['light', 'dark', 'auto'].includes(userPrefs.theme)) {
+      validPrefs.theme = userPrefs.theme;
+    }
+    
+    if (typeof userPrefs.notifications === 'boolean') {
+      validPrefs.notifications = userPrefs.notifications;
+    }
+    
+    if (['en', 'es', 'fr', 'de'].includes(userPrefs.language)) {
+      validPrefs.language = userPrefs.language;
+    }
+    
+    if (Number.isInteger(userPrefs.resultsPerPage) && 
+        userPrefs.resultsPerPage >= 10 && 
+        userPrefs.resultsPerPage <= 100) {
+      validPrefs.resultsPerPage = userPrefs.resultsPerPage;
+    }
+  }
+  
+  return validPrefs;
+}
+
+function savePreferences(preferences) {
+  const validPrefs = validatePreferences(preferences);
+  localStorage.setItem('userPreferences', JSON.stringify(validPrefs));
+  return validPrefs;
+}
+
+function loadPreferences() {
+  const stored = localStorage.getItem('userPreferences');
+  if (stored) {
+    try {
+      return validatePreferences(JSON.parse(stored));
+    } catch (error) {
+      console.error('Failed to parse stored preferences:', error);
+    }
+  }
+  return { ...defaultPreferences };
+}
+
+export { validatePreferences, savePreferences, loadPreferences, defaultPreferences };
