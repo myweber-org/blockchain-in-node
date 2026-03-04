@@ -47,4 +47,18 @@ export { validateUsername, validateEmail, validateUserInput };function validateU
         isValid: true,
         message: "Input validation successful."
     };
+}function validateUserInput(input, type) {
+  const validators = {
+    email: (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
+    password: (value) => value.length >= 8 && /[A-Z]/.test(value) && /\d/.test(value),
+    username: (value) => /^[a-zA-Z0-9_]{3,20}$/.test(value),
+    phone: (value) => /^\+?[\d\s-]{10,}$/.test(value)
+  };
+
+  if (!validators[type]) {
+    throw new Error(`Invalid validation type: ${type}`);
+  }
+
+  const trimmedInput = input.toString().trim();
+  return validators[type](trimmedInput);
 }
