@@ -394,4 +394,52 @@ if (typeof module !== 'undefined' && module.exports) {
   }
 };
 
-export default UserPreferences.init();
+export default UserPreferences.init();class UserPreferencesManager {
+  constructor() {
+    this.preferences = this.loadPreferences();
+  }
+
+  loadPreferences() {
+    const stored = localStorage.getItem('userPreferences');
+    return stored ? JSON.parse(stored) : {
+      theme: 'light',
+      language: 'en',
+      notifications: true,
+      fontSize: 16
+    };
+  }
+
+  savePreferences() {
+    localStorage.setItem('userPreferences', JSON.stringify(this.preferences));
+  }
+
+  setPreference(key, value) {
+    if (this.preferences.hasOwnProperty(key)) {
+      this.preferences[key] = value;
+      this.savePreferences();
+      return true;
+    }
+    return false;
+  }
+
+  getPreference(key) {
+    return this.preferences[key];
+  }
+
+  getAllPreferences() {
+    return { ...this.preferences };
+  }
+
+  resetToDefaults() {
+    this.preferences = {
+      theme: 'light',
+      language: 'en',
+      notifications: true,
+      fontSize: 16
+    };
+    this.savePreferences();
+  }
+}
+
+const userPrefs = new UserPreferencesManager();
+export default userPrefs;
