@@ -174,4 +174,61 @@ const userPrefs = UserPreferences.init();const UserPreferences = {
     }
 };
 
-UserPreferences.init();
+UserPreferences.init();const UserPreferencesManager = {
+  storageKey: 'user_preferences',
+
+  defaults: {
+    theme: 'light',
+    language: 'en',
+    notifications: true,
+    fontSize: 16,
+    autoSave: false
+  },
+
+  initialize() {
+    if (!this.load()) {
+      this.save(this.defaults);
+    }
+  },
+
+  load() {
+    try {
+      const stored = localStorage.getItem(this.storageKey);
+      return stored ? JSON.parse(stored) : null;
+    } catch (error) {
+      console.error('Failed to load preferences:', error);
+      return null;
+    }
+  },
+
+  save(preferences) {
+    try {
+      const merged = { ...this.defaults, ...preferences };
+      localStorage.setItem(this.storageKey, JSON.stringify(merged));
+      return true;
+    } catch (error) {
+      console.error('Failed to save preferences:', error);
+      return false;
+    }
+  },
+
+  update(key, value) {
+    const current = this.load() || this.defaults;
+    return this.save({ ...current, [key]: value });
+  },
+
+  reset() {
+    return this.save(this.defaults);
+  },
+
+  getAll() {
+    return this.load() || this.defaults;
+  },
+
+  get(key) {
+    const prefs = this.load();
+    return prefs ? prefs[key] : this.defaults[key];
+  }
+};
+
+UserPreferencesManager.initialize();
