@@ -188,4 +188,104 @@ function loadPreferences() {
   return { ...defaultPreferences };
 }
 
-export { validatePreferences, savePreferences, loadPreferences, defaultPreferences };
+export { validatePreferences, savePreferences, loadPreferences, defaultPreferences };const USER_PREFERENCES_KEY = 'app_preferences';
+
+const defaultPreferences = {
+  theme: 'light',
+  notifications: true,
+  language: 'en',
+  fontSize: 16,
+  autoSave: false
+};
+
+function validatePreferences(preferences) {
+  const validThemes = ['light', 'dark', 'auto'];
+  const validLanguages = ['en', 'es', 'fr', 'de'];
+  
+  if (!preferences || typeof preferences !== 'object') {
+    return false;
+  }
+
+  if (preferences.theme && !validThemes.includes(preferences.theme)) {
+    return false;
+  }
+
+  if (preferences.language && !validLanguages.includes(preferences.language)) {
+    return false;
+  }
+
+  if (preferences.fontSize && (typeof preferences.fontSize !== 'number' || preferences.fontSize < 12 || preferences.fontSize > 24)) {
+    return false;
+  }
+
+  if (preferences.notifications !== undefined && typeof preferences.notifications !== 'boolean') {
+    return false;
+  }
+
+  if (preferences.autoSave !== undefined && typeof preferences.autoSave !== 'boolean') {
+    return false;
+  }
+
+  return true;
+}
+
+function saveUserPreferences(preferences) {
+  if (!validatePreferences(preferences)) {
+    throw new Error('Invalid preferences format');
+  }
+
+  const mergedPreferences = {
+    ...defaultPreferences,
+    ...preferences
+  };
+
+  try {
+    localStorage.setItem(USER_PREFERENCES_KEY, JSON.stringify(mergedPreferences));
+    return true;
+  } catch (error) {
+    console.error('Failed to save preferences:', error);
+    return false;
+  }
+}
+
+function loadUserPreferences() {
+  try {
+    const stored = localStorage.getItem(USER_PREFERENCES_KEY);
+    if (!stored) {
+      return defaultPreferences;
+    }
+
+    const parsed = JSON.parse(stored);
+    if (validatePreferences(parsed)) {
+      return parsed;
+    }
+    
+    return defaultPreferences;
+  } catch (error) {
+    console.error('Failed to load preferences:', error);
+    return defaultPreferences;
+  }
+}
+
+function resetUserPreferences() {
+  try {
+    localStorage.removeItem(USER_PREFERENCES_KEY);
+    return true;
+  } catch (error) {
+    console.error('Failed to reset preferences:', error);
+    return false;
+  }
+}
+
+function getUserPreference(key) {
+  const preferences = loadUserPreferences();
+  return preferences[key] !== undefined ? preferences[key] : defaultPreferences[key];
+}
+
+export {
+  saveUserPreferences,
+  loadUserPreferences,
+  resetUserPreferences,
+  getUserPreference,
+  validatePreferences
+};
