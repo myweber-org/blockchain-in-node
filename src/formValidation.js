@@ -174,4 +174,32 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     return true;
+}function validateForm() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const emailError = document.getElementById('emailError');
+    const passwordError = document.getElementById('passwordError');
+    let isValid = true;
+
+    emailError.textContent = '';
+    passwordError.textContent = '';
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        emailError.textContent = 'Please enter a valid email address.';
+        emailError.style.color = '#dc2626';
+        isValid = false;
+    }
+
+    if (password.length < 8) {
+        passwordError.textContent = 'Password must be at least 8 characters long.';
+        passwordError.style.color = '#dc2626';
+        isValid = false;
+    }
+
+    if (isValid) {
+        alert('Form submitted successfully!');
+    }
+
+    return isValid;
 }
