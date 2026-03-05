@@ -56,4 +56,39 @@ function loadPreferencesFromStorage() {
     }
 }
 
-export { initializeUserPreferences, savePreferencesToStorage, loadPreferencesFromStorage };
+export { initializeUserPreferences, savePreferencesToStorage, loadPreferencesFromStorage };const userPreferences = {
+  theme: 'light',
+  notifications: true,
+  language: 'en',
+  timezone: 'UTC'
+};
+
+function validatePreferences(prefs) {
+  const validThemes = ['light', 'dark', 'auto'];
+  const validLanguages = ['en', 'es', 'fr', 'de'];
+  
+  if (!validThemes.includes(prefs.theme)) {
+    prefs.theme = 'light';
+  }
+  
+  if (!validLanguages.includes(prefs.language)) {
+    prefs.language = 'en';
+  }
+  
+  if (typeof prefs.notifications !== 'boolean') {
+    prefs.notifications = true;
+  }
+  
+  if (!prefs.timezone || typeof prefs.timezone !== 'string') {
+    prefs.timezone = 'UTC';
+  }
+  
+  return prefs;
+}
+
+function mergeWithDefaults(customPrefs) {
+  const defaults = { ...userPreferences };
+  return validatePreferences({ ...defaults, ...customPrefs });
+}
+
+export { validatePreferences, mergeWithDefaults };
