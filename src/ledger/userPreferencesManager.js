@@ -59,4 +59,81 @@ const UserPreferencesManager = {
     }
 };
 
-export default UserPreferencesManager;
+export default UserPreferencesManager;const UserPreferencesManager = (function() {
+    const STORAGE_KEY = 'user_preferences';
+    const DEFAULT_PREFERENCES = {
+        theme: 'light',
+        language: 'en',
+        notifications: true,
+        fontSize: 16,
+        autoSave: true,
+        showTutorial: false
+    };
+
+    function getPreferences() {
+        try {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                return { ...DEFAULT_PREFERENCES, ...parsed };
+            }
+        } catch (error) {
+            console.warn('Failed to load preferences:', error);
+        }
+        return { ...DEFAULT_PREFERENCES };
+    }
+
+    function savePreferences(preferences) {
+        try {
+            const current = getPreferences();
+            const updated = { ...current, ...preferences };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+            return updated;
+        } catch (error) {
+            console.error('Failed to save preferences:', error);
+            return null;
+        }
+    }
+
+    function resetPreferences() {
+        try {
+            localStorage.removeItem(STORAGE_KEY);
+            return { ...DEFAULT_PREFERENCES };
+        } catch (error) {
+            console.error('Failed to reset preferences:', error);
+            return null;
+        }
+    }
+
+    function getPreference(key) {
+        const preferences = getPreferences();
+        return preferences[key];
+    }
+
+    function setPreference(key, value) {
+        return savePreferences({ [key]: value });
+    }
+
+    function subscribe(callback) {
+        const originalSetItem = localStorage.setItem;
+        localStorage.setItem = function(key, value) {
+            originalSetItem.apply(this, arguments);
+            if (key === STORAGE_KEY) {
+                callback(getPreferences());
+            }
+        };
+        return function unsubscribe() {
+            localStorage.setItem = originalSetItem;
+        };
+    }
+
+    return {
+        get: getPreference,
+        set: setPreference,
+        getAll: getPreferences,
+        save: savePreferences,
+        reset: resetPreferences,
+        subscribe: subscribe,
+        defaults: DEFAULT_PREFERENCES
+    };
+})();
