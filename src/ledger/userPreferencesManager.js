@@ -275,4 +275,51 @@ export default userPreferencesManager;const UserPreferencesManager = (() => {
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = UserPreferencesManager;
-}
+}const UserPreferences = {
+  preferences: {},
+
+  init() {
+    this.loadPreferences();
+  },
+
+  loadPreferences() {
+    const stored = localStorage.getItem('userPreferences');
+    if (stored) {
+      try {
+        this.preferences = JSON.parse(stored);
+      } catch (e) {
+        console.error('Failed to parse stored preferences:', e);
+        this.preferences = {};
+      }
+    }
+  },
+
+  savePreferences() {
+    localStorage.setItem('userPreferences', JSON.stringify(this.preferences));
+  },
+
+  setPreference(key, value) {
+    this.preferences[key] = value;
+    this.savePreferences();
+  },
+
+  getPreference(key, defaultValue = null) {
+    return this.preferences[key] !== undefined ? this.preferences[key] : defaultValue;
+  },
+
+  removePreference(key) {
+    delete this.preferences[key];
+    this.savePreferences();
+  },
+
+  clearAllPreferences() {
+    this.preferences = {};
+    localStorage.removeItem('userPreferences');
+  },
+
+  getAllPreferences() {
+    return { ...this.preferences };
+  }
+};
+
+UserPreferences.init();
