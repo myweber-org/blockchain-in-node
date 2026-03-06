@@ -374,4 +374,64 @@ UserPreferences.init();const UserPreferences = {
   }
 };
 
-export default UserPreferences.init();
+export default UserPreferences.init();const USER_PREFERENCES_KEY = 'app_preferences';
+
+class UserPreferencesManager {
+  constructor() {
+    this.preferences = this.loadPreferences();
+  }
+
+  loadPreferences() {
+    try {
+      const stored = localStorage.getItem(USER_PREFERENCES_KEY);
+      return stored ? JSON.parse(stored) : this.getDefaultPreferences();
+    } catch (error) {
+      console.warn('Failed to load preferences:', error);
+      return this.getDefaultPreferences();
+    }
+  }
+
+  getDefaultPreferences() {
+    return {
+      theme: 'light',
+      language: 'en',
+      notifications: true,
+      fontSize: 16,
+      autoSave: true
+    };
+  }
+
+  updatePreference(key, value) {
+    if (key in this.preferences) {
+      this.preferences[key] = value;
+      this.savePreferences();
+      return true;
+    }
+    return false;
+  }
+
+  savePreferences() {
+    try {
+      localStorage.setItem(USER_PREFERENCES_KEY, JSON.stringify(this.preferences));
+      return true;
+    } catch (error) {
+      console.error('Failed to save preferences:', error);
+      return false;
+    }
+  }
+
+  getPreference(key) {
+    return this.preferences[key];
+  }
+
+  getAllPreferences() {
+    return { ...this.preferences };
+  }
+
+  resetToDefaults() {
+    this.preferences = this.getDefaultPreferences();
+    this.savePreferences();
+  }
+}
+
+export default UserPreferencesManager;
