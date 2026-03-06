@@ -47,4 +47,19 @@ function validateUserInput(username, email) {
   };
 }
 
-module.exports = { validateUserInput, validateUsername, validateEmail };
+module.exports = { validateUserInput, validateUsername, validateEmail };function validateUserInput(input) {
+    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (input.includes('@')) {
+        return emailRegex.test(input) ? 'valid email' : 'invalid email';
+    } else {
+        return usernameRegex.test(input) ? 'valid username' : 'invalid username';
+    }
+}
+
+function sanitizeInput(input) {
+    return input.trim().replace(/[<>]/g, '');
+}
+
+module.exports = { validateUserInput, sanitizeInput };
