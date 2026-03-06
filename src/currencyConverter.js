@@ -332,4 +332,65 @@ function updateExchangeRate(currency, newRate) {
     return true;
 }
 
-export { convertCurrency, formatCurrency, getAvailableCurrencies, updateExchangeRate };
+export { convertCurrency, formatCurrency, getAvailableCurrencies, updateExchangeRate };function fetchExchangeRate(baseCurrency, targetCurrency) {
+    const apiKey = 'YOUR_API_KEY_HERE';
+    const url = `https://api.exchangerate-api.com/v4/latest/${baseCurrency}`;
+    
+    return fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (!data.rates || !data.rates[targetCurrency]) {
+                throw new Error(`Exchange rate for ${targetCurrency} not found`);
+            }
+            return data.rates[targetCurrency];
+        })
+        .catch(error => {
+            console.error('Error fetching exchange rate:', error);
+            return null;
+        });
+}
+
+function convertCurrency(amount, baseCurrency, targetCurrency) {
+    return fetchExchangeRate(baseCurrency, targetCurrency)
+        .then(rate => {
+            if (rate === null) {
+                return null;
+            }
+            const convertedAmount = amount * rate;
+            return {
+                amount: amount,
+                baseCurrency: baseCurrency,
+                targetCurrency: targetCurrency,
+                rate: rate,
+                convertedAmount: convertedAmount,
+                timestamp: new Date().toISOString()
+            };
+        });
+}
+
+function formatCurrency(amount, currencyCode) {
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: currencyCode,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(amount);
+}
+
+function displayConversionResult(result) {
+    if (!result) {
+        console.log('Conversion failed');
+        return;
+    }
+    
+    console.log(`${formatCurrency(result.amount, result.baseCurrency)} = ${formatCurrency(result.convertedAmount, result.targetCurrency)}`);
+    console.log(`Exchange rate: 1 ${result.baseCurrency} = ${result.rate.toFixed(4)} ${result.targetCurrency}`);
+    console.log(`Conversion time: ${result.timestamp}`);
+}
+
+export { convertCurrency, formatCurrency, displayConversionResult };
