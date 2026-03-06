@@ -1,29 +1,29 @@
-function fetchUserData(url) {
-    return fetch(url)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('User data fetched successfully:', data);
+async function fetchUserData(userId, cacheDuration = 300000) {
+    const cacheKey = `user_${userId}`;
+    const cachedData = localStorage.getItem(cacheKey);
+    
+    if (cachedData) {
+        const { data, timestamp } = JSON.parse(cachedData);
+        if (Date.now() - timestamp < cacheDuration) {
             return data;
-        })
-        .catch(error => {
-            console.error('There was a problem fetching the user data:', error);
-        });
-}async function fetchUserData(url) {
-    try {
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
         }
-        const data = await response.json();
-        console.log('User data fetched successfully:', data);
-        return data;
+    }
+
+    try {
+        const response = await fetch(`https://api.example.com/users/${userId}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error: ${response.status}`);
+        }
+        const userData = await response.json();
+        
+        localStorage.setItem(cacheKey, JSON.stringify({
+            data: userData,
+            timestamp: Date.now()
+        }));
+        
+        return userData;
     } catch (error) {
         console.error('Failed to fetch user data:', error);
-        return null;
+        throw error;
     }
 }
