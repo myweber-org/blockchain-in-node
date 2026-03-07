@@ -24,4 +24,9 @@ function testEmailValidation() {
     console.log("All email validation tests completed");
 }
 
-module.exports = { validateEmail, testEmailValidation };
+module.exports = { validateEmail, testEmailValidation };function validateEmail(email) {
+    const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return pattern.test(email);
+}
+
+module.exports = validateEmail;
