@@ -123,4 +123,58 @@ function clearUserCache(userId = null) {
     }
 }
 
-export { fetchUserData, clearUserCache };
+export { fetchUserData, clearUserCache };function fetchUserData(userId) {
+    const apiUrl = `https://jsonplaceholder.typicode.com/users/${userId}`;
+    
+    fetch(apiUrl)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('User Data:', data);
+            displayUserInfo(data);
+        })
+        .catch(error => {
+            console.error('Error fetching user data:', error);
+            displayErrorMessage(error.message);
+        });
+}
+
+function displayUserInfo(user) {
+    const outputDiv = document.getElementById('userInfo');
+    if (outputDiv) {
+        outputDiv.innerHTML = `
+            <h3>${user.name}</h3>
+            <p><strong>Email:</strong> ${user.email}</p>
+            <p><strong>Phone:</strong> ${user.phone}</p>
+            <p><strong>Company:</strong> ${user.company.name}</p>
+            <p><strong>Website:</strong> <a href="https://${user.website}" target="_blank">${user.website}</a></p>
+        `;
+    }
+}
+
+function displayErrorMessage(message) {
+    const outputDiv = document.getElementById('userInfo');
+    if (outputDiv) {
+        outputDiv.innerHTML = `<p class="error">Failed to load user data: ${message}</p>`;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const userIdInput = document.getElementById('userIdInput');
+    const fetchButton = document.getElementById('fetchButton');
+    
+    if (fetchButton && userIdInput) {
+        fetchButton.addEventListener('click', function() {
+            const userId = parseInt(userIdInput.value);
+            if (userId >= 1 && userId <= 10) {
+                fetchUserData(userId);
+            } else {
+                alert('Please enter a valid user ID between 1 and 10');
+            }
+        });
+    }
+});
