@@ -70,4 +70,41 @@ if (typeof module !== 'undefined' && module.exports) {
     }
 }
 
-fetchUserData(1);
+fetchUserData(1);function fetchUserData() {
+    fetch('https://jsonplaceholder.typicode.com/users')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(users => {
+            console.log('Fetched users:', users);
+            displayUsers(users);
+        })
+        .catch(error => {
+            console.error('There was a problem with the fetch operation:', error);
+        });
+}
+
+function displayUsers(users) {
+    const container = document.getElementById('userContainer');
+    if (!container) {
+        console.error('Container element not found');
+        return;
+    }
+
+    container.innerHTML = '';
+    users.forEach(user => {
+        const userElement = document.createElement('div');
+        userElement.className = 'user-item';
+        userElement.innerHTML = `
+            <h3>${user.name}</h3>
+            <p>Email: ${user.email}</p>
+            <p>Phone: ${user.phone}</p>
+        `;
+        container.appendChild(userElement);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', fetchUserData);
