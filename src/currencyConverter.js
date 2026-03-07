@@ -431,4 +431,52 @@ module.exports = {
     convertCurrency,
     getSupportedCurrencies,
     updateExchangeRate
-};
+};const axios = require('axios');
+
+class CurrencyConverter {
+  constructor(apiKey) {
+    this.apiKey = apiKey;
+    this.baseUrl = 'https://api.exchangerate-api.com/v4/latest';
+  }
+
+  async convert(amount, fromCurrency, toCurrency) {
+    try {
+      const response = await axios.get(`${this.baseUrl}/${fromCurrency}`);
+      const rate = response.data.rates[toCurrency];
+      
+      if (!rate) {
+        throw new Error(`Conversion rate for ${toCurrency} not found`);
+      }
+      
+      const convertedAmount = amount * rate;
+      return {
+        original: amount,
+        converted: convertedAmount,
+        from: fromCurrency,
+        to: toCurrency,
+        rate: rate,
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      throw new Error(`Conversion failed: ${error.message}`);
+    }
+  }
+
+  async getAvailableCurrencies() {
+    try {
+      const response = await axios.get(`${this.baseUrl}/USD`);
+      return Object.keys(response.data.rates);
+    } catch (error) {
+      throw new Error(`Failed to fetch currencies: ${error.message}`);
+    }
+  }
+
+  formatCurrency(amount, currencyCode) {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currencyCode
+    }).format(amount);
+  }
+}
+
+module.exports = CurrencyConverter;
