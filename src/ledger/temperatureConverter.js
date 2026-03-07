@@ -7,9 +7,9 @@ function fahrenheitToCelsius(fahrenheit) {
 }
 
 function convertTemperature(value, unit) {
-    if (unit.toLowerCase() === 'c') {
+    if (unit === 'C') {
         return celsiusToFahrenheit(value);
-    } else if (unit.toLowerCase() === 'f') {
+    } else if (unit === 'F') {
         return fahrenheitToCelsius(value);
     } else {
         throw new Error('Invalid unit. Use "C" for Celsius or "F" for Fahrenheit.');
