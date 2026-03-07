@@ -1,23 +1,27 @@
 function fetchUserData(userId) {
-    const apiUrl = `https://api.example.com/users/${userId}`;
-    
-    return fetch(apiUrl)
+    fetch(`https://api.example.com/users/${userId}`)
         .then(response => {
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                throw new Error('Network response was not ok');
             }
             return response.json();
         })
         .then(data => {
-            return {
-                id: data.id,
-                name: data.name,
-                email: data.email,
-                active: data.status === 'active'
-            };
+            console.log('User data:', data);
+            displayUserData(data);
         })
         .catch(error => {
             console.error('Error fetching user data:', error);
-            return null;
         });
+}
+
+function displayUserData(user) {
+    const container = document.getElementById('userDataContainer');
+    if (container) {
+        container.innerHTML = `
+            <h2>${user.name}</h2>
+            <p>Email: ${user.email}</p>
+            <p>Location: ${user.location}</p>
+        `;
+    }
 }
