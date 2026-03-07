@@ -1,110 +1,23 @@
-async function fetchUserData(userId, maxRetries = 3) {
-    const baseUrl = 'https://api.example.com/users';
+function fetchUserData(userId) {
+    const apiUrl = `https://api.example.com/users/${userId}`;
     
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-            const response = await fetch(`${baseUrl}/${userId}`);
-            
+    return fetch(apiUrl)
+        .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
-            const data = await response.json();
-            console.log(`Successfully fetched data for user ${userId}`);
-            return data;
-            
-        } catch (error) {
-            console.error(`Attempt ${attempt} failed: ${error.message}`);
-            
-            if (attempt === maxRetries) {
-                throw new Error(`Failed to fetch user data after ${maxRetries} attempts`);
-            }
-            
-            // Exponential backoff
-            const delay = Math.pow(2, attempt) * 100;
-            await new Promise(resolve => setTimeout(resolve, delay));
-        }
-    }
-}
-
-// Utility function to validate user ID format
-function isValidUserId(userId) {
-    return typeof userId === 'string' && /^[a-zA-Z0-9-]+$/.test(userId);
-}
-
-// Example usage
-async function main() {
-    const testUserId = 'user-12345';
-    
-    if (!isValidUserId(testUserId)) {
-        console.error('Invalid user ID format');
-        return;
-    }
-    
-    try {
-        const userData = await fetchUserData(testUserId);
-        console.log('User data:', userData);
-    } catch (error) {
-        console.error('Fatal error:', error.message);
-    }
-}
-
-// Export for module usage
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { fetchUserData, isValidUserId };
-}async function fetchUserData(userId) {
-    try {
-        const response = await fetch(`https://jsonplaceholder.typicode.com/users/${userId}`);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const userData = await response.json();
-        console.log(`User ID: ${userData.id}`);
-        console.log(`Name: ${userData.name}`);
-        console.log(`Email: ${userData.email}`);
-        console.log(`City: ${userData.address.city}`);
-        return userData;
-    } catch (error) {
-        console.error('Failed to fetch user data:', error.message);
-        return null;
-    }
-}
-
-fetchUserData(1);function fetchUserData() {
-    fetch('https://jsonplaceholder.typicode.com/users')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
             return response.json();
         })
-        .then(users => {
-            console.log('Fetched users:', users);
-            displayUsers(users);
+        .then(data => {
+            return {
+                id: data.id,
+                name: data.name,
+                email: data.email,
+                active: data.status === 'active'
+            };
         })
         .catch(error => {
-            console.error('There was a problem with the fetch operation:', error);
+            console.error('Error fetching user data:', error);
+            return null;
         });
 }
-
-function displayUsers(users) {
-    const container = document.getElementById('userContainer');
-    if (!container) {
-        console.error('Container element not found');
-        return;
-    }
-
-    container.innerHTML = '';
-    users.forEach(user => {
-        const userElement = document.createElement('div');
-        userElement.className = 'user-item';
-        userElement.innerHTML = `
-            <h3>${user.name}</h3>
-            <p>Email: ${user.email}</p>
-            <p>Phone: ${user.phone}</p>
-        `;
-        container.appendChild(userElement);
-    });
-}
-
-document.addEventListener('DOMContentLoaded', fetchUserData);
