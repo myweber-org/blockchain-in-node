@@ -117,4 +117,95 @@ document.addEventListener('DOMContentLoaded', function() {
     return {
         cancel: () => xhr.abort()
     };
+}function validateFile(file, maxSize) {
+    if (!file) {
+        throw new Error('No file provided');
+    }
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+    if (!allowedTypes.includes(file.type)) {
+        throw new Error('Invalid file type');
+    }
+
+    if (file.size > maxSize) {
+        throw new Error('File size exceeds limit');
+    }
+
+    return {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        lastModified: file.lastModified
+    };
 }
+
+function processUpload(file, options = {}) {
+    const defaults = {
+        maxSize: 5 * 1024 * 1024,
+        chunkSize: 1024 * 1024
+    };
+    
+    const config = { ...defaults, ...options };
+    
+    try {
+        const validatedFile = validateFile(file, config.maxSize);
+        
+        if (validatedFile.size > config.chunkSize) {
+            return uploadInChunks(file, config.chunkSize);
+        }
+        
+        return uploadSingleFile(file);
+    } catch (error) {
+        console.error('Upload failed:', error.message);
+        return { success: false, error: error.message };
+    }
+}
+
+function uploadSingleFile(file) {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            resolve({
+                success: true,
+                fileId: `file_${Date.now()}`,
+                url: `https://storage.example.com/${file.name}`
+            });
+        }, 1000);
+    });
+}
+
+function uploadInChunks(file, chunkSize) {
+    const totalChunks = Math.ceil(file.size / chunkSize);
+    const uploadPromises = [];
+    
+    for (let i = 0; i < totalChunks; i++) {
+        const start = i * chunkSize;
+        const end = Math.min(start + chunkSize, file.size);
+        const chunk = file.slice(start, end);
+        
+        uploadPromises.push(uploadChunk(chunk, i, totalChunks));
+    }
+    
+    return Promise.all(uploadPromises)
+        .then(results => {
+            return {
+                success: true,
+                fileId: `chunked_${Date.now()}`,
+                chunks: results.length,
+                url: `https://storage.example.com/assembled/${file.name}`
+            };
+        });
+}
+
+function uploadChunk(chunk, index, total) {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            resolve({
+                chunkIndex: index,
+                totalChunks: total,
+                uploaded: true
+            });
+        }, 500);
+    });
+}
+
+export { validateFile, processUpload };
