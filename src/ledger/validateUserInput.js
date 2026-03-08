@@ -176,4 +176,29 @@ module.exports = validateUserInput;function validateUserInput(username, email) {
         isValid: errors.length === 0,
         errors: errors
     };
+}function sanitizeInput(input) {
+    if (typeof input !== 'string') {
+        return '';
+    }
+    return input
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;')
+        .replace(/\//g, '&#x2F;');
 }
+
+function validateEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+function validatePassword(password) {
+    return password.length >= 8 &&
+           /[A-Z]/.test(password) &&
+           /[a-z]/.test(password) &&
+           /\d/.test(password);
+}
+
+export { sanitizeInput, validateEmail, validatePassword };
