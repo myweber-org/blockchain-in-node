@@ -391,4 +391,64 @@ function mergeWithDefaults(userPrefs) {
   };
 }
 
-export { validatePreferences, mergeWithDefaults, defaultPreferences };
+export { validatePreferences, mergeWithDefaults, defaultPreferences };function validateUserPreferences(preferences) {
+    const defaults = {
+        theme: 'light',
+        language: 'en',
+        notifications: true,
+        fontSize: 16
+    };
+
+    const validated = { ...defaults, ...preferences };
+
+    if (!['light', 'dark', 'auto'].includes(validated.theme)) {
+        validated.theme = defaults.theme;
+    }
+
+    if (!['en', 'es', 'fr', 'de'].includes(validated.language)) {
+        validated.language = defaults.language;
+    }
+
+    if (typeof validated.notifications !== 'boolean') {
+        validated.notifications = defaults.notifications;
+    }
+
+    if (typeof validated.fontSize !== 'number' || validated.fontSize < 12 || validated.fontSize > 24) {
+        validated.fontSize = defaults.fontSize;
+    }
+
+    return validated;
+}
+
+function initializeUserSettings() {
+    const storedPreferences = JSON.parse(localStorage.getItem('userPreferences') || '{}');
+    const preferences = validateUserPreferences(storedPreferences);
+    
+    localStorage.setItem('userPreferences', JSON.stringify(preferences));
+    applyPreferences(preferences);
+    
+    return preferences;
+}
+
+function applyPreferences(preferences) {
+    document.documentElement.setAttribute('data-theme', preferences.theme);
+    document.documentElement.lang = preferences.language;
+    document.documentElement.style.fontSize = `${preferences.fontSize}px`;
+    
+    if (preferences.notifications && 'Notification' in window) {
+        Notification.requestPermission();
+    }
+}
+
+function updatePreference(key, value) {
+    const current = JSON.parse(localStorage.getItem('userPreferences') || '{}');
+    const updated = { ...current, [key]: value };
+    const validated = validateUserPreferences(updated);
+    
+    localStorage.setItem('userPreferences', JSON.stringify(validated));
+    applyPreferences(validated);
+    
+    return validated;
+}
+
+export { validateUserPreferences, initializeUserSettings, updatePreference };
