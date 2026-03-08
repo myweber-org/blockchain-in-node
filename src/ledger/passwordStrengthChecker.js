@@ -90,4 +90,86 @@ function getStrengthLabel(score) {
   return labels[Math.min(score, labels.length - 1)];
 }
 
-export { checkPasswordStrength, calculateStrengthScore };
+export { checkPasswordStrength, calculateStrengthScore };function checkPasswordStrength(password, options = {}) {
+    const defaults = {
+        minLength: 8,
+        requireUppercase: true,
+        requireLowercase: true,
+        requireNumbers: true,
+        requireSpecialChars: true,
+        specialChars: "!@#$%^&*()_+-=[]{}|;:,.<>?"
+    };
+    
+    const config = { ...defaults, ...options };
+    const errors = [];
+    
+    if (password.length < config.minLength) {
+        errors.push(`Password must be at least ${config.minLength} characters long`);
+    }
+    
+    if (config.requireUppercase && !/[A-Z]/.test(password)) {
+        errors.push("Password must contain at least one uppercase letter");
+    }
+    
+    if (config.requireLowercase && !/[a-z]/.test(password)) {
+        errors.push("Password must contain at least one lowercase letter");
+    }
+    
+    if (config.requireNumbers && !/\d/.test(password)) {
+        errors.push("Password must contain at least one number");
+    }
+    
+    if (config.requireSpecialChars) {
+        const specialCharRegex = new RegExp(`[${config.specialChars.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}]`);
+        if (!specialCharRegex.test(password)) {
+            errors.push("Password must contain at least one special character");
+        }
+    }
+    
+    const score = Math.max(0, 100 - (errors.length * 20));
+    const strength = score >= 80 ? "strong" : score >= 60 ? "medium" : "weak";
+    
+    return {
+        isValid: errors.length === 0,
+        score,
+        strength,
+        errors
+    };
+}
+
+function validatePasswordOnInput(inputElement, options) {
+    const result = checkPasswordStrength(inputElement.value, options);
+    const feedbackElement = document.getElementById('passwordFeedback') || createFeedbackElement(inputElement);
+    
+    updateFeedback(feedbackElement, result);
+    return result;
+}
+
+function createFeedbackElement(inputElement) {
+    const feedback = document.createElement('div');
+    feedback.id = 'passwordFeedback';
+    feedback.className = 'password-feedback';
+    inputElement.parentNode.insertBefore(feedback, inputElement.nextSibling);
+    return feedback;
+}
+
+function updateFeedback(element, result) {
+    element.innerHTML = '';
+    element.className = 'password-feedback ' + result.strength;
+    
+    if (result.isValid) {
+        element.textContent = `Password strength: ${result.strength} (${result.score}%)`;
+        element.style.color = '#2ecc71';
+    } else {
+        const errorList = document.createElement('ul');
+        result.errors.forEach(error => {
+            const li = document.createElement('li');
+            li.textContent = error;
+            errorList.appendChild(li);
+        });
+        element.appendChild(errorList);
+        element.style.color = '#e74c3c';
+    }
+}
+
+export { checkPasswordStrength, validatePasswordOnInput };
