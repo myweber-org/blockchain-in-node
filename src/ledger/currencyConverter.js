@@ -141,4 +141,60 @@ class CurrencyConverter {
   }
 }
 
-module.exports = CurrencyConverter;
+module.exports = CurrencyConverter;const exchangeRates = {};
+
+async function fetchExchangeRate(base, target) {
+    const cacheKey = `${base}_${target}`;
+    if (exchangeRates[cacheKey] && (Date.now() - exchangeRates[cacheKey].timestamp < 3600000)) {
+        return exchangeRates[cacheKey].rate;
+    }
+
+    try {
+        const response = await fetch(`https://api.exchangerate-api.com/v4/latest/${base}`);
+        const data = await response.json();
+        const rate = data.rates[target];
+        
+        if (rate) {
+            exchangeRates[cacheKey] = {
+                rate: rate,
+                timestamp: Date.now()
+            };
+            return rate;
+        } else {
+            throw new Error('Invalid target currency');
+        }
+    } catch (error) {
+        console.error('Failed to fetch exchange rate:', error);
+        throw error;
+    }
+}
+
+function convertCurrency(amount, rate) {
+    if (typeof amount !== 'number' || amount <= 0) {
+        throw new Error('Amount must be a positive number');
+    }
+    if (typeof rate !== 'number' || rate <= 0) {
+        throw new Error('Rate must be a positive number');
+    }
+    return parseFloat((amount * rate).toFixed(2));
+}
+
+async function performConversion(amount, fromCurrency, toCurrency) {
+    try {
+        const rate = await fetchExchangeRate(fromCurrency, toCurrency);
+        const convertedAmount = convertCurrency(amount, rate);
+        return {
+            originalAmount: amount,
+            fromCurrency: fromCurrency,
+            toCurrency: toCurrency,
+            convertedAmount: convertedAmount,
+            exchangeRate: rate,
+            timestamp: new Date().toISOString()
+        };
+    } catch (error) {
+        console.error('Conversion failed:', error);
+        throw error;
+    }
+}
+
+export { performConversion, fetchExchangeRate, convertCurrency };
