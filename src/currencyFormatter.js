@@ -76,4 +76,24 @@ function parseCurrency(formattedString, locale = 'en-US') {
     return isNaN(parsedValue) ? null : parsedValue;
 }
 
+export { formatCurrency, parseCurrency };function formatCurrency(amount, locale = 'en-US', currency = 'USD') {
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency: currency
+  }).format(amount);
+}
+
+function parseCurrency(formattedString, locale = 'en-US') {
+  const example = formatCurrency(0, locale);
+  const decimalSeparator = example.replace(/\d/g, '').charAt(1);
+  const groupSeparator = example.replace(/\d/g, '').charAt(0);
+  
+  const cleanString = formattedString
+    .replace(new RegExp('\\' + groupSeparator, 'g'), '')
+    .replace(new RegExp('\\' + decimalSeparator), '.')
+    .replace(/[^\d.-]/g, '');
+  
+  return parseFloat(cleanString);
+}
+
 export { formatCurrency, parseCurrency };
