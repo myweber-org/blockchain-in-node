@@ -200,3 +200,120 @@ class FileManager {
 }
 
 module.exports = FileManager;
+const fs = require('fs');
+const path = require('path');
+
+class FileManager {
+  constructor(basePath) {
+    this.basePath = basePath;
+  }
+
+  validatePath(filePath) {
+    const fullPath = path.join(this.basePath, filePath);
+    const normalizedPath = path.normalize(fullPath);
+    
+    if (!normalizedPath.startsWith(this.basePath)) {
+      throw new Error('Path traversal attempt detected');
+    }
+    
+    return normalizedPath;
+  }
+
+  readFile(filePath) {
+    try {
+      const validatedPath = this.validatePath(filePath);
+      return fs.readFileSync(validatedPath, 'utf8');
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        throw new Error(`File not found: ${filePath}`);
+      }
+      throw error;
+    }
+  }
+
+  writeFile(filePath, content) {
+    try {
+      const validatedPath = this.validatePath(filePath);
+      const dir = path.dirname(validatedPath);
+      
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      
+      fs.writeFileSync(validatedPath, content, 'utf8');
+      return true;
+    } catch (error) {
+      throw new Error(`Failed to write file: ${error.message}`);
+    }
+  }
+
+  listFiles(directoryPath = '') {
+    try {
+      const validatedPath = this.validatePath(directoryPath);
+      const files = fs.readdirSync(validatedPath);
+      
+      return files.map(file => {
+        const fullPath = path.join(validatedPath, file);
+        const stats = fs.statSync(fullPath);
+        
+        return {
+          name: file,
+          path: path.relative(this.basePath, fullPath),
+          isDirectory: stats.isDirectory(),
+          size: stats.size,
+          modified: stats.mtime
+        };
+      });
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        throw new Error(`Directory not found: ${directoryPath}`);
+      }
+      throw error;
+    }
+  }
+
+  deleteFile(filePath) {
+    try {
+      const validatedPath = this.validatePath(filePath);
+      fs.unlinkSync(validatedPath);
+      return true;
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        throw new Error(`File not found: ${filePath}`);
+      }
+      throw error;
+    }
+  }
+
+  fileExists(filePath) {
+    try {
+      const validatedPath = this.validatePath(filePath);
+      return fs.existsSync(validatedPath);
+    } catch (error) {
+      return false;
+    }
+  }
+
+  getFileInfo(filePath) {
+    try {
+      const validatedPath = this.validatePath(filePath);
+      const stats = fs.statSync(validatedPath);
+      
+      return {
+        path: path.relative(this.basePath, validatedPath),
+        isDirectory: stats.isDirectory(),
+        size: stats.size,
+        created: stats.birthtime,
+        modified: stats.mtime,
+        accessed: stats.atime
+      };
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        throw new Error(`File not found: ${filePath}`);
+      }
+      throw error;
+    }
+  }
+}
+
+module.exports = FileManager;
