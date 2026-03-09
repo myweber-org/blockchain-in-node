@@ -11,19 +11,15 @@ function validatePassword(password) {
   return true;
 }
 
-function validateUserData(userData) {
+function validateUserInput(email, password) {
   const errors = [];
   
-  if (!validateEmail(userData.email)) {
+  if (!validateEmail(email)) {
     errors.push('Invalid email format');
   }
   
-  if (!validatePassword(userData.password)) {
-    errors.push('Password must be at least 8 characters with uppercase, lowercase and number');
-  }
-  
-  if (!userData.username || userData.username.trim().length < 3) {
-    errors.push('Username must be at least 3 characters');
+  if (!validatePassword(password)) {
+    errors.push('Password must be at least 8 characters with uppercase, lowercase, and numbers');
   }
   
   return {
@@ -32,4 +28,4 @@ function validateUserData(userData) {
   };
 }
 
-export { validateEmail, validatePassword, validateUserData };
+export { validateEmail, validatePassword, validateUserInput };
