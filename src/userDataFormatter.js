@@ -33,3 +33,5 @@ function formatDate(dateString) {
     day: 'numeric'
   });
 }
+
+export { formatUserData, calculateAge, formatDate };
