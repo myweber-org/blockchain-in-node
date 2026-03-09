@@ -444,4 +444,145 @@ export default UserPreferencesManager;const UserPreferencesManager = (() => {
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = UserPreferencesManager;
-}
+}const UserPreferencesManager = (() => {
+  const STORAGE_KEY = 'user_preferences';
+  
+  const defaultPreferences = {
+    theme: 'light',
+    fontSize: 16,
+    notifications: true,
+    language: 'en',
+    autoSave: false,
+    sidebarCollapsed: false
+  };
+
+  const validatePreference = (key, value) => {
+    const validators = {
+      theme: (val) => ['light', 'dark', 'auto'].includes(val),
+      fontSize: (val) => Number.isInteger(val) && val >= 12 && val <= 24,
+      notifications: (val) => typeof val === 'boolean',
+      language: (val) => ['en', 'es', 'fr', 'de'].includes(val),
+      autoSave: (val) => typeof val === 'boolean',
+      sidebarCollapsed: (val) => typeof val === 'boolean'
+    };
+    
+    return validators[key] ? validators[key](value) : false;
+  };
+
+  const loadPreferences = () => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (!stored) return { ...defaultPreferences };
+      
+      const parsed = JSON.parse(stored);
+      const preferences = { ...defaultPreferences };
+      
+      Object.keys(parsed).forEach(key => {
+        if (defaultPreferences.hasOwnProperty(key) && validatePreference(key, parsed[key])) {
+          preferences[key] = parsed[key];
+        }
+      });
+      
+      return preferences;
+    } catch (error) {
+      console.error('Failed to load preferences:', error);
+      return { ...defaultPreferences };
+    }
+  };
+
+  const savePreferences = (preferences) => {
+    try {
+      const validated = {};
+      Object.keys(preferences).forEach(key => {
+        if (defaultPreferences.hasOwnProperty(key) && validatePreference(key, preferences[key])) {
+          validated[key] = preferences[key];
+        }
+      });
+      
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(validated));
+      return true;
+    } catch (error) {
+      console.error('Failed to save preferences:', error);
+      return false;
+    }
+  };
+
+  const resetToDefaults = () => {
+    return savePreferences(defaultPreferences);
+  };
+
+  const getPreference = (key) => {
+    const preferences = loadPreferences();
+    return preferences[key] !== undefined ? preferences[key] : defaultPreferences[key];
+  };
+
+  const setPreference = (key, value) => {
+    if (!defaultPreferences.hasOwnProperty(key)) {
+      throw new Error(`Invalid preference key: ${key}`);
+    }
+    
+    if (!validatePreference(key, value)) {
+      throw new Error(`Invalid value for preference ${key}: ${value}`);
+    }
+    
+    const preferences = loadPreferences();
+    preferences[key] = value;
+    return savePreferences(preferences);
+  };
+
+  const setMultiplePreferences = (updates) => {
+    const preferences = loadPreferences();
+    Object.keys(updates).forEach(key => {
+      if (defaultPreferences.hasOwnProperty(key) && validatePreference(key, updates[key])) {
+        preferences[key] = updates[key];
+      }
+    });
+    return savePreferences(preferences);
+  };
+
+  const getAllPreferences = () => {
+    return loadPreferences();
+  };
+
+  const exportPreferences = () => {
+    const preferences = loadPreferences();
+    return JSON.stringify(preferences, null, 2);
+  };
+
+  const importPreferences = (jsonString) => {
+    try {
+      const imported = JSON.parse(jsonString);
+      return setMultiplePreferences(imported);
+    } catch (error) {
+      console.error('Failed to import preferences:', error);
+      return false;
+    }
+  };
+
+  const subscribe = (callback) => {
+    const handleStorageChange = (event) => {
+      if (event.key === STORAGE_KEY) {
+        callback(getAllPreferences());
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  };
+
+  return {
+    get: getPreference,
+    set: setPreference,
+    setMultiple: setMultiplePreferences,
+    getAll: getAllPreferences,
+    reset: resetToDefaults,
+    export: exportPreferences,
+    import: importPreferences,
+    subscribe
+  };
+})();
+
+export default UserPreferencesManager;
