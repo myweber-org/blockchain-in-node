@@ -1,18 +1,25 @@
-function sanitizeInput(input) {
-    if (typeof input !== 'string') {
-        throw new TypeError('Input must be a string');
+function validateUserInput(username, password) {
+    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/;
+    
+    if (!usernameRegex.test(username)) {
+        return {
+            isValid: false,
+            message: "Username must be 3-20 characters and contain only letters, numbers, and underscores."
+        };
     }
     
-    const trimmed = input.trim();
-    
-    if (trimmed.length === 0) {
-        throw new Error('Input cannot be empty or whitespace only');
+    if (!passwordRegex.test(password)) {
+        return {
+            isValid: false,
+            message: "Password must be at least 8 characters and contain at least one letter and one number."
+        };
     }
     
-    const sanitized = trimmed
-        .replace(/[<>]/g, '')
-        .replace(/javascript:/gi, '')
-        .replace(/on\w+=/gi, '');
-    
-    return sanitized.substring(0, 255);
+    return {
+        isValid: true,
+        message: "Input validation passed."
+    };
 }
+
+module.exports = validateUserInput;
