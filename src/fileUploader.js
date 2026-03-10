@@ -958,4 +958,174 @@ FileUploader.prototype.onComplete = function(handler) {
 FileUploader.prototype.onError = function(handler) {
   this.errorHandlers.push(handler);
   return this;
-};
+};const FileUploader = (function() {
+    const MAX_FILE_SIZE = 10 * 1024 * 1024;
+    const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'application/pdf'];
+
+    class Uploader {
+        constructor(containerId) {
+            this.container = document.getElementById(containerId);
+            this.files = [];
+            this.initialize();
+        }
+
+        initialize() {
+            this.createDropzone();
+            this.bindEvents();
+        }
+
+        createDropzone() {
+            this.dropzone = document.createElement('div');
+            this.dropzone.className = 'upload-dropzone';
+            this.dropzone.innerHTML = `
+                <div class="dropzone-content">
+                    <svg class="upload-icon" width="48" height="48" viewBox="0 0 24 24">
+                        <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
+                    </svg>
+                    <p class="dropzone-text">Drag & drop files here or click to browse</p>
+                    <input type="file" class="file-input" multiple style="display: none;">
+                </div>
+                <div class="progress-container"></div>
+                <div class="file-list"></div>
+            `;
+            this.container.appendChild(this.dropzone);
+        }
+
+        bindEvents() {
+            const dropzone = this.dropzone;
+            const fileInput = dropzone.querySelector('.file-input');
+
+            dropzone.addEventListener('click', () => fileInput.click());
+            dropzone.addEventListener('dragover', this.handleDragOver.bind(this));
+            dropzone.addEventListener('dragleave', this.handleDragLeave.bind(this));
+            dropzone.addEventListener('drop', this.handleDrop.bind(this));
+            fileInput.addEventListener('change', this.handleFileSelect.bind(this));
+        }
+
+        handleDragOver(e) {
+            e.preventDefault();
+            this.dropzone.classList.add('dragover');
+        }
+
+        handleDragLeave(e) {
+            e.preventDefault();
+            this.dropzone.classList.remove('dragover');
+        }
+
+        handleDrop(e) {
+            e.preventDefault();
+            this.dropzone.classList.remove('dragover');
+            const files = Array.from(e.dataTransfer.files);
+            this.processFiles(files);
+        }
+
+        handleFileSelect(e) {
+            const files = Array.from(e.target.files);
+            this.processFiles(files);
+            e.target.value = '';
+        }
+
+        processFiles(files) {
+            const validFiles = files.filter(file => {
+                if (file.size > MAX_FILE_SIZE) {
+                    this.showError(`${file.name} exceeds maximum file size (10MB)`);
+                    return false;
+                }
+                if (!ALLOWED_TYPES.includes(file.type)) {
+                    this.showError(`${file.name} has unsupported file type`);
+                    return false;
+                }
+                return true;
+            });
+
+            validFiles.forEach(file => this.uploadFile(file));
+        }
+
+        uploadFile(file) {
+            const fileId = Date.now() + Math.random().toString(36).substr(2, 9);
+            const fileItem = {
+                id: fileId,
+                name: file.name,
+                size: file.size,
+                progress: 0,
+                status: 'uploading'
+            };
+
+            this.files.push(fileItem);
+            this.renderFileItem(fileItem);
+
+            const progressInterval = setInterval(() => {
+                if (fileItem.progress < 100) {
+                    fileItem.progress += 10;
+                    this.updateProgress(fileId, fileItem.progress);
+                } else {
+                    clearInterval(progressInterval);
+                    fileItem.status = 'completed';
+                    this.updateStatus(fileId, 'completed');
+                }
+            }, 200);
+        }
+
+        renderFileItem(file) {
+            const fileList = this.dropzone.querySelector('.file-list');
+            const fileElement = document.createElement('div');
+            fileElement.className = 'file-item';
+            fileElement.id = `file-${file.id}`;
+            fileElement.innerHTML = `
+                <div class="file-info">
+                    <span class="file-name">${file.name}</span>
+                    <span class="file-size">${this.formatFileSize(file.size)}</span>
+                </div>
+                <div class="file-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 0%"></div>
+                    </div>
+                    <span class="progress-text">0%</span>
+                </div>
+                <div class="file-status">Uploading...</div>
+            `;
+            fileList.appendChild(fileElement);
+        }
+
+        updateProgress(fileId, progress) {
+            const fileElement = document.getElementById(`file-${fileId}`);
+            if (fileElement) {
+                const progressFill = fileElement.querySelector('.progress-fill');
+                const progressText = fileElement.querySelector('.progress-text');
+                progressFill.style.width = `${progress}%`;
+                progressText.textContent = `${progress}%`;
+            }
+        }
+
+        updateStatus(fileId, status) {
+            const fileElement = document.getElementById(`file-${fileId}`);
+            if (fileElement) {
+                const statusElement = fileElement.querySelector('.file-status');
+                statusElement.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+                statusElement.className = `file-status status-${status}`;
+            }
+        }
+
+        formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'upload-error';
+            errorDiv.textContent = message;
+            this.dropzone.appendChild(errorDiv);
+            setTimeout(() => errorDiv.remove(), 5000);
+        }
+    }
+
+    return Uploader;
+})();
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = FileUploader;
+}
