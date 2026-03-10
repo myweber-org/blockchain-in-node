@@ -1,52 +1,20 @@
-function validateFileUpload(file, allowedTypes, maxSizeInBytes) {
-    if (!file || !allowedTypes || !maxSizeInBytes) {
-        throw new Error('Missing required parameters for file validation.');
+function validateFileUpload(fileInput) {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+    const maxSize = 5 * 1024 * 1024; // 5MB
+
+    if (!fileInput.files || fileInput.files.length === 0) {
+        return { valid: false, error: 'No file selected' };
     }
 
-    const fileExtension = file.name.split('.').pop().toLowerCase();
-    const fileSize = file.size;
+    const file = fileInput.files[0];
 
-    if (!allowedTypes.includes(fileExtension)) {
-        return {
-            isValid: false,
-            message: `File type not allowed. Allowed types: ${allowedTypes.join(', ')}.`
-        };
+    if (!allowedTypes.includes(file.type)) {
+        return { valid: false, error: 'Invalid file type. Only JPEG, PNG and GIF are allowed' };
     }
 
-    if (fileSize > maxSizeInBytes) {
-        return {
-            isValid: false,
-            message: `File size exceeds the limit of ${maxSizeInBytes / (1024 * 1024)} MB.`
-        };
+    if (file.size > maxSize) {
+        return { valid: false, error: 'File size exceeds 5MB limit' };
     }
 
-    return {
-        isValid: true,
-        message: 'File validation passed.'
-    };
+    return { valid: true, file: file };
 }
-
-function handleFileSelect(event) {
-    const allowedFileTypes = ['jpg', 'jpeg', 'png', 'gif'];
-    const maxFileSize = 5 * 1024 * 1024; // 5 MB
-
-    const selectedFile = event.target.files[0];
-    const validationResult = validateFileUpload(selectedFile, allowedFileTypes, maxFileSize);
-
-    const statusElement = document.getElementById('uploadStatus');
-    if (statusElement) {
-        statusElement.textContent = validationResult.message;
-        statusElement.style.color = validationResult.isValid ? 'green' : 'red';
-    }
-
-    if (!validationResult.isValid) {
-        event.target.value = '';
-    }
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    const fileInput = document.getElementById('fileInput');
-    if (fileInput) {
-        fileInput.addEventListener('change', handleFileSelect);
-    }
-});
