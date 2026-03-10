@@ -516,4 +516,46 @@ function createFileUploader(config = {}) {
     return {
         abort: () => xhr.abort()
     };
+}function validateFile(file, maxSize) {
+    const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+    const errors = [];
+
+    if (!allowedTypes.includes(file.type)) {
+        errors.push('Invalid file type. Only JPEG, PNG, and PDF are allowed.');
+    }
+
+    if (file.size > maxSize) {
+        errors.push(`File size exceeds limit of ${maxSize / 1024 / 1024}MB`);
+    }
+
+    return {
+        isValid: errors.length === 0,
+        errors: errors
+    };
+}
+
+function handleFileUpload(event, maxSize = 5 * 1024 * 1024) {
+    const files = event.target.files;
+    const results = [];
+
+    for (let i = 0; i < files.length; i++) {
+        const validation = validateFile(files[i], maxSize);
+        results.push({
+            name: files[i].name,
+            size: files[i].size,
+            type: files[i].type,
+            isValid: validation.isValid,
+            errors: validation.errors
+        });
+    }
+
+    return results;
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
