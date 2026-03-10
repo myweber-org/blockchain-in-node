@@ -1,49 +1,29 @@
-function trackUploadProgress(fileInputId, progressBarId, statusId) {
-    const fileInput = document.getElementById(fileInputId);
-    const progressBar = document.getElementById(progressBarId);
-    const statusDisplay = document.getElementById(statusId);
+function trackUploadProgress(file, onProgress) {
+    const xhr = new XMLHttpRequest();
+    const formData = new FormData();
+    formData.append('file', file);
 
-    if (!fileInput || !progressBar || !statusDisplay) {
-        console.error('Required elements not found');
-        return;
-    }
-
-    fileInput.addEventListener('change', function(event) {
-        const files = event.target.files;
-        if (files.length === 0) {
-            statusDisplay.textContent = 'No file selected';
-            return;
+    xhr.upload.addEventListener('progress', (event) => {
+        if (event.lengthComputable) {
+            const percentComplete = Math.round((event.loaded / event.total) * 100);
+            onProgress(percentComplete);
         }
-
-        const file = files[0];
-        statusDisplay.textContent = `Uploading: ${file.name}`;
-        progressBar.value = 0;
-        progressBar.max = 100;
-
-        simulateUpload(file, progressBar, statusDisplay);
     });
 
-    function simulateUpload(file, progressBar, statusDisplay) {
-        let progress = 0;
-        const interval = setInterval(() => {
-            progress += Math.random() * 10;
-            if (progress >= 100) {
-                progress = 100;
-                clearInterval(interval);
-                statusDisplay.textContent = `Upload complete: ${file.name}`;
-                progressBar.classList.add('complete');
-            }
-            progressBar.value = progress;
-            statusDisplay.textContent = `Uploading ${file.name}: ${Math.round(progress)}%`;
-        }, 200);
-    }
+    xhr.open('POST', '/upload');
+    xhr.send(formData);
 
-    progressBar.addEventListener('error', function() {
-        statusDisplay.textContent = 'Upload failed. Please try again.';
-        progressBar.value = 0;
-    });
+    return xhr;
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    trackUploadProgress('fileInput', 'uploadProgress', 'uploadStatus');
-});
+function simulateUpload() {
+    const dummyFile = new Blob(['dummy content'], { type: 'text/plain' });
+    const progressElement = document.getElementById('uploadProgress');
+
+    const xhr = trackUploadProgress(dummyFile, (progress) => {
+        progressElement.textContent = `Upload Progress: ${progress}%`;
+        if (progress === 100) {
+            progressElement.textContent = 'Upload complete!';
+        }
+    });
+}
