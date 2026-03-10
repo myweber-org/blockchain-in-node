@@ -109,4 +109,89 @@ function loadPreferences() {
     return validateUserPreferences({});
 }
 
-export { validateUserPreferences, savePreferences, loadPreferences };
+export { validateUserPreferences, savePreferences, loadPreferences };const defaultPreferences = {
+  theme: 'light',
+  notifications: true,
+  language: 'en',
+  resultsPerPage: 10,
+  autoSave: false
+};
+
+function validatePreferences(userPrefs) {
+  const validPreferences = {};
+  const allowedKeys = Object.keys(defaultPreferences);
+  
+  for (const key of allowedKeys) {
+    if (userPrefs.hasOwnProperty(key)) {
+      const value = userPrefs[key];
+      
+      switch(key) {
+        case 'theme':
+          if (['light', 'dark', 'auto'].includes(value)) {
+            validPreferences[key] = value;
+          } else {
+            validPreferences[key] = defaultPreferences[key];
+          }
+          break;
+          
+        case 'notifications':
+        case 'autoSave':
+          if (typeof value === 'boolean') {
+            validPreferences[key] = value;
+          } else {
+            validPreferences[key] = defaultPreferences[key];
+          }
+          break;
+          
+        case 'language':
+          if (typeof value === 'string' && value.length === 2) {
+            validPreferences[key] = value.toLowerCase();
+          } else {
+            validPreferences[key] = defaultPreferences[key];
+          }
+          break;
+          
+        case 'resultsPerPage':
+          if (Number.isInteger(value) && value >= 5 && value <= 100) {
+            validPreferences[key] = value;
+          } else {
+            validPreferences[key] = defaultPreferences[key];
+          }
+          break;
+          
+        default:
+          validPreferences[key] = defaultPreferences[key];
+      }
+    } else {
+      validPreferences[key] = defaultPreferences[key];
+    }
+  }
+  
+  return validPreferences;
+}
+
+function mergePreferences(existingPrefs, newPrefs) {
+  const validatedNewPrefs = validatePreferences(newPrefs);
+  return { ...existingPrefs, ...validatedNewPrefs };
+}
+
+function savePreferences(prefs) {
+  const validatedPrefs = validatePreferences(prefs);
+  localStorage.setItem('userPreferences', JSON.stringify(validatedPrefs));
+  return validatedPrefs;
+}
+
+function loadPreferences() {
+  const stored = localStorage.getItem('userPreferences');
+  if (stored) {
+    try {
+      const parsed = JSON.parse(stored);
+      return validatePreferences(parsed);
+    } catch {
+      return { ...defaultPreferences };
+    }
+  }
+  return { ...defaultPreferences };
+}
+
+export { validatePreferences, mergePreferences, savePreferences, loadPreferences, defaultPreferences };
