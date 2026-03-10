@@ -144,4 +144,24 @@ function generateRandomHSLColor() {
   return `hsl(${h}, ${s}%, ${l}%)`;
 }
 
-export { generateRandomColor, generateRandomRGBColor, generateRandomHSLColor };
+export { generateRandomColor, generateRandomRGBColor, generateRandomHSLColor };function generateRandomColor() {
+  const letters = '0123456789ABCDEF';
+  let color = '#';
+  for (let i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
+}
+
+function setRandomBackground() {
+  const newColor = generateRandomColor();
+  document.body.style.backgroundColor = newColor;
+  console.log('Background changed to:', newColor);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const button = document.createElement('button');
+  button.textContent = 'Change Background';
+  button.addEventListener('click', setRandomBackground);
+  document.body.appendChild(button);
+});
