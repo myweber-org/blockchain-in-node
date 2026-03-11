@@ -79,4 +79,30 @@ function validateRegistrationForm(userData) {
     };
 }
 
-export { validateRegistrationForm, validateEmail, validatePassword, validateUsername };
+export { validateRegistrationForm, validateEmail, validatePassword, validateUsername };function validateEmail(email) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+function validatePhoneNumber(phone) {
+  const phoneRegex = /^\+?[\d\s\-\(\)]{10,}$/;
+  return phoneRegex.test(phone);
+}
+
+function validateInput(input, type) {
+  if (typeof input !== 'string') return false;
+  
+  const trimmedInput = input.trim();
+  if (trimmedInput.length === 0) return false;
+  
+  switch(type) {
+    case 'email':
+      return validateEmail(trimmedInput);
+    case 'phone':
+      return validatePhoneNumber(trimmedInput);
+    default:
+      return trimmedInput.length > 0;
+  }
+}
+
+export { validateEmail, validatePhoneNumber, validateInput };
