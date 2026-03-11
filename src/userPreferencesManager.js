@@ -722,4 +722,110 @@ class UserPreferencesManager {
     }
 }
 
-export default UserPreferencesManager;
+export default UserPreferencesManager;const userPreferencesManager = (() => {
+    const STORAGE_KEY = 'app_preferences';
+    
+    const defaultPreferences = {
+        theme: 'light',
+        language: 'en',
+        notifications: true,
+        fontSize: 'medium',
+        autoSave: false,
+        lastUpdated: null
+    };
+
+    function getPreferences() {
+        try {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                return { ...defaultPreferences, ...parsed };
+            }
+            return { ...defaultPreferences };
+        } catch (error) {
+            console.error('Failed to retrieve preferences:', error);
+            return { ...defaultPreferences };
+        }
+    }
+
+    function savePreferences(preferences) {
+        try {
+            const validPreferences = validatePreferences(preferences);
+            validPreferences.lastUpdated = new Date().toISOString();
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(validPreferences));
+            return { success: true, preferences: validPreferences };
+        } catch (error) {
+            console.error('Failed to save preferences:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    function validatePreferences(preferences) {
+        const validated = { ...defaultPreferences };
+        
+        if (preferences.theme && ['light', 'dark', 'auto'].includes(preferences.theme)) {
+            validated.theme = preferences.theme;
+        }
+        
+        if (preferences.language && typeof preferences.language === 'string') {
+            validated.language = preferences.language;
+        }
+        
+        if (typeof preferences.notifications === 'boolean') {
+            validated.notifications = preferences.notifications;
+        }
+        
+        if (preferences.fontSize && ['small', 'medium', 'large'].includes(preferences.fontSize)) {
+            validated.fontSize = preferences.fontSize;
+        }
+        
+        if (typeof preferences.autoSave === 'boolean') {
+            validated.autoSave = preferences.autoSave;
+        }
+        
+        return validated;
+    }
+
+    function resetToDefaults() {
+        try {
+            localStorage.removeItem(STORAGE_KEY);
+            return { success: true, preferences: { ...defaultPreferences } };
+        } catch (error) {
+            console.error('Failed to reset preferences:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    function subscribe(callback) {
+        if (typeof callback !== 'function') {
+            throw new Error('Callback must be a function');
+        }
+
+        const storageHandler = (event) => {
+            if (event.key === STORAGE_KEY) {
+                callback(getPreferences());
+            }
+        };
+
+        window.addEventListener('storage', storageHandler);
+        
+        return () => {
+            window.removeEventListener('storage', storageHandler);
+        };
+    }
+
+    return {
+        get: getPreferences,
+        save: savePreferences,
+        reset: resetToDefaults,
+        subscribe: subscribe,
+        constants: {
+            THEMES: ['light', 'dark', 'auto'],
+            FONT_SIZES: ['small', 'medium', 'large']
+        }
+    };
+})();
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = userPreferencesManager;
+}
