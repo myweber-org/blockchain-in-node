@@ -8,7 +8,6 @@ function validatePassword(password) {
     if (!/[A-Z]/.test(password)) return false;
     if (!/[a-z]/.test(password)) return false;
     if (!/\d/.test(password)) return false;
-    if (!/[!@#$%^&*]/.test(password)) return false;
     return true;
 }
 
@@ -20,11 +19,11 @@ function validateRegistration(userData) {
     }
     
     if (!validateEmail(userData.email)) {
-        errors.email = 'Invalid email format';
+        errors.email = 'Please enter a valid email address';
     }
     
     if (!validatePassword(userData.password)) {
-        errors.password = 'Password must be at least 8 characters with uppercase, lowercase, number and special character';
+        errors.password = 'Password must be at least 8 characters with uppercase, lowercase and numbers';
     }
     
     if (userData.password !== userData.confirmPassword) {
@@ -37,4 +36,4 @@ function validateRegistration(userData) {
     };
 }
 
-export { validateRegistration, validateEmail, validatePassword };
+module.exports = { validateRegistration, validateEmail, validatePassword };
