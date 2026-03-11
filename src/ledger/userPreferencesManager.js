@@ -130,4 +130,59 @@ export default UserPreferencesManager;const UserPreferencesManager = (function()
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = UserPreferencesManager;
-}
+}const userPreferencesManager = (() => {
+    const STORAGE_KEY = 'app_preferences';
+    const defaultPreferences = {
+        theme: 'light',
+        language: 'en',
+        notifications: true,
+        fontSize: 16
+    };
+
+    const getPreferences = () => {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        return stored ? JSON.parse(stored) : { ...defaultPreferences };
+    };
+
+    const savePreferences = (preferences) => {
+        const current = getPreferences();
+        const updated = { ...current, ...preferences };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        return updated;
+    };
+
+    const resetPreferences = () => {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultPreferences));
+        return { ...defaultPreferences };
+    };
+
+    const getPreference = (key) => {
+        const preferences = getPreferences();
+        return preferences[key] !== undefined ? preferences[key] : defaultPreferences[key];
+    };
+
+    const setPreference = (key, value) => {
+        const preferences = getPreferences();
+        preferences[key] = value;
+        return savePreferences(preferences);
+    };
+
+    const subscribe = (callback) => {
+        const handler = (event) => {
+            if (event.key === STORAGE_KEY) {
+                callback(getPreferences());
+            }
+        };
+        window.addEventListener('storage', handler);
+        return () => window.removeEventListener('storage', handler);
+    };
+
+    return {
+        getPreferences,
+        savePreferences,
+        resetPreferences,
+        getPreference,
+        setPreference,
+        subscribe
+    };
+})();
