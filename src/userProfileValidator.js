@@ -90,4 +90,28 @@ function validateProfileData(userData) {
     };
 }
 
-export { validateProfileData, validateEmail, validateUsername, validatePassword };
+export { validateProfileData, validateEmail, validateUsername, validatePassword };function validateUserProfile(profile) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const errors = [];
+
+    if (!profile.name || profile.name.trim().length < 2) {
+        errors.push('Name must be at least 2 characters long');
+    }
+
+    if (!emailRegex.test(profile.email)) {
+        errors.push('Invalid email format');
+    }
+
+    if (typeof profile.age !== 'number' || profile.age < 18 || profile.age > 120) {
+        errors.push('Age must be a number between 18 and 120');
+    }
+
+    if (profile.country && profile.country.length !== 2) {
+        errors.push('Country code must be 2 characters');
+    }
+
+    return {
+        isValid: errors.length === 0,
+        errors: errors
+    };
+}
