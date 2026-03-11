@@ -172,4 +172,71 @@ function updateFeedback(element, result) {
     }
 }
 
-export { checkPasswordStrength, validatePasswordOnInput };
+export { checkPasswordStrength, validatePasswordOnInput };function calculatePasswordEntropy(password) {
+    if (!password || password.length === 0) return 0;
+    
+    const charSets = {
+        lowercase: /[a-z]/.test(password),
+        uppercase: /[A-Z]/.test(password),
+        digits: /\d/.test(password),
+        special: /[^a-zA-Z0-9]/.test(password)
+    };
+    
+    let poolSize = 0;
+    if (charSets.lowercase) poolSize += 26;
+    if (charSets.uppercase) poolSize += 26;
+    if (charSets.digits) poolSize += 10;
+    if (charSets.special) poolSize += 32;
+    
+    if (poolSize === 0) return 0;
+    
+    const entropy = Math.log2(Math.pow(poolSize, password.length));
+    return Math.round(entropy * 100) / 100;
+}
+
+function evaluatePasswordStrength(password) {
+    const entropy = calculatePasswordEntropy(password);
+    
+    if (entropy < 40) return 'Weak';
+    if (entropy < 70) return 'Moderate';
+    if (entropy < 100) return 'Strong';
+    return 'Very Strong';
+}
+
+function validatePassword(password, minLength = 8) {
+    const errors = [];
+    
+    if (password.length < minLength) {
+        errors.push(`Password must be at least ${minLength} characters long`);
+    }
+    
+    if (!/[a-z]/.test(password)) {
+        errors.push('Password must contain at least one lowercase letter');
+    }
+    
+    if (!/[A-Z]/.test(password)) {
+        errors.push('Password must contain at least one uppercase letter');
+    }
+    
+    if (!/\d/.test(password)) {
+        errors.push('Password must contain at least one digit');
+    }
+    
+    if (!/[^a-zA-Z0-9]/.test(password)) {
+        errors.push('Password must contain at least one special character');
+    }
+    
+    const strength = evaluatePasswordStrength(password);
+    if (strength === 'Weak') {
+        errors.push('Password is too weak');
+    }
+    
+    return {
+        isValid: errors.length === 0,
+        strength: strength,
+        entropy: calculatePasswordEntropy(password),
+        errors: errors
+    };
+}
+
+export { calculatePasswordEntropy, evaluatePasswordStrength, validatePassword };
