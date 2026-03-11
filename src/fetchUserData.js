@@ -1,22 +1,47 @@
-function fetchUserData(apiUrl) {
-  return fetch(apiUrl)
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      return response.json();
-    })
-    .then(data => {
-      const processedData = data.map(user => ({
-        id: user.id,
-        name: user.name.toUpperCase(),
-        email: user.email.toLowerCase(),
-        active: user.status === 'active'
-      }));
-      return processedData;
-    })
-    .catch(error => {
-      console.error('Error fetching user data:', error);
-      throw error;
-    });
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const userDataCache = new Map();
+
+async function fetchUserData(userId, forceRefresh = false) {
+    const cacheKey = `user_${userId}`;
+    const cached = userDataCache.get(cacheKey);
+
+    if (!forceRefresh && cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
+        console.log(`Returning cached data for user ${userId}`);
+        return cached.data;
+    }
+
+    try {
+        console.log(`Fetching fresh data for user ${userId}`);
+        const response = await fetch(`https://api.example.com/users/${userId}`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const userData = await response.json();
+        
+        userDataCache.set(cacheKey, {
+            data: userData,
+            timestamp: Date.now()
+        });
+
+        return userData;
+    } catch (error) {
+        console.error(`Failed to fetch data for user ${userId}:`, error);
+        
+        if (cached) {
+            console.log(`Returning stale cached data due to fetch error`);
+            return cached.data;
+        }
+        
+        throw error;
+    }
 }
+
+function invalidateUserCache(userId) {
+    const cacheKey = `user_${userId}`;
+    userDataCache.delete(cacheKey);
+    console.log(`Cache invalidated for user ${userId}`);
+}
+
+export { fetchUserData, invalidateUserCache };
