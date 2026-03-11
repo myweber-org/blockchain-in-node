@@ -451,4 +451,90 @@ function updatePreference(key, value) {
     return validated;
 }
 
-export { validateUserPreferences, initializeUserSettings, updatePreference };
+export { validateUserPreferences, initializeUserSettings, updatePreference };function validateUserPreferences(preferences) {
+    const defaults = {
+        theme: 'light',
+        notifications: true,
+        language: 'en',
+        timezone: 'UTC',
+        resultsPerPage: 25
+    };
+
+    const validated = { ...defaults };
+
+    if (preferences && typeof preferences === 'object') {
+        const validThemes = ['light', 'dark', 'auto'];
+        if (preferences.theme && validThemes.includes(preferences.theme)) {
+            validated.theme = preferences.theme;
+        }
+
+        if (typeof preferences.notifications === 'boolean') {
+            validated.notifications = preferences.notifications;
+        }
+
+        const validLanguages = ['en', 'es', 'fr', 'de'];
+        if (preferences.language && validLanguages.includes(preferences.language)) {
+            validated.language = preferences.language;
+        }
+
+        if (preferences.timezone && typeof preferences.timezone === 'string') {
+            validated.timezone = preferences.timezone;
+        }
+
+        if (preferences.resultsPerPage && Number.isInteger(preferences.resultsPerPage)) {
+            if (preferences.resultsPerPage >= 10 && preferences.resultsPerPage <= 100) {
+                validated.resultsPerPage = preferences.resultsPerPage;
+            }
+        }
+    }
+
+    return validated;
+}
+
+function initializeUserPreferences() {
+    let storedPreferences;
+    try {
+        storedPreferences = JSON.parse(localStorage.getItem('userPreferences'));
+    } catch (error) {
+        console.warn('Failed to parse stored preferences, using defaults');
+        storedPreferences = null;
+    }
+
+    const preferences = validateUserPreferences(storedPreferences);
+    localStorage.setItem('userPreferences', JSON.stringify(preferences));
+    return preferences;
+}
+
+function updateUserPreference(key, value) {
+    let currentPreferences;
+    try {
+        currentPreferences = JSON.parse(localStorage.getItem('userPreferences'));
+    } catch (error) {
+        currentPreferences = null;
+    }
+
+    const updatedPreferences = validateUserPreferences(currentPreferences);
+    
+    const tempObj = { [key]: value };
+    const tempValidated = validateUserPreferences(tempObj);
+    
+    if (tempValidated.hasOwnProperty(key)) {
+        updatedPreferences[key] = tempValidated[key];
+        localStorage.setItem('userPreferences', JSON.stringify(updatedPreferences));
+        return true;
+    }
+    
+    return false;
+}
+
+function getUserPreference(key) {
+    const preferences = initializeUserPreferences();
+    return preferences[key];
+}
+
+export {
+    validateUserPreferences,
+    initializeUserPreferences,
+    updateUserPreference,
+    getUserPreference
+};
