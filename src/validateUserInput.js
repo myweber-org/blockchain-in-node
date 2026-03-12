@@ -342,4 +342,24 @@ function validateUserInput(input, options = {}) {
     value: input,
     length: input.length 
   };
+}function validateUsername(username) {
+    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+    return usernameRegex.test(username);
 }
+
+function validatePassword(password) {
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/;
+    return passwordRegex.test(password);
+}
+
+function validateUserInput(username, password) {
+    if (!validateUsername(username)) {
+        return "Username must be 3-20 characters long and contain only letters, numbers, and underscores.";
+    }
+    if (!validatePassword(password)) {
+        return "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number.";
+    }
+    return null;
+}
+
+module.exports = { validateUserInput, validateUsername, validatePassword };
