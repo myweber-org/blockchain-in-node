@@ -146,4 +146,29 @@ function validateUserInput(username, email) {
     };
 }
 
-export { validateUserInput, validateUsername, validateEmail };
+export { validateUserInput, validateUsername, validateEmail };function validateUsername(username) {
+    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+    return usernameRegex.test(username);
+}
+
+function validatePassword(password) {
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/;
+    return passwordRegex.test(password);
+}
+
+function validateUserInput(username, password) {
+    const isUsernameValid = validateUsername(username);
+    const isPasswordValid = validatePassword(password);
+    
+    if (!isUsernameValid) {
+        return { valid: false, message: "Invalid username. Must be 3-20 characters, alphanumeric and underscores only." };
+    }
+    
+    if (!isPasswordValid) {
+        return { valid: false, message: "Invalid password. Must be at least 8 characters with uppercase, lowercase and a number." };
+    }
+    
+    return { valid: true, message: "User input is valid." };
+}
+
+module.exports = { validateUserInput, validateUsername, validatePassword };
