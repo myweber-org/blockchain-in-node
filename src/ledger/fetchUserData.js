@@ -111,4 +111,68 @@ async function fetchUserData() {
     
     throw error;
   }
+}async function fetchUserData(userId, maxRetries = 3) {
+    const url = `https://api.example.com/users/${userId}`;
+    let lastError;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            const response = await fetch(url);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            console.log(`User data fetched successfully on attempt ${attempt}`);
+            return data;
+            
+        } catch (error) {
+            lastError = error;
+            console.warn(`Attempt ${attempt} failed: ${error.message}`);
+            
+            if (attempt < maxRetries) {
+                const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
+                console.log(`Retrying in ${delay}ms...`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
+    }
+    
+    throw new Error(`Failed to fetch user data after ${maxRetries} attempts: ${lastError.message}`);
 }
+
+function validateUserId(userId) {
+    if (!userId || typeof userId !== 'string') {
+        throw new TypeError('User ID must be a non-empty string');
+    }
+    
+    if (!/^[a-zA-Z0-9_-]+$/.test(userId)) {
+        throw new Error('User ID contains invalid characters');
+    }
+    
+    return true;
+}
+
+async function getUserProfile(userId) {
+    validateUserId(userId);
+    
+    try {
+        const userData = await fetchUserData(userId);
+        
+        return {
+            id: userData.id,
+            username: userData.username,
+            email: userData.email,
+            profilePicture: userData.avatar_url || '/default-avatar.png',
+            lastActive: userData.last_seen ? new Date(userData.last_seen) : null,
+            isVerified: userData.verified || false
+        };
+        
+    } catch (error) {
+        console.error('Failed to load user profile:', error);
+        throw new Error(`Unable to retrieve profile for user ${userId}`);
+    }
+}
+
+export { fetchUserData, getUserProfile };
