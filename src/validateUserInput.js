@@ -283,3 +283,63 @@ module.exports = { validateUserInput, validateUsername, validatePassword };funct
     
     return { valid: true, message: "Input validation successful." };
 }
+function validateUserInput(input, options = {}) {
+  const defaults = {
+    maxLength: 255,
+    minLength: 1,
+    allowSpecialChars: false,
+    trim: true,
+    required: true
+  };
+  
+  const config = { ...defaults, ...options };
+  
+  if (input === null || input === undefined) {
+    if (config.required) {
+      return { isValid: false, error: 'Input is required' };
+    }
+    return { isValid: true, value: null };
+  }
+  
+  if (typeof input !== 'string') {
+    input = String(input);
+  }
+  
+  if (config.trim) {
+    input = input.trim();
+  }
+  
+  if (config.required && input.length === 0) {
+    return { isValid: false, error: 'Input cannot be empty' };
+  }
+  
+  if (input.length < config.minLength) {
+    return { 
+      isValid: false, 
+      error: `Input must be at least ${config.minLength} characters long` 
+    };
+  }
+  
+  if (input.length > config.maxLength) {
+    return { 
+      isValid: false, 
+      error: `Input cannot exceed ${config.maxLength} characters` 
+    };
+  }
+  
+  if (!config.allowSpecialChars) {
+    const specialCharRegex = /[<>{}[\]\\]/;
+    if (specialCharRegex.test(input)) {
+      return { 
+        isValid: false, 
+        error: 'Input contains disallowed special characters' 
+      };
+    }
+  }
+  
+  return { 
+    isValid: true, 
+    value: input,
+    length: input.length 
+  };
+}
