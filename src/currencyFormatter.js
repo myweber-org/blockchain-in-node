@@ -211,4 +211,32 @@ function parseCurrency(formattedString, locale = 'en-US') {
     return parseFloat(cleaned);
 }
 
+export { formatCurrency, parseCurrency };function formatCurrency(amount, currency = 'USD', locale = 'en-US') {
+    if (typeof amount !== 'number' || isNaN(amount)) {
+        throw new TypeError('Amount must be a valid number');
+    }
+
+    const formatter = new Intl.NumberFormat(locale, {
+        style: 'currency',
+        currency: currency.toUpperCase(),
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+
+    return formatter.format(amount);
+}
+
+function parseCurrency(formattedString, locale = 'en-US') {
+    const parts = new Intl.NumberFormat(locale).formatToParts(1234.56);
+    const decimalSeparator = parts.find(part => part.type === 'decimal')?.value || '.';
+    const groupSeparator = parts.find(part => part.type === 'group')?.value || ',';
+
+    const cleaned = formattedString
+        .replace(new RegExp(`[${groupSeparator}]`, 'g'), '')
+        .replace(new RegExp(`[${decimalSeparator}]`, 'g'), '.');
+
+    const number = parseFloat(cleaned.replace(/[^\d.-]/g, ''));
+    return isNaN(number) ? null : number;
+}
+
 export { formatCurrency, parseCurrency };
