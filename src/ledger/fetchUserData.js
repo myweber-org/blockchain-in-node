@@ -50,4 +50,29 @@ function displayUserData(user) {
   }
 };
 
-export default fetchUserData;
+export default fetchUserData;async function fetchUserData(userId, maxRetries = 3) {
+    const url = `https://api.example.com/users/${userId}`;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            const response = await fetch(url);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log(`User data fetched successfully on attempt ${attempt}`);
+            return data;
+            
+        } catch (error) {
+            console.error(`Attempt ${attempt} failed:`, error.message);
+            
+            if (attempt === maxRetries) {
+                throw new Error(`Failed to fetch user data after ${maxRetries} attempts`);
+            }
+            
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        }
+    }
+}
