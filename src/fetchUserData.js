@@ -87,4 +87,29 @@ function displayErrorMessage(message) {
     if (outputDiv) {
         outputDiv.innerHTML = `<p class="error">Failed to fetch user data: ${message}</p>`;
     }
+}async function fetchUserData(userId) {
+    const url = `https://api.example.com/users/${userId}`;
+    
+    try {
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const userData = await response.json();
+        
+        const processedData = {
+            id: userData.id,
+            name: userData.name,
+            email: userData.email,
+            active: userData.status === 'active',
+            lastLogin: new Date(userData.last_login)
+        };
+        
+        return processedData;
+    } catch (error) {
+        console.error('Failed to fetch user data:', error);
+        throw error;
+    }
 }
