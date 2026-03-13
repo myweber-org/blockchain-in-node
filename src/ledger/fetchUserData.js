@@ -24,4 +24,30 @@ function displayUserData(user) {
             <p>Location: ${user.location}</p>
         `;
     }
-}
+}const fetchUserData = async (userId, retries = 3) => {
+  const baseUrl = 'https://api.example.com/users';
+  
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const response = await fetch(`${baseUrl}/${userId}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data;
+      
+    } catch (error) {
+      console.error(`Attempt ${attempt} failed:`, error.message);
+      
+      if (attempt === retries) {
+        throw new Error(`Failed to fetch user data after ${retries} attempts`);
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+    }
+  }
+};
+
+export default fetchUserData;
