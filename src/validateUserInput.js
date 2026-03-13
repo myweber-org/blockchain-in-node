@@ -1,46 +1,37 @@
-function validateUserInput(username, password) {
-  const errors = [];
+function validateUsername(username) {
+  const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+  return usernameRegex.test(username);
+}
 
-  if (!username || username.trim().length === 0) {
-    errors.push("Username cannot be empty");
-  }
-
-  if (username && username.length < 3) {
-    errors.push("Username must be at least 3 characters long");
-  }
-
-  if (!password || password.trim().length === 0) {
-    errors.push("Password cannot be empty");
-  }
-
-  if (password && password.length < 8) {
-    errors.push("Password must be at least 8 characters long");
-  }
-
+function validatePassword(password) {
+  const minLength = 8;
   const hasUpperCase = /[A-Z]/.test(password);
   const hasLowerCase = /[a-z]/.test(password);
   const hasNumbers = /\d/.test(password);
-  const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+  
+  return password.length >= minLength && 
+         hasUpperCase && 
+         hasLowerCase && 
+         hasNumbers && 
+         hasSpecialChar;
+}
 
-  if (password && !(hasUpperCase && hasLowerCase && hasNumbers && hasSpecialChar)) {
-    errors.push("Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character");
+function validateUserInput(username, password) {
+  const errors = [];
+  
+  if (!validateUsername(username)) {
+    errors.push('Username must be 3-20 characters and contain only letters, numbers, and underscores');
   }
-
+  
+  if (!validatePassword(password)) {
+    errors.push('Password must be at least 8 characters and contain uppercase, lowercase, numbers, and special characters');
+  }
+  
   return {
     isValid: errors.length === 0,
     errors: errors
   };
-}function validateUserInput(username, email) {
-    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!usernameRegex.test(username)) {
-        throw new Error('Invalid username format');
-    }
-
-    if (!emailRegex.test(email)) {
-        throw new Error('Invalid email format');
-    }
-
-    return true;
 }
+
+export { validateUserInput, validateUsername, validatePassword };
