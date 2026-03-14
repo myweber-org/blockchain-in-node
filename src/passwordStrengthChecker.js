@@ -846,4 +846,82 @@ function getStrengthLevel(score) {
     return "Strong";
 }
 
-export default checkPasswordStrength;
+export default checkPasswordStrength;function checkPasswordStrength(password, rules) {
+    const result = {
+        isValid: true,
+        score: 0,
+        feedback: []
+    };
+
+    if (!rules) {
+        rules = {
+            minLength: 8,
+            requireUppercase: true,
+            requireLowercase: true,
+            requireNumbers: true,
+            requireSpecialChars: true,
+            specialChars: "!@#$%^&*()_+-=[]{}|;:,.<>?"
+        };
+    }
+
+    if (password.length < rules.minLength) {
+        result.isValid = false;
+        result.feedback.push(`Password must be at least ${rules.minLength} characters long`);
+    }
+
+    if (rules.requireUppercase && !/[A-Z]/.test(password)) {
+        result.isValid = false;
+        result.feedback.push("Password must contain at least one uppercase letter");
+    }
+
+    if (rules.requireLowercase && !/[a-z]/.test(password)) {
+        result.isValid = false;
+        result.feedback.push("Password must contain at least one lowercase letter");
+    }
+
+    if (rules.requireNumbers && !/\d/.test(password)) {
+        result.isValid = false;
+        result.feedback.push("Password must contain at least one number");
+    }
+
+    if (rules.requireSpecialChars) {
+        const specialCharPattern = new RegExp(`[${rules.specialChars.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}]`);
+        if (!specialCharPattern.test(password)) {
+            result.isValid = false;
+            result.feedback.push("Password must contain at least one special character");
+        }
+    }
+
+    if (result.isValid) {
+        result.score = calculatePasswordScore(password);
+    }
+
+    return result;
+}
+
+function calculatePasswordScore(password) {
+    let score = 0;
+    
+    score += Math.min(password.length * 4, 40);
+    
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasLowercase = /[a-z]/.test(password);
+    const hasNumbers = /\d/.test(password);
+    const hasSpecial = /[^A-Za-z0-9]/.test(password);
+    
+    const charTypeCount = [hasUppercase, hasLowercase, hasNumbers, hasSpecial].filter(Boolean).length;
+    score += (charTypeCount - 1) * 10;
+    
+    if (password.length > 12) {
+        score += 10;
+    }
+    
+    const commonPatterns = ["123", "abc", "qwerty", "password", "admin"];
+    if (!commonPatterns.some(pattern => password.toLowerCase().includes(pattern))) {
+        score += 15;
+    }
+    
+    return Math.min(score, 100);
+}
+
+export { checkPasswordStrength, calculatePasswordScore };
